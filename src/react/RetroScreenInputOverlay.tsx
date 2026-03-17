@@ -1,15 +1,15 @@
 import type { RefObject, TextareaHTMLAttributes } from "react";
 
-type RetroLcdInputOverlayProps = {
+type RetroScreenInputOverlayProps = {
   inputRef: RefObject<HTMLTextAreaElement | null>;
   visible: boolean;
 } & TextareaHTMLAttributes<HTMLTextAreaElement>;
 
-export function RetroLcdInputOverlay({
+export function RetroScreenInputOverlay({
   inputRef,
   visible,
   ...props
-}: RetroLcdInputOverlayProps) {
+}: RetroScreenInputOverlayProps) {
   if (!visible) {
     return null;
   }

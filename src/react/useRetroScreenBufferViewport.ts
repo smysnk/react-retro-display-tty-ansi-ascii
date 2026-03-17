@@ -5,7 +5,7 @@ import {
   getSnapshotMaxScrollOffset,
   snapshotToRenderModel,
   type RetroLcdRenderModel
-} from "./retro-lcd-render-model";
+} from "./retro-screen-render-model";
 
 export type RetroLcdBufferViewportState = {
   autoFollow: boolean;

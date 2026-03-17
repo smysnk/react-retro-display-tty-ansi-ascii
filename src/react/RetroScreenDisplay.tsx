@@ -15,8 +15,8 @@ import {
   getCellCharacter,
   getLineDisplayText,
   type RetroLcdRenderModel
-} from "./retro-lcd-render-model";
-import { getCellPresentationStyle } from "./retro-lcd-display-color";
+} from "./retro-screen-render-model";
+import { getCellPresentationStyle } from "./retro-screen-display-color";
 
 const joinClassNames = (...classNames: Array<string | undefined>) =>
   classNames.filter(Boolean).join(" ");
@@ -31,7 +31,7 @@ const getCellClassName = (cell: RetroLcdCell) =>
     cell.style.blink ? "retro-lcd__cell--blink" : undefined
   );
 
-type RetroLcdDisplayProps = {
+type RetroScreenDisplayProps = {
   mode: RetroLcdProps["mode"];
   renderModel: RetroLcdRenderModel;
   displayColorMode: RetroLcdDisplayColorMode;
@@ -46,7 +46,7 @@ type RetroLcdDisplayProps = {
   children?: ReactNode;
 };
 
-export function RetroLcdDisplay({
+export function RetroScreenDisplay({
   mode,
   renderModel,
   displayColorMode,
@@ -59,7 +59,7 @@ export function RetroLcdDisplay({
   onViewportWheel,
   viewportTabIndex,
   children
-}: RetroLcdDisplayProps) {
+}: RetroScreenDisplayProps) {
   return (
     <div className="retro-lcd__screen">
       <div

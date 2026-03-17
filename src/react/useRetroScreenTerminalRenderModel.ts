@@ -5,7 +5,7 @@ import type {
   RetroLcdGeometry,
   RetroLcdTerminalModeProps
 } from "../core/types";
-import { buildTerminalSnapshot } from "./retro-lcd-render-model";
+import { buildTerminalSnapshot } from "./retro-screen-render-model";
 import type { RetroLcdScreenSnapshot } from "../core/terminal/types";
 
 type UseRetroLcdTerminalRenderModelArgs = {

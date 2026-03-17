@@ -5,7 +5,7 @@ import { shellSessionTraceFixture } from "../core/terminal/conformance/fixtures/
 import { statusPaneTraceFixture } from "../core/terminal/conformance/fixtures/real-world/status-pane.trace.fixture";
 import { createRetroLcdController } from "../core/terminal/controller";
 import type { RetroLcdDisplayColorMode, RetroLcdGeometry } from "../core/types";
-import { RetroLcd } from "../react/RetroLcd";
+import { RetroScreen, RetroScreen as RetroLcd } from "../react/RetroScreen";
 
 const STORY_COLOR = "#97ff9b";
 
@@ -1858,13 +1858,13 @@ function FeatureTourStory() {
 }
 
 const meta = {
-  title: "RetroLcd",
-  component: RetroLcd,
+  title: "RetroScreen",
+  component: RetroScreen,
   tags: ["autodocs"],
   args: {
     color: STORY_COLOR
   }
-} satisfies Meta<typeof RetroLcd>;
+} satisfies Meta<typeof RetroScreen>;
 
 export default meta;
 

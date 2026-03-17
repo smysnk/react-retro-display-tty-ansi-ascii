@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { useState } from "react";
-import { RetroLcd } from "./RetroLcd";
+import { RetroScreen as RetroLcd } from "./RetroScreen";
 import { createRetroLcdController } from "../core/terminal/controller";
 import { wrapTextToColumns } from "../core/geometry/wrap";
 

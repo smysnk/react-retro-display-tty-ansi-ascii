@@ -162,7 +162,7 @@ const readDescenderMetrics = async () =>
   });
 
 test("editable story keeps the visible cursor after the latest typed character", async () => {
-  await harness.gotoStory("retrolcd--editable-notebook");
+  await harness.gotoStory("retroscreen--editable-notebook");
   await page().locator(".retro-lcd__input").click();
 
   const initialCols = Number(await page().locator(".retro-lcd").getAttribute("data-cols"));
@@ -189,7 +189,7 @@ test("editable story keeps the visible cursor after the latest typed character",
 });
 
 test("quiet output story leaves enough room for descender glyphs", async () => {
-  await harness.gotoStory("retrolcd--calm-readout");
+  await harness.gotoStory("retroscreen--calm-readout");
 
   await page().waitForFunction(() => {
     const lines = Array.from(document.querySelectorAll(".retro-lcd__line")).map((line) =>

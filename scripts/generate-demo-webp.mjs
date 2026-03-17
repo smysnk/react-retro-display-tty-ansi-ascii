@@ -198,7 +198,7 @@ const runFfmpegMp4 = ({ framesDir, fps, outputFile }) => {
 const captures = [
   {
     name: "feature tour",
-    storyId: "retrolcd--feature-tour",
+    storyId: "retroscreen--feature-tour",
     selector: "[data-feature-tour-root='true']",
     waitMs: 300,
     fps: featureTourFps,
@@ -210,7 +210,7 @@ const captures = [
   },
   {
     name: "quiet output",
-    storyId: "retrolcd--quiet-output-demo",
+    storyId: "retroscreen--quiet-output-demo",
     selector: "[data-demo-capture='quiet-output']",
     waitMs: 220,
     fps: 16,
@@ -222,7 +222,7 @@ const captures = [
   },
   {
     name: "editable drafting",
-    storyId: "retrolcd--editable-mode-demo",
+    storyId: "retroscreen--editable-mode-demo",
     selector: "[data-demo-capture='editable-drafting']",
     waitMs: 220,
     fps: 16,
@@ -234,7 +234,7 @@ const captures = [
   },
   {
     name: "terminal output",
-    storyId: "retrolcd--terminal-mode-demo",
+    storyId: "retroscreen--terminal-mode-demo",
     selector: "[data-demo-capture='terminal-output']",
     waitMs: 220,
     fps: 15,
@@ -246,7 +246,7 @@ const captures = [
   },
   {
     name: "prompt loop",
-    storyId: "retrolcd--prompt-mode-demo",
+    storyId: "retroscreen--prompt-mode-demo",
     selector: "[data-demo-capture='prompt-interaction']",
     waitMs: 220,
     fps: 15,
@@ -258,7 +258,7 @@ const captures = [
   },
   {
     name: "display color modes",
-    storyId: "retrolcd--display-color-modes-demo",
+    storyId: "retroscreen--display-color-modes-demo",
     selector: "[data-demo-capture='display-color-modes']",
     waitMs: 180,
     fps: 16,
@@ -270,7 +270,7 @@ const captures = [
   },
   {
     name: "light and dark hosts",
-    storyId: "retrolcd--light-dark-hosts-demo",
+    storyId: "retroscreen--light-dark-hosts-demo",
     selector: "[data-demo-capture='light-dark-hosts']",
     waitMs: 180,
     fps: 16,
@@ -282,7 +282,7 @@ const captures = [
   },
   {
     name: "control character replay",
-    storyId: "retrolcd--control-character-replay-demo",
+    storyId: "retroscreen--control-character-replay-demo",
     selector: "[data-demo-capture='control-character-replay']",
     waitMs: 180,
     fps: 16,
@@ -294,7 +294,7 @@ const captures = [
   },
   {
     name: "auto resize probe",
-    storyId: "retrolcd--auto-resize-probe-demo",
+    storyId: "retroscreen--auto-resize-probe-demo",
     selector: "[data-demo-capture='auto-resize-probe']",
     waitMs: 240,
     fps: 16,

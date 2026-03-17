@@ -25,12 +25,12 @@ npm install react-retro-display-tty-ansi
 ```
 
 ```tsx
-import { RetroLcd } from "react-retro-display-tty-ansi";
+import { RetroScreen } from "react-retro-display-tty-ansi";
 import "react-retro-display-tty-ansi/styles.css";
 
 export function StatusCard() {
   return (
-    <RetroLcd
+    <RetroScreen
       mode="value"
       value="SYSTEM READY"
       color="#97ff9b"
@@ -54,17 +54,17 @@ more. The prop accepts:
 - an object with per-side `top`, `right`, `bottom`, and `left`
 
 ```tsx
-<RetroLcd mode="value" value="Tight framing" displayPadding={8} />
+<RetroScreen mode="value" value="Tight framing" displayPadding={8} />
 
-<RetroLcd mode="value" value="Room to breathe" displayPadding="1.25rem" />
+<RetroScreen mode="value" value="Room to breathe" displayPadding="1.25rem" />
 
-<RetroLcd
+<RetroScreen
   mode="terminal"
   displayPadding={{ block: 10, inline: 14 }}
   value="measured from the padded screen area"
 />
 
-<RetroLcd
+<RetroScreen
   mode="prompt"
   displayPadding={{ top: 6, right: 10, bottom: 12, left: 10 }}
 />
@@ -82,7 +82,7 @@ terminal content can sit inside bright docs, dark dashboards, or a side-by-side 
 [![Light And Dark Hosts Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi/main/docs/assets/react-retro-display-tty-ansi-light-dark-hosts.webp)](https://github.com/user-attachments/assets/f8658ce6-e6b9-42f9-99cc-61d71d897e95)
 
 ```tsx
-<RetroLcd
+<RetroScreen
   mode="terminal"
   value={[
     "\u001b[1mLIGHT SURFACE\u001b[0m",
@@ -94,7 +94,7 @@ terminal content can sit inside bright docs, dark dashboards, or a side-by-side 
   displayPadding={{ block: 12, inline: 14 }}
 />
 
-<RetroLcd
+<RetroScreen
   mode="terminal"
   value={[
     "\u001b[1mDARK SURFACE\u001b[0m",
@@ -120,7 +120,7 @@ Use `mode="value"` when the display is just there to speak.
 [![Quiet Output Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi/main/docs/assets/react-retro-display-tty-ansi-quiet-output.webp)](https://github.com/user-attachments/assets/0d92a410-7151-4da8-bfc1-3b47151301b3)
 
 ```tsx
-<RetroLcd
+<RetroScreen
   mode="value"
   value="LINK STABLE\nAwaiting operator input."
 />
@@ -139,7 +139,7 @@ export function DraftPad() {
   const [value, setValue] = useState("");
 
   return (
-    <RetroLcd
+    <RetroScreen
       mode="value"
       value={value}
       editable
@@ -163,7 +163,7 @@ Use a controller when the display should follow external writes over time.
 ```tsx
 import { useEffect } from "react";
 import {
-  RetroLcd,
+  RetroScreen,
   createRetroLcdController
 } from "react-retro-display-tty-ansi";
 
@@ -180,7 +180,7 @@ export function StreamedTerminal() {
     controller.write("\u001b[1mREADY\u001b[0m ansi parser online");
   }, []);
 
-  return <RetroLcd mode="terminal" controller={controller} />;
+  return <RetroScreen mode="terminal" controller={controller} />;
 }
 ```
 
@@ -194,7 +194,7 @@ Use `mode="prompt"` when the interface should feel like a guided shell.
 [![Prompt Interaction Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi/main/docs/assets/react-retro-display-tty-ansi-prompt-loop.webp)](https://github.com/user-attachments/assets/c346c616-14fd-4b84-813b-545cd5d92f21)
 
 ```tsx
-<RetroLcd
+<RetroScreen
   mode="prompt"
   autoFocus
   promptChar="$"
@@ -233,7 +233,7 @@ Use `bufferSize` to control how many rows of history the component-managed termi
 surface keeps, and `defaultAutoFollow` if you want the view to start detached from the tail.
 
 ```tsx
-<RetroLcd
+<RetroScreen
   mode="terminal"
   bufferSize={400}
   defaultAutoFollow
@@ -255,7 +255,7 @@ const controller = createRetroLcdController({
   scrollback: 400
 });
 
-<RetroLcd mode="terminal" controller={controller} />
+<RetroScreen mode="terminal" controller={controller} />
 ```
 
 The browser suite now covers this path directly, including paging, wheel scrolling, anchored
@@ -275,7 +275,7 @@ different visual projections.
 
 ```tsx
 import {
-  RetroLcd,
+  RetroScreen,
   createRetroLcdController
 } from "react-retro-display-tty-ansi";
 
@@ -287,7 +287,7 @@ const controller = createRetroLcdController({
 
 export function ResizingTerminalProbe() {
   return (
-    <RetroLcd
+    <RetroScreen
       mode="terminal"
       controller={controller}
       displayPadding={{ block: 8, inline: 10 }}
@@ -326,7 +326,7 @@ Available modes:
 - `ansi-extended`
 
 ```tsx
-<RetroLcd
+<RetroScreen
   mode="terminal"
   displayColorMode="ansi-extended"
   value={[
@@ -350,7 +350,7 @@ updates, ANSI 16-color, indexed 256-color, and truecolor output.
 
 ```tsx
 import {
-  RetroLcd,
+  RetroScreen,
   createRetroLcdController
 } from "react-retro-display-tty-ansi";
 
@@ -364,7 +364,7 @@ controller.write(
   "\u001b[6;1H\u001b[L\u001b[38;2;255;180;120mrecorded regression fixture\u001b[0m"
 );
 
-<RetroLcd
+<RetroScreen
   mode="terminal"
   controller={controller}
   displayColorMode="ansi-extended"

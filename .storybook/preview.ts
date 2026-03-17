@@ -1,5 +1,5 @@
 import type { Preview } from "@storybook/react-vite";
-import "../src/styles/retro-lcd.css";
+import "../src/styles/retro-screen.css";
 import "../src/stories/storybook.css";
 
 const preview: Preview = {
@@ -13,7 +13,7 @@ const preview: Preview = {
     },
     options: {
       storySort: {
-        order: ["RetroLcd"]
+        order: ["RetroScreen"]
       }
     }
   }

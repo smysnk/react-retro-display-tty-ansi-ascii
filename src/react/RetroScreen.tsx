@@ -14,20 +14,20 @@ import type {
   RetroLcdProps,
   RetroLcdValueModeProps
 } from "../core/types";
-import { RetroLcdDisplay } from "./RetroLcdDisplay";
-import { RetroLcdInputOverlay } from "./RetroLcdInputOverlay";
-import { getDisplayModeRootVars } from "./retro-lcd-display-color";
-import { getDisplayPaddingVars } from "./retro-lcd-display-padding";
-import { useRetroLcdController } from "./useRetroLcdController";
-import { useRetroLcdBufferViewport } from "./useRetroLcdBufferViewport";
-import { useRetroLcdGeometry } from "./useRetroLcdGeometry";
-import { useRetroLcdPromptSession } from "./useRetroLcdPromptSession";
+import { RetroScreenDisplay } from "./RetroScreenDisplay";
+import { RetroScreenInputOverlay } from "./RetroScreenInputOverlay";
+import { getDisplayModeRootVars } from "./retro-screen-display-color";
+import { getDisplayPaddingVars } from "./retro-screen-display-padding";
+import { useRetroLcdController } from "./useRetroScreenController";
+import { useRetroLcdBufferViewport } from "./useRetroScreenBufferViewport";
+import { useRetroLcdGeometry } from "./useRetroScreenGeometry";
+import { useRetroLcdPromptSession } from "./useRetroScreenPromptSession";
 import {
   buildTextRenderModel,
   getValueDisplayText,
   type RetroLcdRenderModel
-} from "./retro-lcd-render-model";
-import { useRetroLcdTerminalRenderModel } from "./useRetroLcdTerminalRenderModel";
+} from "./retro-screen-render-model";
+import { useRetroLcdTerminalRenderModel } from "./useRetroScreenTerminalRenderModel";
 
 const DEFAULT_ROWS = 9;
 const DEFAULT_COLS = 46;
@@ -38,7 +38,7 @@ const joinClassNames = (...classNames: Array<string | undefined>) =>
 const clampSelection = (value: number, text: string) =>
   Math.max(0, Math.min(text.length, Number.isFinite(value) ? Math.floor(value) : text.length));
 
-export function RetroLcd(props: RetroLcdProps) {
+export function RetroScreen(props: RetroLcdProps) {
   const displayColorMode = props.displayColorMode ?? "phosphor-green";
   const displaySurfaceMode = props.displaySurfaceMode ?? "dark";
   const requestedCursorMode = props.cursorMode;
@@ -321,7 +321,7 @@ export function RetroLcd(props: RetroLcdProps) {
       data-auto-follow={bufferViewport.viewportState.autoFollow ? "true" : "false"}
     >
       <div className="retro-lcd__bezel" aria-hidden="true" />
-      <RetroLcdDisplay
+      <RetroScreenDisplay
         mode={props.mode}
         renderModel={renderModel}
         displayColorMode={displayColorMode}
@@ -334,7 +334,7 @@ export function RetroLcd(props: RetroLcdProps) {
         onViewportWheel={handleViewportWheel}
         viewportTabIndex={props.mode === "terminal" ? 0 : undefined}
       >
-        <RetroLcdInputOverlay
+        <RetroScreenInputOverlay
           inputRef={inputRef}
           visible={props.mode === "prompt" || (props.mode === "value" && Boolean(props.editable))}
           value={promptProps ? promptProps.value ?? promptDraft : valueProps?.value ?? ""}
@@ -376,7 +376,9 @@ export function RetroLcd(props: RetroLcdProps) {
           autoCorrect="off"
           aria-label={props.mode === "prompt" ? "Retro LCD prompt" : "Retro LCD input"}
         />
-      </RetroLcdDisplay>
+      </RetroScreenDisplay>
     </div>
   );
 }
+
+export const RetroLcd = RetroScreen;

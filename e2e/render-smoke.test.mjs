@@ -7,9 +7,9 @@ const page = () => harness.page;
 
 test("core rendering stories paint stable retro surfaces in the browser", async () => {
   const stories = [
-    { id: "retrolcd--calm-readout", mode: "value" },
-    { id: "retrolcd--terminal-stream", mode: "terminal" },
-    { id: "retrolcd--prompt-loop", mode: "prompt" }
+    { id: "retroscreen--calm-readout", mode: "value" },
+    { id: "retroscreen--terminal-stream", mode: "terminal" },
+    { id: "retroscreen--prompt-loop", mode: "prompt" }
   ];
 
   for (const story of stories) {
@@ -36,7 +36,7 @@ test("core rendering stories paint stable retro surfaces in the browser", async 
 });
 
 test("display color modes story covers every supported display palette and ANSI projection path", async () => {
-  await harness.gotoStory("retrolcd--display-color-modes");
+  await harness.gotoStory("retroscreen--display-color-modes");
 
   const modes = await page().locator("[data-display-mode-card]").evaluateAll((cards) =>
     cards.map((card) => {

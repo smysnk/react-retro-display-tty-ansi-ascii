@@ -1,7 +1,7 @@
-export { RetroLcd } from "./react/RetroLcd";
-export { useRetroLcdController } from "./react/useRetroLcdController";
-export { useRetroLcdGeometry } from "./react/useRetroLcdGeometry";
-export { useRetroLcdPromptSession } from "./react/useRetroLcdPromptSession";
+export { RetroScreen, RetroScreen as RetroLcd } from "./react/RetroScreen";
+export { useRetroLcdController } from "./react/useRetroScreenController";
+export { useRetroLcdGeometry } from "./react/useRetroScreenGeometry";
+export { useRetroLcdPromptSession } from "./react/useRetroScreenPromptSession";
 export type {
   CursorMode,
   RetroLcdDisplayColorMode,
