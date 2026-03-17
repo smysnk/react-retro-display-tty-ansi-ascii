@@ -784,6 +784,65 @@ function ControlCharacterReplayDemoStory() {
   );
 }
 
+function DisplayBufferStory() {
+  const [controller] = useState(() =>
+    createRetroLcdController({
+      rows: 8,
+      cols: 34,
+      scrollback: 40,
+      cursorMode: "solid"
+    })
+  );
+  const [lineNumber, setLineNumber] = useState(18);
+
+  useEffect(() => {
+    controller.reset();
+    controller.setCursorVisible(true);
+    controller.setCursorMode("solid");
+
+    for (let index = 1; index <= 18; index += 1) {
+      const line = `line-${String(index).padStart(2, "0")}  telemetry stable`;
+      if (index < 18) {
+        controller.writeln(line);
+      } else {
+        controller.write(line);
+      }
+    }
+  }, [controller]);
+
+  return (
+    <StoryShell
+      kicker="Display Buffer"
+      title="Page through terminal history without losing the live tail."
+      copy="The terminal viewport now exposes a real display buffer with page up/down, wheel scrolling, and auto-follow. Scroll back, append more output, then return to the bottom when you are ready to follow the stream again."
+      footer={
+        <ul className="sb-retro-note-list">
+          <li>Focus the LCD, then use PageUp, PageDown, Home, End, or the mouse wheel.</li>
+          <li>Appending new output while scrolled back should keep the visible window anchored.</li>
+        </ul>
+      }
+    >
+      <div className="sb-retro-toolbar">
+        <button
+          className="sb-retro-button"
+          type="button"
+          data-display-buffer-action="append"
+          onClick={() => {
+            const nextLineNumber = lineNumber + 1;
+            controller.writeln(`line-${String(nextLineNumber).padStart(2, "0")}  live append`);
+            setLineNumber(nextLineNumber);
+          }}
+        >
+          Append live line
+        </button>
+      </div>
+      <Stage maxWidth={820}>
+        <RetroLcd mode="terminal" controller={controller} />
+      </Stage>
+    </StoryShell>
+  );
+}
+
 function ResponsivePanelStory() {
   const widths = [
     { label: "Compact", value: 420 },
@@ -1147,6 +1206,10 @@ export const DisplayColorModes: Story = {
 
 export const ControlCharacterReplay: Story = {
   render: () => <ControlCharacterReplayStory />
+};
+
+export const DisplayBuffer: Story = {
+  render: () => <DisplayBufferStory />
 };
 
 export const FeatureTour: Story = {

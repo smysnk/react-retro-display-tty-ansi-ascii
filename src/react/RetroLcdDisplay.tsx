@@ -1,4 +1,10 @@
-import type { CSSProperties, ReactNode, RefObject } from "react";
+import type {
+  CSSProperties,
+  KeyboardEventHandler,
+  ReactNode,
+  RefObject,
+  WheelEventHandler
+} from "react";
 import type { RetroLcdCell } from "../core/terminal/types";
 import type { RetroLcdDisplayColorMode, RetroLcdProps } from "../core/types";
 import {
@@ -27,7 +33,11 @@ type RetroLcdDisplayProps = {
   displayColorMode: RetroLcdDisplayColorMode;
   screenRef: RefObject<HTMLDivElement | null>;
   probeRef: RefObject<HTMLSpanElement | null>;
+  viewportRef?: RefObject<HTMLDivElement | null>;
   onViewportClick: () => void;
+  onViewportKeyDown?: KeyboardEventHandler<HTMLDivElement>;
+  onViewportWheel?: WheelEventHandler<HTMLDivElement>;
+  viewportTabIndex?: number;
   children?: ReactNode;
 };
 
@@ -37,12 +47,23 @@ export function RetroLcdDisplay({
   displayColorMode,
   screenRef,
   probeRef,
+  viewportRef,
   onViewportClick,
+  onViewportKeyDown,
+  onViewportWheel,
+  viewportTabIndex,
   children
 }: RetroLcdDisplayProps) {
   return (
     <div className="retro-lcd__screen">
-      <div className="retro-lcd__viewport" onClick={onViewportClick}>
+      <div
+        ref={viewportRef}
+        className="retro-lcd__viewport"
+        onClick={onViewportClick}
+        onKeyDown={onViewportKeyDown}
+        onWheel={onViewportWheel}
+        tabIndex={viewportTabIndex}
+      >
         <div
           ref={screenRef}
           className={joinClassNames(

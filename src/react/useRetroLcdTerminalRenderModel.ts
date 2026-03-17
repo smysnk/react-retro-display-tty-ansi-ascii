@@ -5,11 +5,7 @@ import type {
   RetroLcdGeometry,
   RetroLcdTerminalModeProps
 } from "../core/types";
-import {
-  buildTerminalSnapshot,
-  snapshotToRenderModel,
-  type RetroLcdRenderModel
-} from "./retro-lcd-render-model";
+import { buildTerminalSnapshot } from "./retro-lcd-render-model";
 import type { RetroLcdScreenSnapshot } from "../core/terminal/types";
 
 type UseRetroLcdTerminalRenderModelArgs = {
@@ -27,7 +23,7 @@ export const useRetroLcdTerminalRenderModel = ({
   requestedCursorMode,
   internalController
 }: UseRetroLcdTerminalRenderModelArgs): {
-  renderModel: RetroLcdRenderModel;
+  snapshot: RetroLcdScreenSnapshot;
   terminalController: RetroLcdController | null;
 } => {
   const terminalController =
@@ -37,7 +33,8 @@ export const useRetroLcdTerminalRenderModel = ({
       text: terminalProps?.value ?? terminalProps?.initialBuffer ?? "",
       rows: geometry.rows,
       cols: geometry.cols,
-      cursorMode
+      cursorMode,
+      scrollback: terminalProps?.bufferSize
     })
   );
 
@@ -87,13 +84,15 @@ export const useRetroLcdTerminalRenderModel = ({
         text: terminalProps?.value ?? terminalProps?.initialBuffer ?? "",
         rows: geometry.rows,
         cols: geometry.cols,
-        cursorMode
+        cursorMode,
+        scrollback: terminalProps?.bufferSize
       })
     );
   }, [
     cursorMode,
     geometry.cols,
     geometry.rows,
+    terminalProps?.bufferSize,
     terminalController,
     terminalProps?.initialBuffer,
     terminalProps?.value
@@ -101,7 +100,7 @@ export const useRetroLcdTerminalRenderModel = ({
 
   return useMemo(
     () => ({
-      renderModel: snapshotToRenderModel(snapshot),
+      snapshot,
       terminalController
     }),
     [snapshot, terminalController]

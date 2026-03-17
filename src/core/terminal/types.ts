@@ -58,6 +58,7 @@ export type RetroLcdScreenSnapshot = {
   rawLines: string[];
   cells: RetroLcdCell[][];
   scrollback: string[];
+  scrollbackCells: RetroLcdCell[][];
   cursor: RetroLcdCursorState;
   pendingWrap: boolean;
   modes: RetroLcdTerminalModes;

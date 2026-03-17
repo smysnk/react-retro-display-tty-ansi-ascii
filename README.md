@@ -155,6 +155,51 @@ Use `mode="prompt"` when the interface should feel like a guided shell.
 />
 ```
 
+## Display Buffer And Follow Mode
+
+Terminal and prompt surfaces now expose a real display buffer instead of only showing the live
+viewport. That means you can scroll back through recent output, inspect older lines, then return
+to the live tail when you are ready to follow the stream again.
+
+Built-in behavior:
+
+- `PageUp` and `PageDown` move through the display buffer
+- mouse wheel scrolling moves through the same history
+- `End` returns terminal mode to the live tail
+- auto-follow starts enabled, turns off when you scroll back, and turns back on when you return to the bottom
+
+Use `bufferSize` to control how many rows of history the component-managed terminal or prompt
+surface keeps, and `defaultAutoFollow` if you want the view to start detached from the tail.
+
+```tsx
+<RetroLcd
+  mode="terminal"
+  bufferSize={400}
+  defaultAutoFollow
+  value={[
+    "line-01  warm boot",
+    "line-02  telemetry stable",
+    "line-03  waiting for operator"
+  ].join("\n")}
+/>
+```
+
+If you are driving the component with your own controller, configure the underlying buffer size on
+the controller itself:
+
+```tsx
+const controller = createRetroLcdController({
+  rows: 9,
+  cols: 46,
+  scrollback: 400
+});
+
+<RetroLcd mode="terminal" controller={controller} />
+```
+
+The browser suite now covers this path directly, including paging, wheel scrolling, anchored
+scrollback while new lines arrive, and auto-follow recovery back to the live tail.
+
 ## Terminal Color Modes
 
 Use `displayColorMode` to decide how semantic terminal color should be projected onto the screen.
@@ -246,6 +291,7 @@ It includes stories for the main user journeys:
 - read-only display
 - editable drafting
 - controller-fed terminal output
+- display buffer paging and follow mode
 - ANSI styling
 - display color mode projection
 - control-character replay fixtures

@@ -54,7 +54,7 @@ export class RetroLcdScreenBuffer {
   readonly scrollbackLimit: number;
   readonly tabWidth: number;
   private readonly grid: RetroLcdCell[][];
-  private readonly scrollbackLines: string[] = [];
+  private readonly scrollbackCells: RetroLcdCell[][] = [];
   private readonly parser: RetroLcdAnsiParser;
   private cursorState: RetroLcdCursorState;
   private savedCursorState = defaultSavedCursor();
@@ -97,7 +97,7 @@ export class RetroLcdScreenBuffer {
 
   reset() {
     this.clear();
-    this.scrollbackLines.length = 0;
+    this.scrollbackCells.length = 0;
     this.currentStyle = cloneStyle(DEFAULT_CELL_STYLE);
     this.savedCursorState = defaultSavedCursor();
     this.terminalModes = { ...DEFAULT_TERMINAL_MODES };
@@ -148,6 +148,7 @@ export class RetroLcdScreenBuffer {
   getSnapshot(): RetroLcdScreenSnapshot {
     const cells = cloneGrid(this.grid);
     const rawLines = cells.map((line) => line.map((cell) => cell.char).join(""));
+    const scrollbackCells = cloneGrid(this.scrollbackCells);
 
     return {
       rows: this.rows,
@@ -155,7 +156,8 @@ export class RetroLcdScreenBuffer {
       rawLines,
       cells,
       lines: rawLines.map((line) => line.replace(/\s+$/u, "")),
-      scrollback: [...this.scrollbackLines],
+      scrollback: scrollbackCells.map((line) => trimLine(line)),
+      scrollbackCells,
       cursor: this.getCursor(),
       pendingWrap: this.pendingWrap,
       modes: { ...this.terminalModes }
@@ -450,7 +452,7 @@ export class RetroLcdScreenBuffer {
         return;
       case 3:
         this.eraseInDisplay(2);
-        this.scrollbackLines.length = 0;
+        this.scrollbackCells.length = 0;
         return;
       default:
         for (let col = this.cursorState.col; col < this.cols; col += 1) {
@@ -632,10 +634,10 @@ export class RetroLcdScreenBuffer {
       const shifted = this.grid[top];
 
       if (options?.captureScrollback) {
-        this.scrollbackLines.push(trimLine(shifted));
+        this.scrollbackCells.push(shifted.map((cell) => cloneCell(cell)));
 
-        if (this.scrollbackLines.length > this.scrollbackLimit) {
-          this.scrollbackLines.splice(0, this.scrollbackLines.length - this.scrollbackLimit);
+        if (this.scrollbackCells.length > this.scrollbackLimit) {
+          this.scrollbackCells.splice(0, this.scrollbackCells.length - this.scrollbackLimit);
         }
       }
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { createRetroLcdController } from "../core/terminal/controller";
 import type { RetroLcdController } from "../core/types";
 import type { RetroLcdScreenBufferOptions } from "../core/terminal/types";
@@ -6,21 +6,24 @@ import type { RetroLcdScreenBufferOptions } from "../core/terminal/types";
 export const useRetroLcdController = (
   options: Partial<RetroLcdScreenBufferOptions> = {}
 ): RetroLcdController => {
-  const controllerRef = useRef<RetroLcdController | null>(null);
-
-  if (!controllerRef.current) {
-    controllerRef.current = createRetroLcdController(options);
-  }
+  const controller = useMemo(
+    () =>
+      createRetroLcdController({
+        scrollback: options.scrollback,
+        tabWidth: options.tabWidth
+      }),
+    [options.scrollback, options.tabWidth]
+  );
 
   useEffect(() => {
-    controllerRef.current?.resize(options.rows ?? 9, options.cols ?? 46);
-  }, [options.cols, options.rows]);
+    controller.resize(options.rows ?? 9, options.cols ?? 46);
+  }, [controller, options.cols, options.rows]);
 
   useEffect(() => {
     if (options.cursorMode) {
-      controllerRef.current?.setCursorMode(options.cursorMode);
+      controller.setCursorMode(options.cursorMode);
     }
-  }, [options.cursorMode]);
+  }, [controller, options.cursorMode]);
 
-  return controllerRef.current;
+  return controller;
 };

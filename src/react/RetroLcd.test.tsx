@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { useState } from "react";
@@ -8,6 +8,11 @@ import { wrapTextToColumns } from "../core/geometry/wrap";
 
 const getBodyText = (container: HTMLElement) =>
   container.querySelector(".retro-lcd__body")?.textContent?.replace(/\u00a0/gu, " ") ?? "";
+
+const getVisibleLines = (container: HTMLElement) =>
+  Array.from(container.querySelectorAll(".retro-lcd__line")).map((line) =>
+    (line.textContent ?? "").replace(/\u00a0/gu, " ")
+  );
 
 describe("RetroLcd", () => {
   it("renders value mode text", () => {
@@ -318,5 +323,99 @@ describe("RetroLcd", () => {
 
     expect(cursor!.style.getPropertyValue("--retro-lcd-cursor-row")).toBe(String(expectedRow));
     expect(cursor!.style.getPropertyValue("--retro-lcd-cursor-col")).toBe(String(expectedCol));
+  });
+
+  it("pages through terminal scrollback and restores auto-follow at the bottom", () => {
+    const controller = createRetroLcdController({ rows: 3, cols: 12, scrollback: 12 });
+    const { container } = render(<RetroLcd mode="terminal" controller={controller} />);
+
+    act(() => {
+      controller.write(
+        Array.from({ length: 12 }, (_, index) => `line-${index + 1}`).join("\r\n")
+      );
+    });
+
+    const root = container.querySelector(".retro-lcd") as HTMLElement | null;
+    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLElement | null;
+    expect(root).not.toBeNull();
+    expect(viewport).not.toBeNull();
+
+    const initialLines = getVisibleLines(container);
+    expect(Number(root?.getAttribute("data-buffer-max-offset") ?? "0")).toBeGreaterThan(0);
+    expect(initialLines.join("")).toContain("line-12");
+
+    act(() => {
+      viewport!.focus();
+      fireEvent.keyDown(viewport!, { key: "PageUp" });
+    });
+
+    const pagedLines = getVisibleLines(container);
+    expect(Number(root?.getAttribute("data-buffer-offset") ?? "0")).toBeGreaterThan(0);
+    expect(root).toHaveAttribute("data-auto-follow", "false");
+    expect(pagedLines).not.toEqual(initialLines);
+
+    act(() => {
+      fireEvent.keyDown(viewport!, { key: "PageDown" });
+    });
+
+    expect(root).toHaveAttribute("data-buffer-offset", "0");
+    expect(root).toHaveAttribute("data-auto-follow", "true");
+    expect(getVisibleLines(container)).toEqual(initialLines);
+  });
+
+  it("supports mouse-wheel scrolling and keeps the viewport anchored while auto-follow is off", () => {
+    const controller = createRetroLcdController({ rows: 2, cols: 12, scrollback: 12 });
+    const { container } = render(<RetroLcd mode="terminal" controller={controller} />);
+
+    act(() => {
+      controller.write(
+        Array.from({ length: 12 }, (_, index) => `line-${index + 1}`).join("\r\n")
+      );
+    });
+
+    const root = container.querySelector(".retro-lcd") as HTMLElement | null;
+    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLElement | null;
+    expect(root).not.toBeNull();
+    expect(viewport).not.toBeNull();
+
+    act(() => {
+      fireEvent.wheel(viewport!, { deltaY: -240 });
+    });
+
+    const scrolledLines = getVisibleLines(container);
+    const offsetWhileScrolled = Number(root?.getAttribute("data-buffer-offset") ?? "0");
+    expect(offsetWhileScrolled).toBeGreaterThan(0);
+    expect(root).toHaveAttribute("data-auto-follow", "false");
+
+    act(() => {
+      controller.write("\r\nline-13");
+    });
+
+    expect(Number(root?.getAttribute("data-buffer-offset") ?? "0")).toBeGreaterThan(
+      offsetWhileScrolled
+    );
+    expect(getVisibleLines(container)).toEqual(scrolledLines);
+
+    act(() => {
+      fireEvent.wheel(viewport!, { deltaY: 1200 });
+    });
+
+    expect(root).toHaveAttribute("data-buffer-offset", "0");
+    expect(root).toHaveAttribute("data-auto-follow", "true");
+    expect(getVisibleLines(container).join("")).toContain("line-13");
+  });
+
+  it("limits internal terminal scrollback when bufferSize is configured", () => {
+    const { container } = render(
+      <RetroLcd
+        mode="terminal"
+        bufferSize={2}
+        value={Array.from({ length: 12 }, (_, index) => `line-${index + 1}`).join("\r\n")}
+      />
+    );
+
+    const root = container.querySelector(".retro-lcd") as HTMLElement | null;
+    expect(root).not.toBeNull();
+    expect(root).toHaveAttribute("data-buffer-max-offset", "2");
   });
 });

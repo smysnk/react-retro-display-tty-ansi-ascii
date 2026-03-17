@@ -62,6 +62,10 @@
   padding: 28px 32px;
 }
 
+.retro-lcd__viewport:focus {
+  outline: none;
+}
+
 .retro-lcd__grid {
   --retro-lcd-cursor-height: 1em;
   --retro-lcd-cursor-y-offset: max(

@@ -5,7 +5,8 @@ import {
   useState,
   type CSSProperties,
   type FormEvent,
-  type KeyboardEvent
+  type KeyboardEvent,
+  type WheelEvent
 } from "react";
 import type { RetroLcdScreenSnapshot } from "../core/terminal/types";
 import type {
@@ -17,12 +18,12 @@ import { RetroLcdDisplay } from "./RetroLcdDisplay";
 import { RetroLcdInputOverlay } from "./RetroLcdInputOverlay";
 import { getDisplayModeRootVars } from "./retro-lcd-display-color";
 import { useRetroLcdController } from "./useRetroLcdController";
+import { useRetroLcdBufferViewport } from "./useRetroLcdBufferViewport";
 import { useRetroLcdGeometry } from "./useRetroLcdGeometry";
 import { useRetroLcdPromptSession } from "./useRetroLcdPromptSession";
 import {
   buildTextRenderModel,
   getValueDisplayText,
-  snapshotToRenderModel,
   type RetroLcdRenderModel
 } from "./retro-lcd-render-model";
 import { useRetroLcdTerminalRenderModel } from "./useRetroLcdTerminalRenderModel";
@@ -44,14 +45,18 @@ export function RetroLcd(props: RetroLcdProps) {
   const terminalProps = props.mode === "terminal" ? props : null;
   const promptProps = props.mode === "prompt" ? props : null;
   const screenRef = useRef<HTMLDivElement | null>(null);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
   const probeRef = useRef<HTMLSpanElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const previousEditableValueRef = useRef(valueProps?.value ?? "");
-  const internalTerminalController = useRetroLcdController();
+  const internalTerminalController = useRetroLcdController({
+    scrollback: terminalProps?.bufferSize
+  });
   const promptSession = useRetroLcdPromptSession({
     rows: DEFAULT_ROWS,
     cols: DEFAULT_COLS,
     cursorMode,
+    scrollback: promptProps?.bufferSize,
     promptChar: promptProps?.promptChar,
     acceptanceText: promptProps?.acceptanceText,
     rejectionText: promptProps?.rejectionText,
@@ -68,12 +73,17 @@ export function RetroLcd(props: RetroLcdProps) {
     probeRef,
     onGeometryChange: props.onGeometryChange
   });
-  const { renderModel: terminalRenderModel } = useRetroLcdTerminalRenderModel({
+  const { snapshot: terminalSnapshot } = useRetroLcdTerminalRenderModel({
     terminalProps,
     geometry,
     cursorMode,
     requestedCursorMode,
     internalController: internalTerminalController
+  });
+  const bufferViewport = useRetroLcdBufferViewport({
+    snapshot: props.mode === "terminal" ? terminalSnapshot : promptSnapshot,
+    enabled: props.mode === "terminal" || props.mode === "prompt",
+    defaultAutoFollow: terminalProps?.defaultAutoFollow ?? promptProps?.defaultAutoFollow ?? true
   });
 
   useEffect(() => {
@@ -138,11 +148,11 @@ export function RetroLcd(props: RetroLcdProps) {
 
   const renderModel = useMemo<RetroLcdRenderModel>(() => {
     if (props.mode === "terminal") {
-      return terminalRenderModel;
+      return bufferViewport.renderModel;
     }
 
     if (promptProps) {
-      return snapshotToRenderModel(promptSnapshot);
+      return bufferViewport.renderModel;
     }
 
     const nextValueProps = valueProps as RetroLcdValueModeProps;
@@ -157,12 +167,12 @@ export function RetroLcd(props: RetroLcdProps) {
     });
   }, [
     cursorMode,
+    bufferViewport.renderModel,
     focused,
     geometry,
-    promptSnapshot,
     props.mode,
     selectionStart,
-    terminalRenderModel
+    valueProps
   ]);
 
   const syncSelection = () => {
@@ -182,7 +192,24 @@ export function RetroLcd(props: RetroLcdProps) {
   };
 
   const focusInput = () => {
+    if (props.mode === "terminal") {
+      viewportRef.current?.focus();
+      return;
+    }
+
     inputRef.current?.focus();
+  };
+
+  const handleBufferNavigationKey = (key: string) => {
+    if (props.mode !== "terminal" && props.mode !== "prompt") {
+      return false;
+    }
+
+    if (props.mode === "prompt" && (key === "Home" || key === "End")) {
+      return false;
+    }
+
+    return bufferViewport.handleNavigationKey(key);
   };
 
   const handleValueSubmit = () => {
@@ -200,6 +227,11 @@ export function RetroLcd(props: RetroLcdProps) {
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (handleBufferNavigationKey(event.key)) {
+      event.preventDefault();
+      return;
+    }
+
     if (event.key !== "Enter") {
       return;
     }
@@ -240,6 +272,22 @@ export function RetroLcd(props: RetroLcdProps) {
     promptSession.setSelection(nextSelection);
   };
 
+  const handleViewportKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (props.mode !== "terminal") {
+      return;
+    }
+
+    if (handleBufferNavigationKey(event.key)) {
+      event.preventDefault();
+    }
+  };
+
+  const handleViewportWheel = (event: WheelEvent<HTMLDivElement>) => {
+    if ((props.mode === "terminal" || props.mode === "prompt") && bufferViewport.handleWheelDelta(event.deltaY)) {
+      event.preventDefault();
+    }
+  };
+
   const inlineStyle = {
     "--retro-lcd-rows": `${geometry.rows}`,
     "--retro-lcd-cols": `${geometry.cols}`,
@@ -258,6 +306,9 @@ export function RetroLcd(props: RetroLcdProps) {
       data-cols={geometry.cols}
       data-display-color-mode={displayColorMode}
       data-placeholder={renderModel.isDimmed ? "true" : "false"}
+      data-buffer-offset={bufferViewport.viewportState.scrollOffset}
+      data-buffer-max-offset={bufferViewport.viewportState.maxScrollOffset}
+      data-auto-follow={bufferViewport.viewportState.autoFollow ? "true" : "false"}
     >
       <div className="retro-lcd__bezel" aria-hidden="true" />
       <RetroLcdDisplay
@@ -266,7 +317,11 @@ export function RetroLcd(props: RetroLcdProps) {
         displayColorMode={displayColorMode}
         screenRef={screenRef}
         probeRef={probeRef}
+        viewportRef={viewportRef}
         onViewportClick={focusInput}
+        onViewportKeyDown={handleViewportKeyDown}
+        onViewportWheel={handleViewportWheel}
+        viewportTabIndex={props.mode === "terminal" ? 0 : undefined}
       >
         <RetroLcdInputOverlay
           inputRef={inputRef}

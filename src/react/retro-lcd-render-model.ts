@@ -90,17 +90,20 @@ export const buildTerminalSnapshot = ({
   text,
   rows,
   cols,
-  cursorMode
+  cursorMode,
+  scrollback
 }: {
   text: string;
   rows: number;
   cols: number;
   cursorMode: CursorMode;
+  scrollback?: number;
 }): RetroLcdScreenSnapshot => {
   const buffer = new RetroLcdScreenBuffer({
     rows,
     cols,
-    cursorMode
+    cursorMode,
+    scrollback
   });
 
   if (text) {
@@ -110,18 +113,49 @@ export const buildTerminalSnapshot = ({
   return buffer.getSnapshot();
 };
 
-export const snapshotToRenderModel = (snapshot: RetroLcdScreenSnapshot): RetroLcdRenderModel => ({
-  lines: normalizeLines(snapshot.rawLines, snapshot.rows),
-  cells: snapshot.cells,
-  cursor: snapshot.cursor.visible
-    ? {
-        row: snapshot.cursor.row,
-        col: snapshot.cursor.col,
-        mode: snapshot.cursor.mode
-      }
-    : null,
-  isDimmed: false
-});
+const trimRenderedLine = (line: RetroLcdCell[]) =>
+  line
+    .map((cell) => cell.char)
+    .join("")
+    .replace(/\s+$/u, "");
+
+export const getSnapshotMaxScrollOffset = (snapshot: RetroLcdScreenSnapshot) =>
+  Math.max(0, snapshot.scrollbackCells.length);
+
+export const clampSnapshotScrollOffset = (
+  snapshot: RetroLcdScreenSnapshot,
+  scrollOffset: number
+) => Math.max(0, Math.min(getSnapshotMaxScrollOffset(snapshot), Math.floor(scrollOffset) || 0));
+
+export const snapshotToRenderModel = (
+  snapshot: RetroLcdScreenSnapshot,
+  options: {
+    scrollOffset?: number;
+  } = {}
+): RetroLcdRenderModel => {
+  const scrollOffset = clampSnapshotScrollOffset(snapshot, options.scrollOffset ?? 0);
+  const bufferCells = [...snapshot.scrollbackCells, ...snapshot.cells];
+  const windowStart = Math.max(0, bufferCells.length - snapshot.rows - scrollOffset);
+  const viewportCells = bufferCells.slice(windowStart, windowStart + snapshot.rows);
+  const cursorAbsoluteRow = snapshot.scrollbackCells.length + snapshot.cursor.row;
+  const cursorVisible =
+    snapshot.cursor.visible &&
+    cursorAbsoluteRow >= windowStart &&
+    cursorAbsoluteRow < windowStart + snapshot.rows;
+
+  return {
+    lines: normalizeLines(viewportCells.map((line) => trimRenderedLine(line)), snapshot.rows),
+    cells: viewportCells,
+    cursor: cursorVisible
+      ? {
+          row: cursorAbsoluteRow - windowStart,
+          col: snapshot.cursor.col,
+          mode: snapshot.cursor.mode
+        }
+      : null,
+    isDimmed: false
+  };
+};
 
 export const getValueDisplayText = (props: RetroLcdValueModeProps, focused: boolean) => {
   if (props.value.length > 0) {

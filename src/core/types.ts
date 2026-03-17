@@ -57,6 +57,8 @@ export type RetroLcdTerminalModeProps = RetroLcdSharedProps & {
   value?: string;
   initialBuffer?: string;
   controller?: RetroLcdController;
+  bufferSize?: number;
+  defaultAutoFollow?: boolean;
 };
 
 export type RetroLcdPromptCommandResult =
@@ -75,6 +77,8 @@ export type RetroLcdPromptModeProps = RetroLcdSharedProps & {
   promptChar?: string;
   acceptanceText?: string;
   rejectionText?: string;
+  bufferSize?: number;
+  defaultAutoFollow?: boolean;
   onCommand?: (
     command: string
   ) => RetroLcdPromptCommandResult | Promise<RetroLcdPromptCommandResult>;

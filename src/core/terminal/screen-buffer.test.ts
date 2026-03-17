@@ -123,6 +123,23 @@ describe("RetroLcdScreenBuffer", () => {
     });
   });
 
+  it("retains styled scrollback cells for viewport paging", () => {
+    const buffer = new RetroLcdScreenBuffer({ rows: 1, cols: 8, scrollback: 4 });
+
+    buffer.write("\u001b[31mRED\u001b[0m\r\n\u001b[32mGREEN");
+
+    const snapshot = buffer.getSnapshot();
+    expect(snapshot.scrollback).toEqual(["RED"]);
+    expect(snapshot.scrollbackCells[0]?.[0]?.style.foreground).toMatchObject({
+      mode: "palette",
+      value: 1
+    });
+    expect(snapshot.cells[0]?.[0]?.style.foreground).toMatchObject({
+      mode: "palette",
+      value: 2
+    });
+  });
+
   it("supports explicit cursor movement and cursor state updates", () => {
     const buffer = new RetroLcdScreenBuffer({
       rows: 2,
