@@ -4,6 +4,8 @@
 
 # react-retro-display-tty-ansi
 
+[![npm version](https://img.shields.io/npm/v/react-retro-display-tty-ansi.svg)](https://www.npmjs.com/package/react-retro-display-tty-ansi)
+
 `react-retro-display-tty-ansi` is a React component for calm, terminal-flavored interfaces.
 It can be a read-only display, a controlled editable surface, a controller-driven terminal,
 or a small command prompt without changing visual language.

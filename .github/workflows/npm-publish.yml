@@ -6,13 +6,23 @@ on:
       - main
       - master
   workflow_dispatch:
+    inputs:
+      publish_npm:
+        description: "Publish the npm package after validation"
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: publish-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
   id-token: write
 
 jobs:
-  publish:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,6 +33,9 @@ jobs:
         with:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
+
+      - name: Upgrade npm
+        run: npm install --global npm@latest
 
       - name: Enable Corepack
         run: corepack enable
@@ -45,6 +58,38 @@ jobs:
       - name: Build Storybook
         run: yarn storybook:build
 
+      - name: Validate npm release package
+        shell: bash
+        run: bash ./scripts/release/release-npm-package.sh
+
+  npm-publish:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Upgrade npm
+        run: npm install --global npm@latest
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Activate project Yarn
+        run: corepack prepare "$(node -p 'require("./package.json").packageManager')" --activate
+
+      - name: Check Yarn version
+        run: yarn --version
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
       - name: Check whether this version is already published
         id: package_version
         shell: bash
@@ -63,8 +108,10 @@ jobs:
             echo "Package $package_name@$package_version is not on npm yet. Publishing after checks pass." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Publish package to npm
-        if: steps.package_version.outputs.should_publish == 'true'
+      - name: Publish npm package
+        if: steps.package_version.outputs.should_publish == 'true' && (github.event_name == 'push' || inputs.publish_npm)
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public --provenance
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_PUBLISH: "1"
+          NPM_PROVENANCE: "1"
+        run: bash ./scripts/release/release-npm-package.sh
