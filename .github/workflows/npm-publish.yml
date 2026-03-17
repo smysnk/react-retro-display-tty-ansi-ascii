@@ -126,6 +126,10 @@ jobs:
             echo "Package $package_name@$package_version is not on npm yet. Publishing after checks pass." >> "$GITHUB_STEP_SUMMARY"
           fi
 
+      - name: Build package for npm publish
+        if: steps.package_version.outputs.should_publish == 'true'
+        run: yarn build
+
       - name: Publish npm package
         if: steps.package_version.outputs.should_publish == 'true' && (github.event_name == 'push' || inputs.publish_npm)
         env:
