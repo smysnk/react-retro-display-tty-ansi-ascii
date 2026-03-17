@@ -38,6 +38,7 @@ const RAW_RUNTIME_STATE =
           ["@types/react-dom", "virtual:705930526be419c5d854344d1249377cdd03bf9165dd1a70a5bc1a38de4634c9cfcded6b0bbee8e1b7847f6de71833e024dc75791a9d2ef85ec88b556e4d0a61#npm:19.2.3"],\
           ["@vitejs/plugin-react", "virtual:705930526be419c5d854344d1249377cdd03bf9165dd1a70a5bc1a38de4634c9cfcded6b0bbee8e1b7847f6de71833e024dc75791a9d2ef85ec88b556e4d0a61#npm:5.2.0"],\
           ["@vitest/coverage-v8", "virtual:705930526be419c5d854344d1249377cdd03bf9165dd1a70a5bc1a38de4634c9cfcded6b0bbee8e1b7847f6de71833e024dc75791a9d2ef85ec88b556e4d0a61#npm:3.2.4"],\
+          ["@xterm/headless", "npm:6.0.0"],\
           ["jsdom", "virtual:705930526be419c5d854344d1249377cdd03bf9165dd1a70a5bc1a38de4634c9cfcded6b0bbee8e1b7847f6de71833e024dc75791a9d2ef85ec88b556e4d0a61#npm:26.1.0"],\
           ["playwright-core", "npm:1.58.2"],\
           ["react", "npm:19.2.4"],\
@@ -1861,6 +1862,15 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["@xterm/headless", [\
+      ["npm:6.0.0", {\
+        "packageLocation": "../../.yarn/berry/cache/@xterm-headless-npm-6.0.0-55cc6fe435-10c0.zip/node_modules/@xterm/headless/",\
+        "packageDependencies": [\
+          ["@xterm/headless", "npm:6.0.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["abbrev", [\
       ["npm:4.0.0", {\
         "packageLocation": "../../.yarn/berry/cache/abbrev-npm-4.0.0-7d848a1ef0-10c0.zip/node_modules/abbrev/",\
@@ -3672,6 +3682,7 @@ const RAW_RUNTIME_STATE =
           ["@types/react-dom", "virtual:705930526be419c5d854344d1249377cdd03bf9165dd1a70a5bc1a38de4634c9cfcded6b0bbee8e1b7847f6de71833e024dc75791a9d2ef85ec88b556e4d0a61#npm:19.2.3"],\
           ["@vitejs/plugin-react", "virtual:705930526be419c5d854344d1249377cdd03bf9165dd1a70a5bc1a38de4634c9cfcded6b0bbee8e1b7847f6de71833e024dc75791a9d2ef85ec88b556e4d0a61#npm:5.2.0"],\
           ["@vitest/coverage-v8", "virtual:705930526be419c5d854344d1249377cdd03bf9165dd1a70a5bc1a38de4634c9cfcded6b0bbee8e1b7847f6de71833e024dc75791a9d2ef85ec88b556e4d0a61#npm:3.2.4"],\
+          ["@xterm/headless", "npm:6.0.0"],\
           ["jsdom", "virtual:705930526be419c5d854344d1249377cdd03bf9165dd1a70a5bc1a38de4634c9cfcded6b0bbee8e1b7847f6de71833e024dc75791a9d2ef85ec88b556e4d0a61#npm:26.1.0"],\
           ["playwright-core", "npm:1.58.2"],\
           ["react", "npm:19.2.4"],\

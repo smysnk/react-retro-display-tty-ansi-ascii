@@ -35,6 +35,32 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Run terminal conformance regression suite
+        run: yarn test:conformance
+
+      - name: Detect browser executable
+        id: browser
+        shell: bash
+        run: |
+          for candidate in \
+            /usr/bin/google-chrome \
+            /usr/bin/google-chrome-stable \
+            /usr/bin/chromium \
+            /usr/bin/chromium-browser
+          do
+            if [ -x "$candidate" ]; then
+              echo "path=$candidate" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+          echo "No Chrome or Chromium executable found on the runner." >&2
+          exit 1
+
+      - name: Run browser smoke suite
+        env:
+          CHROME_PATH: ${{ steps.browser.outputs.path }}
+        run: yarn test:e2e
+
       - name: Capture test-station start time
         run: echo "TEST_STATION_BUILD_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
 

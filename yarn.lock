@@ -1245,6 +1245,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@xterm/headless@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "@xterm/headless@npm:6.0.0"
+  checksum: 10c0/9fa915767d89f52e5c066e2b8160f56701a95382205b03665247b381bb319ed5702626227a933cbb36c4df01c619bc0cc38c96ce9635dc141e88a9742d6ed669
+  languageName: node
+  linkType: hard
+
 "abbrev@npm:^4.0.0":
   version: 4.0.0
   resolution: "abbrev@npm:4.0.0"
@@ -2836,6 +2843,7 @@ __metadata:
     "@types/react-dom": "npm:^19.1.9"
     "@vitejs/plugin-react": "npm:^5.0.2"
     "@vitest/coverage-v8": "npm:^3.2.4"
+    "@xterm/headless": "npm:^6.0.0"
     jsdom: "npm:^26.1.0"
     playwright-core: "npm:^1.55.0"
     react: "npm:^19.2.0"

@@ -66,6 +66,39 @@ describe("RetroLcd", () => {
     expect(container.querySelector(".retro-lcd__cell--blink")).not.toBeNull();
   });
 
+  it("projects ANSI semantic colors through the ansi-classic display mode", () => {
+    const controller = createRetroLcdController({ rows: 2, cols: 8 });
+    const { container } = render(
+      <RetroLcd mode="terminal" controller={controller} displayColorMode="ansi-classic" />
+    );
+
+    act(() => {
+      controller.write("\u001b[31;44mA");
+    });
+
+    const cell = container.querySelector(".retro-lcd__cell") as HTMLElement | null;
+    expect(cell).not.toBeNull();
+    expect(window.getComputedStyle(cell!).color).not.toBe("rgb(151, 255, 155)");
+    expect(window.getComputedStyle(cell!).backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+  });
+
+  it("projects indexed and truecolor cells through the ansi-extended display mode", () => {
+    const controller = createRetroLcdController({ rows: 2, cols: 8 });
+    const { container } = render(
+      <RetroLcd mode="terminal" controller={controller} displayColorMode="ansi-extended" />
+    );
+
+    act(() => {
+      controller.write("\u001b[38;5;196;48;5;25mA\u001b[38;2;17;34;51;48;2;68;85;102mB");
+    });
+
+    const cells = Array.from(container.querySelectorAll(".retro-lcd__cell")) as HTMLElement[];
+    expect(cells.length).toBeGreaterThanOrEqual(2);
+    expect(window.getComputedStyle(cells[0]!).color).toBe("rgb(255, 0, 0)");
+    expect(window.getComputedStyle(cells[1]!).color).toBe("rgb(17, 34, 51)");
+    expect(window.getComputedStyle(cells[1]!).backgroundColor).toBe("rgb(68, 85, 102)");
+  });
+
   it("renders prompt mode with the default prompt character", () => {
     const { container } = render(<RetroLcd mode="prompt" value="status" />);
 
@@ -138,6 +171,14 @@ describe("RetroLcd", () => {
         cols: expect.any(Number)
       })
     );
+  });
+
+  it("switches the base palette when a phosphor display color mode is selected", () => {
+    const { container } = render(<RetroLcd mode="value" value="grid" displayColorMode="phosphor-amber" />);
+
+    const root = container.querySelector(".retro-lcd");
+    expect(root?.style.getPropertyValue("--retro-lcd-color")).toBe("#ffc96b");
+    expect(root).toHaveAttribute("data-display-color-mode", "phosphor-amber");
   });
 
   it("shows a solid cursor for focused editable value mode", () => {

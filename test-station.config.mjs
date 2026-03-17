@@ -10,7 +10,7 @@ export default {
   },
   workspaceDiscovery: {
     provider: "manual",
-    packages: ["library", "docs", "quality"]
+    packages: ["library", "terminal", "docs", "quality"]
   },
   execution: {
     continueOnError: true,
@@ -53,6 +53,19 @@ export default {
       coverage: {
         enabled: true,
         mode: "second-pass"
+      }
+    },
+    {
+      id: "terminal-conformance",
+      label: "Terminal Conformance",
+      adapter: "shell",
+      package: "terminal",
+      cwd: rootDir,
+      command: ["yarn", "test:conformance"],
+      module: "runtime",
+      theme: "terminal",
+      coverage: {
+        enabled: false
       }
     },
     {

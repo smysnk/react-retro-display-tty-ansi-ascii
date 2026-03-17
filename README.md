@@ -1,4 +1,4 @@
-<video src="https://github.com/user-attachments/assets/23fb32a3-0ad7-4abf-abfb-5e1eb6858f1c" autoplay controls loop muted playsinline title="Feature Tour Demo">
+<video src="https://github.com/user-attachments/assets/2be69856-c4d4-4f8e-8155-191f3836b96a" autoplay controls loop muted playsinline title="Feature Tour Demo">
   Your browser does not support the video tag.
 </video>
 
@@ -9,7 +9,9 @@
 
 `react-retro-display-tty-ansi` is a React component for calm, terminal-flavored interfaces.
 It can be a read-only display, a controlled editable surface, a controller-driven terminal,
-or a small command prompt without changing visual language.
+or a small command prompt without changing visual language. It also understands ANSI styling,
+semantic display color modes, and an xterm-checked terminal behavior surface for real control
+character playback.
 
 Latest test report: [test-station.smysnk.com/projects/react-retro-display-tty-ansi](https://test-station.smysnk.com/projects/react-retro-display-tty-ansi)
 
@@ -46,7 +48,7 @@ wrapping, cursor rendering, and terminal feel.
 
 Use `mode="value"` when the display is just there to speak.
 
-<video src="https://github.com/user-attachments/assets/b9de7508-09d2-4e7c-b109-c789a1eb42d8" autoplay controls loop muted playsinline title="Quiet Output Demo">
+<video src="https://github.com/user-attachments/assets/4942d6d1-b68f-45aa-af69-d15e8a262fcb" autoplay controls loop muted playsinline title="Quiet Output Demo">
   Your browser does not support the video tag.
 </video>
 
@@ -61,7 +63,7 @@ Use `mode="value"` when the display is just there to speak.
 
 Turn on `editable` when you want the same surface to behave like a controlled input.
 
-<video src="https://github.com/user-attachments/assets/6fba4e01-3ad2-4167-9c0b-60f23b48e022" autoplay controls loop muted playsinline title="Editable Drafting Demo">
+<video src="https://github.com/user-attachments/assets/78600036-e1f7-4898-a7db-05c2255729ae" autoplay controls loop muted playsinline title="Editable Drafting Demo">
   Your browser does not support the video tag.
 </video>
 
@@ -91,7 +93,7 @@ export function DraftPad() {
 
 Use a controller when the display should follow external writes over time.
 
-<video src="https://github.com/user-attachments/assets/2eb03e39-c108-4dd1-ad09-f81b8d749e29" autoplay controls loop muted playsinline title="Terminal Output Demo">
+<video src="https://github.com/user-attachments/assets/a7d6ebbf-8f6f-4239-b8f7-9ca0523fff28" autoplay controls loop muted playsinline title="Terminal Output Demo">
   Your browser does not support the video tag.
 </video>
 
@@ -126,7 +128,7 @@ or `initialBuffer`.
 
 Use `mode="prompt"` when the interface should feel like a guided shell.
 
-<video src="https://github.com/user-attachments/assets/d11a9267-1fb2-4675-aa07-1c8ad052b089" autoplay controls loop muted playsinline title="Prompt Interaction Demo">
+<video src="https://github.com/user-attachments/assets/f8f40e8b-d658-4808-a12b-9dfd15ef215d" autoplay controls loop muted playsinline title="Prompt Interaction Demo">
   Your browser does not support the video tag.
 </video>
 
@@ -153,6 +155,79 @@ Use `mode="prompt"` when the interface should feel like a guided shell.
 />
 ```
 
+## Terminal Color Modes
+
+Use `displayColorMode` to decide how semantic terminal color should be projected onto the screen.
+The phosphor modes keep the retro LCD personality even when the source emits ANSI color. The ANSI
+modes preserve more of the source terminal palette.
+
+<video src="https://github.com/user-attachments/assets/7ce144e3-672c-490b-9eeb-230c22f847fc" autoplay controls loop muted playsinline title="Display Color Modes Demo">
+  Your browser does not support the video tag.
+</video>
+
+Available modes:
+
+- `phosphor-green`
+- `phosphor-amber`
+- `phosphor-ice`
+- `ansi-classic`
+- `ansi-extended`
+
+```tsx
+<RetroLcd
+  mode="terminal"
+  displayColorMode="ansi-extended"
+  value={[
+    "\u001b[31mALERT\u001b[0m \u001b[32mlink stable\u001b[0m",
+    "\u001b[38;5;196mindexed 196\u001b[0m from the 256-color palette",
+    "\u001b[38;2;255;180;120mtruecolor 255,180,120\u001b[0m"
+  ].join("\n")}
+/>
+```
+
+Reach for `ansi-classic` when you want the familiar 16-color terminal profile, or
+`ansi-extended` when 256-color and truecolor cells should survive all the way to the display.
+
+## Control-Character Playback
+
+The terminal path is now tested against an xterm oracle and can faithfully replay real control
+character effects like carriage return rewrites, erase-in-line, scroll regions, insert-line
+updates, ANSI 16-color, indexed 256-color, and truecolor output.
+
+<video src="https://github.com/user-attachments/assets/77e6ffed-d352-487c-92e7-9f72befdebb8" autoplay controls loop muted playsinline title="Control Character Replay Demo">
+  Your browser does not support the video tag.
+</video>
+
+```tsx
+import {
+  RetroLcd,
+  createRetroLcdController
+} from "react-retro-display-tty-ansi";
+
+const controller = createRetroLcdController({ rows: 6, cols: 34 });
+
+controller.write("Downloading fixtures... 12%");
+controller.write("\rDownloading fixtures... 73%");
+controller.write("\r\u001b[32mDownloaded fixtures.\u001b[0m\u001b[K\r\n");
+controller.write("\u001b[2;6r");
+controller.write(
+  "\u001b[6;1H\u001b[L\u001b[38;2;255;180;120mrecorded regression fixture\u001b[0m"
+);
+
+<RetroLcd
+  mode="terminal"
+  controller={controller}
+  displayColorMode="ansi-extended"
+/>
+```
+
+The same trace fixtures used in Storybook are also exercised in the terminal verification layers:
+
+```bash
+yarn test:conformance
+yarn test:e2e
+```
+
 ## Ease Of Integration
 
 The component is intentionally small at the edge:
@@ -172,6 +247,8 @@ It includes stories for the main user journeys:
 - editable drafting
 - controller-fed terminal output
 - ANSI styling
+- display color mode projection
+- control-character replay fixtures
 - prompt interaction
 - responsive geometry
 - a capture-ready feature tour

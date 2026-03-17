@@ -1,9 +1,9 @@
 import { readFile, stat, writeFile } from "node:fs/promises";
 import { basename, resolve } from "node:path";
+import { getGitHubCookieFromBrowser } from "./github-cookie-browser.mjs";
 
 const rootDir = resolve(new URL("..", import.meta.url).pathname);
 const repositoryId = process.env.GITHUB_REPOSITORY_ID ?? "1183359000";
-const githubCookie = process.env.GITHUB_COOKIE;
 
 const readmeFile = resolve(rootDir, "README.md");
 
@@ -27,6 +27,17 @@ const videoEntries = [
   {
     title: "Prompt Interaction Demo",
     file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-prompt-loop.mp4")
+  },
+  {
+    title: "Display Color Modes Demo",
+    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-display-color-modes.mp4")
+  },
+  {
+    title: "Control Character Replay Demo",
+    file: resolve(
+      rootDir,
+      "docs/assets/react-retro-display-tty-ansi-control-character-replay.mp4"
+    )
   }
 ];
 
@@ -43,7 +54,7 @@ const filterHeaders = (headers) =>
 const buildVideoTag = (src, title) =>
   `<video src="${src}" autoplay controls loop muted playsinline title="${title}">\n  Your browser does not support the video tag.\n</video>`;
 
-const uploadVideo = async (filePath) => {
+const uploadVideo = async (filePath, githubCookie) => {
   const fileName = basename(filePath);
   const fileBuffer = await readFile(filePath);
   const fileInfo = await stat(filePath);
@@ -156,10 +167,19 @@ const updateReadme = async (uploads) => {
 
 const printUsage = () => {
   console.log(`Usage:
-  GITHUB_COOKIE='cookie string from github.com while signed in' node ./scripts/upload-readme-videos.mjs
+  GITHUB_COOKIE='cookie string from github.com while signed in' yarn readme:videos
+  yarn readme:videos
+  yarn readme:videos --browser-cookie
 
 This uploads the README demo MP4 files to GitHub user-attachments and rewrites README.md
-to use the uploaded video URLs.`);
+to use the uploaded video URLs.
+
+If GITHUB_COOKIE is not provided, the script can open a browser window, reuse a persistent
+GitHub session if one exists, or wait for you to log in before continuing.
+
+Optional environment variables:
+  GITHUB_COOKIE_USER_DATA_DIR   Override the persistent browser profile path
+  GITHUB_COOKIE_WAIT_TIMEOUT_MS Override the login wait timeout in milliseconds`);
 };
 
 const main = async () => {
@@ -168,16 +188,16 @@ const main = async () => {
     return;
   }
 
-  if (!githubCookie) {
-    throw new Error(
-      "Missing GITHUB_COOKIE. Sign in to github.com in your browser, copy the Cookie request header, and run the script again."
-    );
-  }
+  const preferBrowserCookie = process.argv.includes("--browser-cookie");
+  const githubCookie =
+    !preferBrowserCookie && process.env.GITHUB_COOKIE
+      ? process.env.GITHUB_COOKIE
+      : await getGitHubCookieFromBrowser({ log: console.log });
 
   const uploads = [];
 
   for (const entry of videoEntries) {
-    const href = await uploadVideo(entry.file);
+    const href = await uploadVideo(entry.file, githubCookie);
 
     if (!href) {
       throw new Error(`GitHub did not return an attachment URL for ${basename(entry.file)}.`);

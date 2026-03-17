@@ -3,6 +3,13 @@ import type { RetroLcdScreenSnapshot, RetroLcdWriteOptions } from "./terminal/ty
 
 export type CursorMode = "solid" | "hollow";
 
+export type RetroLcdDisplayColorMode =
+  | "phosphor-green"
+  | "phosphor-amber"
+  | "phosphor-ice"
+  | "ansi-classic"
+  | "ansi-extended";
+
 export type RetroLcdGeometry = {
   rows: number;
   cols: number;
@@ -14,6 +21,7 @@ export type RetroLcdGeometry = {
 
 export type RetroLcdSharedProps = {
   color?: string;
+  displayColorMode?: RetroLcdDisplayColorMode;
   cursorMode?: CursorMode;
   className?: string;
   style?: CSSProperties;

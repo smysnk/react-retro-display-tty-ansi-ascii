@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { progressRewriteTraceFixture } from "../core/terminal/conformance/fixtures/real-world/progress-rewrite.trace.fixture";
+import { shellSessionTraceFixture } from "../core/terminal/conformance/fixtures/real-world/shell-session.trace.fixture";
+import { statusPaneTraceFixture } from "../core/terminal/conformance/fixtures/real-world/status-pane.trace.fixture";
 import { createRetroLcdController } from "../core/terminal/controller";
-import type { RetroLcdGeometry } from "../core/types";
+import type { RetroLcdDisplayColorMode, RetroLcdGeometry } from "../core/types";
 import { RetroLcd } from "../react/RetroLcd";
 
 const STORY_COLOR = "#97ff9b";
@@ -14,10 +17,107 @@ type StoryShellProps = {
   footer?: ReactNode;
 };
 
+type DisplayColorModeCardProps = {
+  displayColorMode: RetroLcdDisplayColorMode;
+  title: string;
+  copy: string;
+  children: ReactNode;
+};
+
+type TraceScenario = {
+  id: string;
+  label: string;
+  title: string;
+  copy: string;
+  rows: number;
+  cols: number;
+  chunks: string[];
+  stepDelay: number;
+};
+
 const wait = (duration: number) =>
   new Promise<void>((resolve) => {
     window.setTimeout(resolve, duration);
   });
+
+const displayColorModeDemoSteps: {
+  displayColorMode: RetroLcdDisplayColorMode;
+  value: string;
+}[] = [
+  {
+    displayColorMode: "phosphor-green",
+    value: [
+      "MODE  phosphor-green",
+      "\u001b[31malert\u001b[0m \u001b[33mwarn\u001b[0m \u001b[34mlink\u001b[0m",
+      "\u001b[38;5;196mindexed 196\u001b[0m \u001b[38;2;72;210;255mtruecolor\u001b[0m"
+    ].join("\r\n")
+  },
+  {
+    displayColorMode: "phosphor-amber",
+    value: [
+      "MODE  phosphor-amber",
+      "\u001b[31malert\u001b[0m \u001b[33mwarn\u001b[0m \u001b[34mlink\u001b[0m",
+      "\u001b[38;5;214mindexed 214\u001b[0m \u001b[38;2;255;214;120mtruecolor\u001b[0m"
+    ].join("\r\n")
+  },
+  {
+    displayColorMode: "phosphor-ice",
+    value: [
+      "MODE  phosphor-ice",
+      "\u001b[31malert\u001b[0m \u001b[33mwarn\u001b[0m \u001b[34mlink\u001b[0m",
+      "\u001b[38;5;51mindexed 051\u001b[0m \u001b[38;2;180;240;255mtruecolor\u001b[0m"
+    ].join("\r\n")
+  },
+  {
+    displayColorMode: "ansi-classic",
+    value: [
+      "MODE  ansi-classic",
+      "\u001b[31mRED\u001b[0m \u001b[33mYELLOW\u001b[0m \u001b[34mBLUE\u001b[0m",
+      "\u001b[92mBRIGHT\u001b[0m \u001b[7mINVERSE\u001b[0m \u001b[44;37mFRAME\u001b[0m"
+    ].join("\r\n")
+  },
+  {
+    displayColorMode: "ansi-extended",
+    value: [
+      "MODE  ansi-extended",
+      "\u001b[31mRED\u001b[0m \u001b[38;5;196mIDX 196\u001b[0m \u001b[38;5;45mIDX 045\u001b[0m",
+      "\u001b[38;2;255;180;120mTRUECOLOR\u001b[0m \u001b[48;5;25;37m BG 025 \u001b[0m"
+    ].join("\r\n")
+  }
+];
+
+const traceScenarios: TraceScenario[] = [
+  {
+    id: "progress-rewrite",
+    label: "Progress rewrite",
+    title: "Rewrite a live line without tearing the terminal state apart.",
+    copy: "This path exercises carriage return plus erase-in-line so progress text can keep updating in place until the final status settles.",
+    rows: progressRewriteTraceFixture.rows,
+    cols: progressRewriteTraceFixture.cols,
+    chunks: progressRewriteTraceFixture.chunks,
+    stepDelay: 560
+  },
+  {
+    id: "shell-session",
+    label: "Shell trace",
+    title: "Replay shell-like chunks and keep ANSI color intent intact.",
+    copy: "The same conformance fixtures that compare against xterm can drive the component in Storybook, so the docs stay grounded in real terminal behavior.",
+    rows: shellSessionTraceFixture.rows,
+    cols: shellSessionTraceFixture.cols,
+    chunks: shellSessionTraceFixture.chunks,
+    stepDelay: 620
+  },
+  {
+    id: "status-pane",
+    label: "Status pane",
+    title: "Scroll regions and insert-line updates stay readable in a tight pane.",
+    copy: "This fixture exercises a fixed header, a constrained scrolling body, and a truecolor footer insertion inside the lower region.",
+    rows: statusPaneTraceFixture.rows,
+    cols: statusPaneTraceFixture.cols,
+    chunks: statusPaneTraceFixture.chunks,
+    stepDelay: 700
+  }
+];
 
 const setTextareaValue = (node: HTMLTextAreaElement, value: string) => {
   const descriptor = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value");
@@ -61,6 +161,35 @@ const typeIntoTextarea = async (
   return currentValue;
 };
 
+const playTraceScenario = (
+  controller: ReturnType<typeof createRetroLcdController>,
+  scenario: TraceScenario,
+  startAt = 0
+) => {
+  const timers: number[] = [
+    window.setTimeout(() => {
+      controller.reset();
+      controller.resize(scenario.rows, scenario.cols);
+      controller.setCursorVisible(false);
+    }, startAt)
+  ];
+  let nextAt = startAt + 240;
+
+  for (const chunk of scenario.chunks) {
+    timers.push(
+      window.setTimeout(() => {
+        controller.write(chunk);
+      }, nextAt)
+    );
+    nextAt += scenario.stepDelay;
+  }
+
+  return {
+    timers,
+    nextAt
+  };
+};
+
 function StoryShell({ kicker, title, copy, children, footer }: StoryShellProps) {
   return (
     <div className="sb-retro-page">
@@ -83,6 +212,24 @@ function Stage({ children, maxWidth = 860 }: { children: ReactNode; maxWidth?: n
       <div className="sb-retro-frame" style={{ maxWidth }}>
         {children}
       </div>
+    </div>
+  );
+}
+
+function DisplayColorModeCard({
+  displayColorMode,
+  title,
+  copy,
+  children
+}: DisplayColorModeCardProps) {
+  return (
+    <div className="sb-retro-mode-card" data-display-mode-card={displayColorMode}>
+      <div className="sb-retro-mode-copy">
+        <span className="sb-retro-kicker">{displayColorMode}</span>
+        <h2 className="sb-retro-mode-title">{title}</h2>
+        <p className="sb-retro-mode-description">{copy}</p>
+      </div>
+      {children}
     </div>
   );
 }
@@ -481,6 +628,162 @@ function PromptModeDemoStory() {
   );
 }
 
+function DisplayColorModesDemoStory() {
+  const [controller] = useState(() =>
+    createRetroLcdController({
+      rows: 6,
+      cols: 40,
+      cursorMode: "solid"
+    })
+  );
+  const [displayColorMode, setDisplayColorMode] = useState<RetroLcdDisplayColorMode>(
+    displayColorModeDemoSteps[0].displayColorMode
+  );
+
+  useEffect(() => {
+    const applyStep = ({
+      displayColorMode: nextDisplayColorMode,
+      value
+    }: (typeof displayColorModeDemoSteps)[number]) => {
+      setDisplayColorMode(nextDisplayColorMode);
+      controller.reset();
+      controller.resize(6, 40);
+      controller.setCursorVisible(false);
+      controller.write(value);
+    };
+
+    applyStep(displayColorModeDemoSteps[0]);
+
+    const timers = displayColorModeDemoSteps.slice(1).map((step, index) =>
+      window.setTimeout(() => {
+        applyStep(step);
+      }, (index + 1) * 1800)
+    );
+
+    return () => {
+      for (const timer of timers) {
+        window.clearTimeout(timer);
+      }
+    };
+  }, [controller]);
+
+  return (
+    <CaptureStage captureId="display-color-modes" maxWidth={820}>
+      <RetroLcd
+        mode="terminal"
+        controller={controller}
+        displayColorMode={displayColorMode}
+        cursorMode="solid"
+      />
+    </CaptureStage>
+  );
+}
+
+function ControlCharacterReplayStory() {
+  const [scenarioId, setScenarioId] = useState(traceScenarios[0].id);
+  const [runToken, setRunToken] = useState(0);
+  const [controller] = useState(() =>
+    createRetroLcdController({
+      rows: traceScenarios[0].rows,
+      cols: traceScenarios[0].cols,
+      cursorMode: "solid"
+    })
+  );
+
+  const scenario = traceScenarios.find((entry) => entry.id === scenarioId) ?? traceScenarios[0];
+
+  useEffect(() => {
+    const { timers } = playTraceScenario(controller, scenario, 160);
+
+    return () => {
+      for (const timer of timers) {
+        window.clearTimeout(timer);
+      }
+    };
+  }, [controller, runToken, scenario]);
+
+  return (
+    <StoryShell
+      kicker="Terminal Conformance"
+      title={scenario.title}
+      copy={scenario.copy}
+      footer={
+        <ul className="sb-retro-note-list">
+          <li>Click an active chip to replay the same trace.</li>
+          <li>The component is replaying the same chunk fixtures used in the xterm-backed conformance suite.</li>
+        </ul>
+      }
+    >
+      <div className="sb-retro-toolbar">
+        {traceScenarios.map((entry) => (
+          <button
+            className="sb-retro-button"
+            type="button"
+            key={entry.id}
+            data-active={entry.id === scenario.id}
+            onClick={() => {
+              if (entry.id === scenario.id) {
+                setRunToken((current) => current + 1);
+                return;
+              }
+
+              setScenarioId(entry.id);
+            }}
+          >
+            {entry.label}
+          </button>
+        ))}
+      </div>
+      <Stage maxWidth={820}>
+        <RetroLcd
+          mode="terminal"
+          controller={controller}
+          displayColorMode="ansi-extended"
+          cursorMode="solid"
+        />
+      </Stage>
+    </StoryShell>
+  );
+}
+
+function ControlCharacterReplayDemoStory() {
+  const [controller] = useState(() =>
+    createRetroLcdController({
+      rows: 6,
+      cols: 34,
+      cursorMode: "solid"
+    })
+  );
+
+  useEffect(() => {
+    const timers: number[] = [];
+    let nextAt = 180;
+
+    for (const scenario of traceScenarios) {
+      const scheduled = playTraceScenario(controller, scenario, nextAt);
+      timers.push(...scheduled.timers);
+      nextAt = scheduled.nextAt + 900;
+    }
+
+    return () => {
+      for (const timer of timers) {
+        window.clearTimeout(timer);
+      }
+    };
+  }, [controller]);
+
+  return (
+    <CaptureStage captureId="control-character-replay" maxWidth={820}>
+      <RetroLcd
+        mode="terminal"
+        controller={controller}
+        displayColorMode="ansi-extended"
+        cursorMode="solid"
+      />
+    </CaptureStage>
+  );
+}
+
 function ResponsivePanelStory() {
   const widths = [
     { label: "Compact", value: 420 },
@@ -530,6 +833,98 @@ function ResponsivePanelStory() {
           onGeometryChange={setGeometry}
         />
       </Stage>
+    </StoryShell>
+  );
+}
+
+function DisplayColorModesStory() {
+  return (
+    <StoryShell
+      kicker="Display Color Modes"
+      title="Keep semantic terminal color separate from the screen palette."
+      copy="These modes all read from the same terminal state. The phosphor variants deliberately collapse color into a retro family, while the ANSI modes preserve palette intent."
+      footer={
+        <ul className="sb-retro-note-list">
+          <li>Phosphor modes keep the LCD personality even when the source emits ANSI styling.</li>
+          <li>`ansi-classic` targets the 16-color profile.</li>
+          <li>`ansi-extended` preserves 256-color and truecolor cells.</li>
+        </ul>
+      }
+    >
+      <div className="sb-retro-grid sb-retro-grid--double">
+        <DisplayColorModeCard
+          displayColorMode="phosphor-green"
+          title="Phosphor green"
+          copy="The default projection for a clean monochrome terminal look."
+        >
+          <RetroLcd
+            mode="terminal"
+            displayColorMode="phosphor-green"
+            value={[
+              "\u001b[1mREADY\u001b[0m status window attached",
+              "\u001b[31mwarning\u001b[0m still resolves into the green family"
+            ].join("\r\n")}
+          />
+        </DisplayColorModeCard>
+        <DisplayColorModeCard
+          displayColorMode="phosphor-amber"
+          title="Phosphor amber"
+          copy="A warmer monochrome mode for calmer control-room styling."
+        >
+          <RetroLcd
+            mode="terminal"
+            displayColorMode="phosphor-amber"
+            value={[
+              "\u001b[1mREADY\u001b[0m maintenance lane open",
+              "\u001b[34mtelemetry\u001b[0m still maps into amber light"
+            ].join("\r\n")}
+          />
+        </DisplayColorModeCard>
+        <DisplayColorModeCard
+          displayColorMode="phosphor-ice"
+          title="Phosphor ice"
+          copy="A cooler monochrome palette when the vintage green is too heavy."
+        >
+          <RetroLcd
+            mode="terminal"
+            displayColorMode="phosphor-ice"
+            value={[
+              "\u001b[1mREADY\u001b[0m cool lane online",
+              "\u001b[35mstatus\u001b[0m collapses into the ice palette"
+            ].join("\r\n")}
+          />
+        </DisplayColorModeCard>
+        <DisplayColorModeCard
+          displayColorMode="ansi-classic"
+          title="ANSI classic"
+          copy="Preserves the 16-color terminal palette while keeping the LCD frame."
+        >
+          <RetroLcd
+            mode="terminal"
+            displayColorMode="ansi-classic"
+            cursorMode="hollow"
+            value={[
+              "\u001b[31;44mALERT\u001b[0m \u001b[32mclear path\u001b[0m",
+              "\u001b[93mbright yellow\u001b[0m on terminal glass"
+            ].join("\r\n")}
+          />
+        </DisplayColorModeCard>
+        <DisplayColorModeCard
+          displayColorMode="ansi-extended"
+          title="ANSI extended"
+          copy="Carries indexed 256-color and truecolor output directly into the screen."
+        >
+          <RetroLcd
+            mode="terminal"
+            displayColorMode="ansi-extended"
+            cursorMode="hollow"
+            value={[
+              "\u001b[38;5;196;48;5;25mINDEXED 196/25\u001b[0m",
+              "\u001b[38;2;17;34;51;48;2;68;85;102mTRUECOLOR 17,34,51\u001b[0m"
+            ].join("\r\n")}
+          />
+        </DisplayColorModeCard>
+      </div>
     </StoryShell>
   );
 }
@@ -746,6 +1141,14 @@ export const ResponsivePanel: Story = {
   render: () => <ResponsivePanelStory />
 };
 
+export const DisplayColorModes: Story = {
+  render: () => <DisplayColorModesStory />
+};
+
+export const ControlCharacterReplay: Story = {
+  render: () => <ControlCharacterReplayStory />
+};
+
 export const FeatureTour: Story = {
   parameters: {
     controls: {
@@ -805,4 +1208,30 @@ export const PromptModeDemo: Story = {
     }
   },
   render: () => <PromptModeDemoStory />
+};
+
+export const DisplayColorModesDemo: Story = {
+  name: "Capture / Display Color Modes Demo",
+  parameters: {
+    controls: {
+      disable: true
+    },
+    docs: {
+      disable: true
+    }
+  },
+  render: () => <DisplayColorModesDemoStory />
+};
+
+export const ControlCharacterReplayDemo: Story = {
+  name: "Capture / Control Character Replay Demo",
+  parameters: {
+    controls: {
+      disable: true
+    },
+    docs: {
+      disable: true
+    }
+  },
+  render: () => <ControlCharacterReplayDemoStory />
 };

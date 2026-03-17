@@ -1,33 +1,6 @@
 import assert from "node:assert/strict";
-import { createReadStream } from "node:fs";
-import { access, stat } from "node:fs/promises";
-import { createServer } from "node:http";
-import { extname, normalize, resolve } from "node:path";
-import { after, before, test } from "node:test";
-import { chromium } from "playwright-core";
-
-const rootDir = resolve(new URL("..", import.meta.url).pathname);
-const staticDir = resolve(rootDir, "storybook-static");
-const chromeCandidates = [
-  process.env.CHROME_PATH,
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  "/Applications/Chromium.app/Contents/MacOS/Chromium"
-].filter(Boolean);
-
-const mimeTypes = new Map([
-  [".css", "text/css; charset=utf-8"],
-  [".html", "text/html; charset=utf-8"],
-  [".ico", "image/x-icon"],
-  [".jpg", "image/jpeg"],
-  [".js", "text/javascript; charset=utf-8"],
-  [".json", "application/json; charset=utf-8"],
-  [".map", "application/json; charset=utf-8"],
-  [".png", "image/png"],
-  [".svg", "image/svg+xml"],
-  [".txt", "text/plain; charset=utf-8"],
-  [".woff", "font/woff"],
-  [".woff2", "font/woff2"]
-]);
+import { test } from "node:test";
+import { createStorybookBrowserHarness } from "./support/storybook-browser.mjs";
 
 const wrapTextToColumns = (text, cols, tabWidth = 4) => {
   const lines = [""];
@@ -106,85 +79,11 @@ const getPreviousCursorCharacter = ({ value, selectionStart, cols }) => {
   };
 };
 
-const createStaticServer = () =>
-  createServer(async (request, response) => {
-    try {
-      const url = new URL(request.url ?? "/", "http://127.0.0.1");
-      const stripped = url.pathname === "/" ? "/index.html" : url.pathname;
-      const safePath = normalize(stripped).replace(/^(\.\.(\/|\\|$))+/, "");
-      const filePath = resolve(staticDir, `.${safePath}`);
-
-      if (!filePath.startsWith(staticDir)) {
-        throw new Error("Blocked path traversal attempt.");
-      }
-
-      const details = await stat(filePath);
-      const finalPath = details.isDirectory() ? resolve(filePath, "index.html") : filePath;
-      const contentType = mimeTypes.get(extname(finalPath)) ?? "application/octet-stream";
-
-      response.writeHead(200, { "content-type": contentType });
-      createReadStream(finalPath).pipe(response);
-    } catch (error) {
-      response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
-      response.end(error instanceof Error ? error.message : "Not found");
-    }
-  });
-
-const detectChromePath = async () => {
-  for (const candidate of chromeCandidates) {
-    try {
-      await access(candidate);
-      return candidate;
-    } catch {
-      continue;
-    }
-  }
-
-  throw new Error(
-    "No Chrome or Chromium executable was found. Set CHROME_PATH to run the end-to-end tests."
-  );
-};
-
-let browser;
-let page;
-let server;
-let port;
-
-before(async () => {
-  await access(staticDir);
-  server = createStaticServer();
-
-  await new Promise((resolvePromise) => {
-    server.listen(0, "127.0.0.1", () => {
-      port = server.address().port;
-      resolvePromise(undefined);
-    });
-  });
-
-  browser = await chromium.launch({
-    executablePath: await detectChromePath(),
-    headless: true
-  });
-
-  page = await browser.newPage({
-    viewport: {
-      width: 1440,
-      height: 1100
-    }
-  });
-});
-
-after(async () => {
-  await page?.close();
-  await browser?.close();
-
-  await new Promise((resolvePromise) => {
-    server?.close(() => resolvePromise(undefined));
-  });
-});
+const harness = createStorybookBrowserHarness();
+const page = () => harness.page;
 
 const readCursorState = async () =>
-  page.locator(".retro-lcd").evaluate((root) => {
+  page().locator(".retro-lcd").evaluate((root) => {
     const input = root.querySelector(".retro-lcd__input");
     const cursor = root.querySelector(".retro-lcd__cursor");
 
@@ -227,32 +126,84 @@ const assertCursorTracksTypedText = async () => {
   );
 };
 
-test("editable story keeps the visible cursor after the latest typed character", async () => {
-  await page.goto(
-    `http://127.0.0.1:${port}/iframe.html?id=retrolcd--editable-notebook&viewMode=story`,
-    { waitUntil: "networkidle" }
-  );
-  await page.locator(".retro-lcd__input").click();
+const readDescenderMetrics = async () =>
+  page().locator(".retro-lcd").evaluate((root) => {
+    const grid = root.querySelector(".retro-lcd__grid");
+    const descenderLine = Array.from(root.querySelectorAll(".retro-lcd__line")).find((line) =>
+      /[gjpqy]/iu.test(line.textContent ?? "")
+    );
 
-  const initialCols = Number(await page.locator(".retro-lcd").getAttribute("data-cols"));
+    if (!(grid instanceof HTMLElement) || !(descenderLine instanceof HTMLElement)) {
+      return null;
+    }
+
+    const gridStyle = getComputedStyle(grid);
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      return null;
+    }
+
+    context.font = gridStyle.font;
+    const text = (descenderLine.textContent ?? "").replace(/\u00a0/gu, " ");
+    const sample = text.match(/[gjpqy]/giu)?.join("") ?? "gjpqy";
+    const metrics = context.measureText(sample);
+
+    return {
+      text,
+      sample,
+      font: gridStyle.font,
+      fontSize: Number.parseFloat(gridStyle.fontSize),
+      renderedLineHeight: descenderLine.getBoundingClientRect().height,
+      inkHeight: metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent,
+      descent: metrics.actualBoundingBoxDescent
+    };
+  });
+
+test("editable story keeps the visible cursor after the latest typed character", async () => {
+  await harness.gotoStory("retrolcd--editable-notebook");
+  await page().locator(".retro-lcd__input").click();
+
+  const initialCols = Number(await page().locator(".retro-lcd").getAttribute("data-cols"));
   const initialSequence = "calm";
   const wrapSequence = "x".repeat(Math.max(1, initialCols + 3 - initialSequence.length));
 
   for (const character of initialSequence) {
-    await page.keyboard.type(character);
+    await page().keyboard.type(character);
     await assertCursorTracksTypedText();
   }
 
   for (const character of wrapSequence) {
-    await page.keyboard.type(character);
+    await page().keyboard.type(character);
     await assertCursorTracksTypedText();
   }
 
-  await page.keyboard.press("Shift+Enter");
+  await page().keyboard.press("Shift+Enter");
   await assertCursorTracksTypedText();
 
   for (const character of "end") {
-    await page.keyboard.type(character);
+    await page().keyboard.type(character);
     await assertCursorTracksTypedText();
   }
+});
+
+test("quiet output story leaves enough room for descender glyphs", async () => {
+  await harness.gotoStory("retrolcd--calm-readout");
+
+  await page().waitForFunction(() => {
+    const lines = Array.from(document.querySelectorAll(".retro-lcd__line")).map((line) =>
+      (line.textContent ?? "").replace(/\u00a0/gu, " ")
+    );
+    return lines.some((line) => /[gjpqy]/iu.test(line));
+  });
+
+  const metrics = await readDescenderMetrics();
+
+  assert.ok(metrics, "The quiet output story should expose a descender-bearing text line.");
+  assert.ok(metrics.descent > 0, "The sampled glyph metrics should include a descender.");
+  assert.ok(
+    metrics.renderedLineHeight >= metrics.inkHeight - 0.5,
+    `Rendered line height ${metrics.renderedLineHeight}px should fit descender text "${metrics.text}" (ink ${metrics.inkHeight}px, sample ${metrics.sample}, font ${metrics.font}).`
+  );
 });

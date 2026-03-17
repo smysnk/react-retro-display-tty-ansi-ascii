@@ -74,7 +74,7 @@
   overflow: hidden;
   color: var(--retro-lcd-color);
   font-family: "IBM Plex Mono", monospace;
-  font-size: 28px;
+  font-size: 24px;
   line-height: var(--retro-lcd-cell-height);
   letter-spacing: 0.015em;
   text-shadow:

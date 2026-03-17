@@ -4,6 +4,7 @@ export { useRetroLcdGeometry } from "./react/useRetroLcdGeometry";
 export { useRetroLcdPromptSession } from "./react/useRetroLcdPromptSession";
 export type {
   CursorMode,
+  RetroLcdDisplayColorMode,
   RetroLcdController,
   RetroLcdGeometry,
   RetroLcdPromptCommandResult,
@@ -20,6 +21,12 @@ export { createRetroLcdPromptSession } from "./core/terminal/prompt-session";
 export { RetroLcdAnsiParser } from "./core/terminal/ansi-parser";
 export { RetroLcdScreenBuffer } from "./core/terminal/screen-buffer";
 export type {
+  RetroLcdTerminalHostAdapter,
+  RetroLcdTerminalHostKeyEvent,
+  RetroLcdTerminalInputAdapter,
+  RetroLcdTerminalOutputAdapter
+} from "./core/terminal/host-adapter";
+export type {
   RetroLcdPromptSession,
   RetroLcdPromptSessionOptions
 } from "./core/terminal/prompt-session";
@@ -28,6 +35,7 @@ export type {
   RetroLcdCellIntensity,
   RetroLcdCellStyle,
   RetroLcdCursorState,
+  RetroLcdTerminalColor,
   RetroLcdScreenBufferOptions,
   RetroLcdScreenSnapshot,
   RetroLcdWriteOptions

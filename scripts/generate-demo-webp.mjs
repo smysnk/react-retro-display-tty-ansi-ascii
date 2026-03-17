@@ -31,6 +31,22 @@ const terminalModeMp4File = resolve(
 );
 const promptModeWebpFile = resolve(outputDir, "react-retro-display-tty-ansi-prompt-loop.webp");
 const promptModeMp4File = resolve(outputDir, "react-retro-display-tty-ansi-prompt-loop.mp4");
+const displayColorModesWebpFile = resolve(
+  outputDir,
+  "react-retro-display-tty-ansi-display-color-modes.webp"
+);
+const displayColorModesMp4File = resolve(
+  outputDir,
+  "react-retro-display-tty-ansi-display-color-modes.mp4"
+);
+const controlCharacterReplayWebpFile = resolve(
+  outputDir,
+  "react-retro-display-tty-ansi-control-character-replay.webp"
+);
+const controlCharacterReplayMp4File = resolve(
+  outputDir,
+  "react-retro-display-tty-ansi-control-character-replay.mp4"
+);
 const chromePath =
   process.env.CHROME_PATH ??
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
@@ -222,6 +238,30 @@ const captures = [
     outputs: [
       { type: "webp", file: promptModeWebpFile },
       { type: "mp4", file: promptModeMp4File }
+    ]
+  },
+  {
+    name: "display color modes",
+    storyId: "retrolcd--display-color-modes-demo",
+    selector: "[data-demo-capture='display-color-modes']",
+    waitMs: 180,
+    fps: 16,
+    durationMs: 9800,
+    outputs: [
+      { type: "webp", file: displayColorModesWebpFile },
+      { type: "mp4", file: displayColorModesMp4File }
+    ]
+  },
+  {
+    name: "control character replay",
+    storyId: "retrolcd--control-character-replay-demo",
+    selector: "[data-demo-capture='control-character-replay']",
+    waitMs: 180,
+    fps: 16,
+    durationMs: 10800,
+    outputs: [
+      { type: "webp", file: controlCharacterReplayWebpFile },
+      { type: "mp4", file: controlCharacterReplayMp4File }
     ]
   }
 ];

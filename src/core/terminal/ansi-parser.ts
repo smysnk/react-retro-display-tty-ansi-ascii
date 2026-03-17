@@ -1,34 +1,30 @@
+import type { RetroLcdTerminalCommand } from "./commands";
+
 export type RetroLcdAnsiParserHandlers = {
-  printable: (character: string) => void;
-  lineFeed: () => void;
-  carriageReturn: () => void;
-  backspace: () => void;
-  tab: () => void;
-  formFeed: () => void;
-  bell: () => void;
-  cursorUp: (count: number) => void;
-  cursorDown: (count: number) => void;
-  cursorForward: (count: number) => void;
-  cursorBackward: (count: number) => void;
-  cursorPosition: (row: number, col: number) => void;
-  eraseInDisplay: (mode: number) => void;
-  eraseInLine: (mode: number) => void;
-  saveCursor: () => void;
-  restoreCursor: () => void;
-  setGraphicRendition: (params: number[]) => void;
+  command: (command: RetroLcdTerminalCommand) => void;
 };
 
 type ParserState = "text" | "escape" | "csi";
 
-const isCsiParamCharacter = (character: string) => /[0-9;?]/u.test(character);
+const isCsiPrefixCharacter = (character: string) => /[<=>?]/u.test(character);
+
+const isCsiParamCharacter = (character: string) => /[0-9;]/u.test(character);
+
+const isCsiIntermediateCharacter = (character: string) =>
+  character >= "\u0020" && character <= "\u002f";
+
+const isEscIntermediateCharacter = (character: string) =>
+  character >= "\u0020" && character <= "\u002f";
+
+const isEscFinalCharacter = (character: string) =>
+  character >= "\u0030" && character <= "\u007e";
 
 const parseParams = (value: string) => {
-  if (!value || value === "?") {
+  if (!value) {
     return [];
   }
 
   return value
-    .replace(/\?/gu, "")
     .split(";")
     .map((segment) => {
       const parsed = Number.parseInt(segment, 10);
@@ -43,7 +39,10 @@ const firstParam = (params: number[], fallback = 1) => {
 
 export class RetroLcdAnsiParser {
   private state: ParserState = "text";
+  private escIntermediateBuffer = "";
+  private csiPrefixBuffer = "";
   private csiParamBuffer = "";
+  private csiIntermediateBuffer = "";
 
   constructor(private readonly handlers: RetroLcdAnsiParserHandlers) {}
 
@@ -55,7 +54,10 @@ export class RetroLcdAnsiParser {
 
   reset() {
     this.state = "text";
+    this.escIntermediateBuffer = "";
+    this.csiPrefixBuffer = "";
     this.csiParamBuffer = "";
+    this.csiIntermediateBuffer = "";
   }
 
   private feedCharacter(character: string) {
@@ -76,87 +78,206 @@ export class RetroLcdAnsiParser {
     switch (character) {
       case "\u001b":
         this.state = "escape";
+        this.escIntermediateBuffer = "";
         return;
       case "\n":
-        this.handlers.lineFeed();
+        this.handlers.command({ type: "lineFeed" });
         return;
       case "\r":
-        this.handlers.carriageReturn();
+        this.handlers.command({ type: "carriageReturn" });
         return;
       case "\b":
-        this.handlers.backspace();
+        this.handlers.command({ type: "backspace" });
         return;
       case "\t":
-        this.handlers.tab();
+        this.handlers.command({ type: "tab" });
         return;
       case "\f":
-        this.handlers.formFeed();
+        this.handlers.command({ type: "formFeed" });
         return;
       case "\u0007":
-        this.handlers.bell();
+        this.handlers.command({ type: "bell" });
         return;
       default:
-        this.handlers.printable(character);
+        this.handlers.command({ type: "print", char: character });
     }
   }
 
   private feedEscapeCharacter(character: string) {
     if (character === "[") {
       this.state = "csi";
+      this.csiPrefixBuffer = "";
       this.csiParamBuffer = "";
+      this.csiIntermediateBuffer = "";
+      return;
+    }
+
+    if (isEscIntermediateCharacter(character)) {
+      this.escIntermediateBuffer += character;
+      return;
+    }
+
+    if (isEscFinalCharacter(character)) {
+      this.dispatchEscape({
+        final: character,
+        intermediates: this.escIntermediateBuffer || undefined
+      });
+      this.state = "text";
+      this.escIntermediateBuffer = "";
       return;
     }
 
     this.state = "text";
-    this.feedTextCharacter(character);
+    this.escIntermediateBuffer = "";
   }
 
   private feedCsiCharacter(character: string) {
+    if (!this.csiPrefixBuffer && !this.csiParamBuffer && isCsiPrefixCharacter(character)) {
+      this.csiPrefixBuffer = character;
+      return;
+    }
+
     if (isCsiParamCharacter(character)) {
       this.csiParamBuffer += character;
       return;
     }
 
-    this.dispatchCsi(character, parseParams(this.csiParamBuffer));
+    if (isCsiIntermediateCharacter(character)) {
+      this.csiIntermediateBuffer += character;
+      return;
+    }
+
+    this.dispatchCsi(
+      {
+        prefix: this.csiPrefixBuffer || undefined,
+        intermediates: this.csiIntermediateBuffer || undefined,
+        final: character
+      },
+      parseParams(this.csiParamBuffer)
+    );
     this.state = "text";
+    this.csiPrefixBuffer = "";
     this.csiParamBuffer = "";
+    this.csiIntermediateBuffer = "";
   }
 
-  private dispatchCsi(finalByte: string, params: number[]) {
-    switch (finalByte) {
-      case "A":
-        this.handlers.cursorUp(firstParam(params));
+  private dispatchEscape(identifier: { final: string; intermediates?: string }) {
+    switch (identifier.final) {
+      case "7":
+        this.handlers.command({ type: "saveCursor", source: "dec" });
         return;
-      case "B":
-        this.handlers.cursorDown(firstParam(params));
-        return;
-      case "C":
-        this.handlers.cursorForward(firstParam(params));
+      case "8":
+        this.handlers.command({ type: "restoreCursor", source: "dec" });
         return;
       case "D":
-        this.handlers.cursorBackward(firstParam(params));
+        this.handlers.command({ type: "index" });
+        return;
+      case "E":
+        this.handlers.command({ type: "nextLine" });
+        return;
+      case "M":
+        this.handlers.command({ type: "reverseIndex" });
+        return;
+      case "c":
+        this.handlers.command({ type: "resetToInitialState" });
+        return;
+      default:
+        this.handlers.command({
+          type: "unknownEscape",
+          identifier
+        });
+    }
+  }
+
+  private dispatchCsi(
+    identifier: {
+      prefix?: string;
+      intermediates?: string;
+      final: string;
+    },
+    params: number[]
+  ) {
+    switch (identifier.final) {
+      case "@":
+        this.handlers.command({ type: "insertChars", count: firstParam(params) });
+        return;
+      case "A":
+        this.handlers.command({ type: "cursorUp", count: firstParam(params) });
+        return;
+      case "B":
+        this.handlers.command({ type: "cursorDown", count: firstParam(params) });
+        return;
+      case "C":
+        this.handlers.command({ type: "cursorForward", count: firstParam(params) });
+        return;
+      case "D":
+        this.handlers.command({ type: "cursorBackward", count: firstParam(params) });
+        return;
+      case "L":
+        this.handlers.command({ type: "insertLines", count: firstParam(params) });
+        return;
+      case "M":
+        this.handlers.command({ type: "deleteLines", count: firstParam(params) });
+        return;
+      case "P":
+        this.handlers.command({ type: "deleteChars", count: firstParam(params) });
+        return;
+      case "S":
+        this.handlers.command({ type: "scrollUp", count: firstParam(params) });
+        return;
+      case "T":
+        this.handlers.command({ type: "scrollDown", count: firstParam(params) });
         return;
       case "H":
       case "f":
-        this.handlers.cursorPosition(params[0] || 1, params[1] || 1);
+        this.handlers.command({
+          type: "cursorPosition",
+          row: params[0] || 1,
+          col: params[1] || 1
+        });
+        return;
+      case "r":
+        this.handlers.command({
+          type: "setScrollRegion",
+          top: params[0] || undefined,
+          bottom: params[1] || undefined
+        });
         return;
       case "J":
-        this.handlers.eraseInDisplay(params[0] ?? 0);
+        this.handlers.command({ type: "eraseInDisplay", mode: params[0] ?? 0 });
         return;
       case "K":
-        this.handlers.eraseInLine(params[0] ?? 0);
+        this.handlers.command({ type: "eraseInLine", mode: params[0] ?? 0 });
         return;
       case "s":
-        this.handlers.saveCursor();
+        this.handlers.command({ type: "saveCursor", source: "ansi" });
         return;
       case "u":
-        this.handlers.restoreCursor();
+        this.handlers.command({ type: "restoreCursor", source: "ansi" });
         return;
       case "m":
-        this.handlers.setGraphicRendition(params);
+        this.handlers.command({ type: "setGraphicRendition", params });
+        return;
+      case "h":
+        this.handlers.command({
+          type: "setMode",
+          identifier,
+          params
+        });
+        return;
+      case "l":
+        this.handlers.command({
+          type: "resetMode",
+          identifier,
+          params
+        });
         return;
       default:
-        return;
+        this.handlers.command({
+          type: "unknownCsi",
+          identifier,
+          params
+        });
     }
   }
 }

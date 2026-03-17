@@ -169,6 +169,34 @@
   box-shadow: 0 0 12px rgba(255, 238, 198, 0.14);
 }
 
+.sb-retro-mode-card {
+  display: grid;
+  gap: 14px;
+}
+
+.sb-retro-mode-copy {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  text-align: center;
+}
+
+.sb-retro-mode-title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: rgba(239, 235, 228, 0.92);
+}
+
+.sb-retro-mode-description {
+  margin: 0;
+  max-width: 420px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(221, 214, 203, 0.68);
+}
+
 .sb-retro-measure {
   display: inline-flex;
   gap: 8px;
