@@ -23,10 +23,15 @@ jobs:
         with:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
-          cache: yarn
 
       - name: Enable Corepack
         run: corepack enable
+
+      - name: Activate project Yarn
+        run: corepack prepare "$(node -p 'require("./package.json").packageManager')" --activate
+
+      - name: Check Yarn version
+        run: yarn --version
 
       - name: Install dependencies
         run: yarn install --immutable
