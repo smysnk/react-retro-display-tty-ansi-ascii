@@ -35,11 +35,67 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Build package
-        run: yarn build
+      - name: Capture test-station start time
+        run: echo "TEST_STATION_BUILD_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
 
-      - name: Run unit tests
-        run: yarn test
+      - name: Run test-station report
+        id: test_station
+        shell: bash
+        run: |
+          set +e
+          yarn test:coverage
+          exit_code=$?
+          if [ "$exit_code" -eq 0 ]; then
+            status=passed
+          else
+            status=failed
+          fi
+          echo "TEST_STATION_CI_STATUS=$status" >> "$GITHUB_ENV"
+          echo "exit_code=$exit_code" >> "$GITHUB_OUTPUT"
+          exit 0
 
-      - name: Build Storybook
-        run: yarn storybook:build
+      - name: Publish test-station summary
+        if: always() && hashFiles('.test-results/test-station/report.json') != ''
+        run: |
+          node --input-type=module <<'EOF' >> "$GITHUB_STEP_SUMMARY"
+          import fs from "node:fs";
+          const report = JSON.parse(fs.readFileSync(".test-results/test-station/report.json", "utf8"));
+          const summary = report.summary || {};
+          const coveragePct = summary.coverage?.lines?.pct;
+          console.log("### Test Station Summary");
+          console.log("");
+          console.log(`- Packages: ${summary.totalPackages ?? 0}`);
+          console.log(`- Suites: ${summary.totalSuites ?? 0}`);
+          console.log(`- Tests: ${summary.totalTests ?? 0}`);
+          console.log(`- Failed tests: ${summary.failedTests ?? 0}`);
+          console.log(`- Failed packages: ${summary.failedPackages ?? 0}`);
+          console.log(`- Line coverage: ${Number.isFinite(coveragePct) ? `${coveragePct}%` : "n/a"}`);
+          EOF
+
+      - name: Publish test-station ingest
+        if: always() && hashFiles('.test-results/test-station/report.json') != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+        env:
+          TEST_STATION_INGEST_ENDPOINT: https://test-station.smysnk.com/api/ingest
+          TEST_STATION_INGEST_PROJECT_KEY: react-retro-display-tty-ansi
+          TEST_STATION_INGEST_SHARED_KEY: ${{ secrets.TEST_STATION_INGEST_SHARED_KEY }}
+        run: |
+          if [ -z "$TEST_STATION_INGEST_SHARED_KEY" ]; then
+            echo "Skipping test-station ingest: TEST_STATION_INGEST_SHARED_KEY is not configured."
+            exit 0
+          fi
+          completed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          export TEST_STATION_BUILD_COMPLETED_AT="$completed_at"
+          echo "TEST_STATION_BUILD_COMPLETED_AT=$completed_at" >> "$GITHUB_ENV"
+          node ./scripts/test-station/publish-ingest-report.mjs
+
+      - name: Upload test artifacts
+        if: always() && hashFiles('.test-results/test-station/report.json') != ''
+        uses: actions/upload-artifact@v6
+        with:
+          name: test-station-results
+          path: .test-results/test-station
+          retention-days: 14
+
+      - name: Fail if report detected regressions
+        if: always()
+        run: exit "${{ steps.test_station.outputs.exit_code }}"

@@ -5,10 +5,13 @@
 # react-retro-display-tty-ansi
 
 [![npm version](https://img.shields.io/npm/v/react-retro-display-tty-ansi.svg)](https://www.npmjs.com/package/react-retro-display-tty-ansi)
+[![test-station](https://github.com/smysnk/react-retro-display-tty-ansi/actions/workflows/test.yml/badge.svg?branch=main&label=test-station)](https://test-station.smysnk.com/projects/react-retro-display-tty-ansi)
 
 `react-retro-display-tty-ansi` is a React component for calm, terminal-flavored interfaces.
 It can be a read-only display, a controlled editable surface, a controller-driven terminal,
 or a small command prompt without changing visual language.
+
+Latest test report: [test-station.smysnk.com/projects/react-retro-display-tty-ansi](https://test-station.smysnk.com/projects/react-retro-display-tty-ansi)
 
 ## Getting Started
 
@@ -186,5 +189,6 @@ npm run storybook
 npm install
 npm run build
 npm run test
+npm run test:unit
 npm run storybook
 ```

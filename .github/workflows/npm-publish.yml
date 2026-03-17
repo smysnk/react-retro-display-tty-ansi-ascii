@@ -49,14 +49,8 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Build package
-        run: yarn build
-
-      - name: Run unit tests
+      - name: Run test-station release validation
         run: yarn test
-
-      - name: Build Storybook
-        run: yarn storybook:build
 
       - name: Set npm package version from build number
         env:
