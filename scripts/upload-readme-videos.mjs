@@ -4,6 +4,8 @@ import { getGitHubCookieFromBrowser } from "./github-cookie-browser.mjs";
 
 const rootDir = resolve(new URL("..", import.meta.url).pathname);
 const repositoryId = process.env.GITHUB_REPOSITORY_ID ?? "1183359000";
+const repositorySlug = process.env.GITHUB_REPOSITORY ?? "smysnk/react-retro-display-tty-ansi";
+const readmeAssetBranch = process.env.README_ASSET_BRANCH ?? "main";
 
 const readmeFile = resolve(rootDir, "README.md");
 
@@ -59,8 +61,12 @@ const defaultHeaders = {
 const filterHeaders = (headers) =>
   Object.fromEntries(Object.entries(headers).filter(([, value]) => value !== undefined && value !== null));
 
-const buildVideoTag = (src, title) =>
-  `<video src="${src}" autoplay controls loop muted playsinline title="${title}">\n  Your browser does not support the video tag.\n</video>`;
+const buildReadmePreviewUrl = (filePath) => {
+  const previewFileName = basename(filePath).replace(/\.mp4$/u, ".webp");
+  return `https://raw.githubusercontent.com/${repositorySlug}/${readmeAssetBranch}/docs/assets/${previewFileName}`;
+};
+
+const buildPreviewLink = (href, previewUrl, title) => `[![${title}](${previewUrl})](${href})`;
 
 const uploadVideo = async (filePath, githubCookie) => {
   const fileName = basename(filePath);
@@ -155,7 +161,7 @@ const uploadVideo = async (filePath, githubCookie) => {
 const updateReadme = async (uploads) => {
   let readme = await readFile(readmeFile, "utf8");
 
-  for (const { title, href } of uploads) {
+  for (const { title, href, previewUrl } of uploads) {
     const linkedPreviewPattern = new RegExp(
       String.raw`\[!\[${title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\]\([^)]+\)\]\([^)]+\)`,
       "g"
@@ -164,7 +170,7 @@ const updateReadme = async (uploads) => {
       String.raw`<video src="[^"]+"[^>]*title="${title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*>\n  Your browser does not support the video tag\.\n<\/video>`,
       "g"
     );
-    const replacement = buildVideoTag(href, title);
+    const replacement = buildPreviewLink(href, previewUrl, title);
 
     readme = readme.replace(linkedPreviewPattern, replacement);
     readme = readme.replace(videoTagPattern, replacement);
@@ -180,7 +186,7 @@ const printUsage = () => {
   yarn readme:videos --browser-cookie
 
 This uploads the README demo MP4 files to GitHub user-attachments and rewrites README.md
-to use the uploaded video URLs.
+to use npm-safe animated WebP preview links that point at the uploaded videos.
 
 If GITHUB_COOKIE is not provided, the script can open a browser window, reuse a persistent
 GitHub session if one exists, or wait for you to log in before continuing.
@@ -213,7 +219,8 @@ const main = async () => {
 
     uploads.push({
       title: entry.title,
-      href
+      href,
+      previewUrl: buildReadmePreviewUrl(entry.file)
     });
 
     console.log(`${entry.title}: ${href}`);

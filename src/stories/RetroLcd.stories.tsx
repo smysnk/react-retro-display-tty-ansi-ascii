@@ -346,6 +346,49 @@ const createSeededRandom = (seed: number) => {
 
 const stripAnsi = (value: string) => value.replace(/\u001b\[[0-9;]*m/gu, "");
 
+const buildAnsiTypedFrames = (value: string) => {
+  const frames: string[] = [];
+  let current = "";
+
+  for (let index = 0; index < value.length; index += 1) {
+    const character = value[index];
+
+    if (character === "\u001b") {
+      let end = index + 1;
+
+      if (value[end] === "[") {
+        end += 1;
+
+        while (end < value.length && !/[\u0040-\u007e]/u.test(value[end] ?? "")) {
+          end += 1;
+        }
+
+        if (end < value.length) {
+          end += 1;
+        }
+      }
+
+      current += value.slice(index, end);
+      index = end - 1;
+      continue;
+    }
+
+    current += character;
+    frames.push(current);
+  }
+
+  return frames;
+};
+
+const resolveAnsiTypedFrame = (frames: string[], progress: number) => {
+  if (progress <= 0 || frames.length === 0) {
+    return "";
+  }
+
+  const visibleCount = Math.min(frames.length, Math.max(1, Math.round(frames.length * progress)));
+  return frames[visibleCount - 1] ?? "";
+};
+
 const applyAnsi = (code: string, text: string) => `${code}${text}${PROBE_RESET}`;
 
 const colorizeSequence = (text: string, palette: string[]) => {
@@ -1556,24 +1599,43 @@ function LightDarkHostsSurface({
   const [tick, setTick] = useState(0);
   const cycleMs = 10200;
   const now = tick % cycleMs;
-  const takeText = (text: string, progress: number) =>
-    text.slice(0, Math.max(1, Math.round(text.length * progress)));
   const clampProgress = (start: number, end: number) =>
     Math.max(0, Math.min(1, (now - start) / (end - start)));
   const resolvedActiveTheme =
     animated ? (now < cycleMs / 2 ? "light" : "dark") : activeTheme;
-  const lightText = [
-    "LIGHT SHELL",
-    "Warm notes for bright workspaces.",
-    "Amber glass without forcing the whole page dark."
-  ].join("\n");
-  const darkText = [
-    "DARK SHELL",
-    "Night-shift console stays grounded.",
-    "Same component, different host mood."
-  ].join("\n");
-  const lightValue = animated ? takeText(lightText, clampProgress(0, 4000)) : lightText;
-  const darkValue = animated ? takeText(darkText, clampProgress(5200, 9200)) : darkText;
+  const lightStream = [
+    "\u001b[1mLIGHT SURFACE\u001b[0m",
+    "\u001b[38;5;160mR\u001b[38;5;214mA\u001b[38;5;190mI\u001b[38;5;45mN\u001b[38;5;39mB\u001b[38;5;141mO\u001b[38;5;201mW\u001b[0m contrast check",
+    "\u001b[38;2;194;94;0mamber\u001b[0m  \u001b[38;2;0;104;181mblue\u001b[0m  \u001b[38;2;108;40;148mviolet\u001b[0m",
+    "\u001b[38;2;28;139;98mtyped live\u001b[0m on bright LCD glass"
+  ].join("\r\n");
+  const darkStream = [
+    "\u001b[1mDARK SURFACE\u001b[0m",
+    "\u001b[38;5;160mR\u001b[38;5;214mA\u001b[38;5;190mI\u001b[38;5;45mN\u001b[38;5;39mB\u001b[38;5;141mO\u001b[38;5;201mW\u001b[0m contrast check",
+    "\u001b[38;2;255;176;86mamber\u001b[0m  \u001b[38;2;102;198;255mblue\u001b[0m  \u001b[38;2;214;145;255mviolet\u001b[0m",
+    "\u001b[38;2;110;255;185mtyped live\u001b[0m on deep terminal glass"
+  ].join("\r\n");
+  const lightFrames = buildAnsiTypedFrames(lightStream);
+  const darkFrames = buildAnsiTypedFrames(darkStream);
+  const lightValue = animated
+    ? resolveAnsiTypedFrame(lightFrames, clampProgress(0, 4200))
+    : lightStream;
+  const darkValue = animated
+    ? resolveAnsiTypedFrame(darkFrames, clampProgress(5200, 9400))
+    : darkStream;
+
+  useEffect(() => {
+    if (!animated) {
+      return undefined;
+    }
+
+    const startedAt = window.performance.now();
+    const timer = window.setInterval(() => {
+      setTick(window.performance.now() - startedAt);
+    }, 80);
+
+    return () => window.clearInterval(timer);
+  }, [animated]);
 
   return (
     <div className="sb-retro-host-grid">
@@ -1585,14 +1647,15 @@ function LightDarkHostsSurface({
           <span className="sb-retro-host-kicker">Light shell</span>
           <h2 className="sb-retro-host-title">Bright docs lane</h2>
           <p className="sb-retro-host-description">
-            Keep the surrounding page light, warm, and editorial while the LCD stays focused.
+            The same ANSI stream stays legible on a pale LCD surface instead of assuming dark glass.
           </p>
         </div>
         <RetroLcd
-          mode="value"
+          mode="terminal"
           value={lightValue}
           displaySurfaceMode="light"
-          displayColorMode="phosphor-amber"
+          displayColorMode="ansi-extended"
+          rows={6}
           displayPadding={{ block: 12, inline: 14 }}
         />
       </article>
@@ -1604,14 +1667,15 @@ function LightDarkHostsSurface({
           <span className="sb-retro-host-kicker">Dark shell</span>
           <h2 className="sb-retro-host-title">Night operations lane</h2>
           <p className="sb-retro-host-description">
-            Drop the same display into a deeper host surface when the app wants darker chrome.
+            The exact same ANSI colors read differently, but still clearly, on the classic dark surface.
           </p>
         </div>
         <RetroLcd
-          mode="value"
+          mode="terminal"
           value={darkValue}
           displaySurfaceMode="dark"
-          displayColorMode="phosphor-green"
+          displayColorMode="ansi-extended"
+          rows={6}
           displayPadding={{ block: 12, inline: 14 }}
         />
       </article>
@@ -1626,11 +1690,11 @@ function LightDarkHostsStory() {
     <StoryShell
       kicker="Light And Dark Shells"
       title="Let the host app pick the mood."
-      copy="The component does not need the whole page to become a terminal. You can place the same LCD inside a bright editorial shell or a deep operational shell and keep the display language consistent."
+      copy="The component does not need the whole page to become a terminal. You can place the same ANSI-rich LCD inside a bright editorial shell or a deep operational shell and keep contrast readable in both."
       footer={
         <ul className="sb-retro-note-list">
           <li>Use the host page to define the light or dark surface around the display.</li>
-          <li>`displayColorMode` can stay warm in light shells and cooler in dark shells.</li>
+          <li>`displaySurfaceMode` tunes the LCD glass, while ANSI colors still get contrast-safe rendering.</li>
         </ul>
       }
     >

@@ -125,3 +125,53 @@ jobs:
       - name: Fail if report detected regressions
         if: always()
         run: exit "${{ steps.test_station.outputs.exit_code }}"
+
+  storybook-pages-build:
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Activate project Yarn
+        run: corepack prepare "$(node -p 'require("./package.json").packageManager')" --activate
+
+      - name: Check Yarn version
+        run: yarn --version
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build Storybook for GitHub Pages
+        env:
+          STORYBOOK_BASE_PATH: /react-retro-display-tty-ansi/
+        run: yarn storybook:build
+
+      - name: Upload Storybook Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: storybook-static
+
+  storybook-pages-deploy:
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    needs: storybook-pages-build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy Storybook to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

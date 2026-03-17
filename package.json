@@ -2,6 +2,23 @@
   "name": "react-retro-display-tty-ansi",
   "version": "0.1.0",
   "description": "A reusable React retro display component with value, terminal, and prompt modes.",
+  "keywords": [
+    "react",
+    "react-component",
+    "terminal",
+    "terminal-ui",
+    "tty",
+    "ansi",
+    "prompt",
+    "console",
+    "lcd",
+    "retro",
+    "retro-ui",
+    "retro-terminal",
+    "phosphor",
+    "monochrome",
+    "scrollback"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",

@@ -1,11 +1,11 @@
-<video src="https://github.com/user-attachments/assets/6d8ca42a-2721-42cd-8344-e57a751ef595" autoplay controls loop muted playsinline title="Feature Tour Demo">
-  Your browser does not support the video tag.
-</video>
+[![Feature Tour Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi/main/docs/assets/react-retro-display-tty-ansi.webp)](https://github.com/user-attachments/assets/6b09540f-8670-4f14-880b-c3f2cbdb34f3)
 
 # react-retro-display-tty-ansi
 
 [![npm version](https://img.shields.io/npm/v/react-retro-display-tty-ansi.svg)](https://www.npmjs.com/package/react-retro-display-tty-ansi)
 [![test-station](https://github.com/smysnk/react-retro-display-tty-ansi/actions/workflows/test.yml/badge.svg?branch=main&label=test-station)](https://test-station.smysnk.com/projects/react-retro-display-tty-ansi)
+
+Storybook: [smysnk.github.io/react-retro-display-tty-ansi](https://smysnk.github.io/react-retro-display-tty-ansi/)
 
 `react-retro-display-tty-ansi` is a React component for calm, terminal-flavored interfaces.
 It can be a read-only display, a controlled editable surface, a controller-driven terminal,
@@ -76,33 +76,40 @@ denser grid and looser padding yields fewer cells.
 ## Light And Dark Surface Modes
 
 Use `displaySurfaceMode` when the LCD itself should read like a light instrument panel or a
-dark night-ops surface. This is separate from the host page theme, so the same component can
-sit inside bright docs, dark dashboards, or a side-by-side comparison view.
+dark night-ops surface. This is separate from the host page theme, so the same ANSI-rich
+terminal content can sit inside bright docs, dark dashboards, or a side-by-side comparison view.
 
-<video src="https://github.com/user-attachments/assets/5dd0a2ec-acea-4e8c-a988-e3a8ce42362e" autoplay controls loop muted playsinline title="Light And Dark Hosts Demo">
-  Your browser does not support the video tag.
-</video>
+[![Light And Dark Hosts Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi/main/docs/assets/react-retro-display-tty-ansi-light-dark-hosts.webp)](https://github.com/user-attachments/assets/f8658ce6-e6b9-42f9-99cc-61d71d897e95)
 
 ```tsx
 <RetroLcd
-  mode="value"
-  value="LIGHT SHELL\nWarm notes for bright workspaces."
+  mode="terminal"
+  value={[
+    "\u001b[1mLIGHT SURFACE\u001b[0m",
+    "\u001b[38;5;160mR\u001b[38;5;214mA\u001b[38;5;190mI\u001b[38;5;45mN\u001b[38;5;39mB\u001b[38;5;141mO\u001b[38;5;201mW\u001b[0m contrast check",
+    "\u001b[38;2;194;94;0mamber\u001b[0m  \u001b[38;2;0;104;181mblue\u001b[0m  \u001b[38;2;108;40;148mviolet\u001b[0m"
+  ].join("\n")}
   displaySurfaceMode="light"
-  displayColorMode="phosphor-amber"
+  displayColorMode="ansi-extended"
   displayPadding={{ block: 12, inline: 14 }}
 />
 
 <RetroLcd
-  mode="value"
-  value="DARK SHELL\nNight-shift console stays grounded."
+  mode="terminal"
+  value={[
+    "\u001b[1mDARK SURFACE\u001b[0m",
+    "\u001b[38;5;160mR\u001b[38;5;214mA\u001b[38;5;190mI\u001b[38;5;45mN\u001b[38;5;39mB\u001b[38;5;141mO\u001b[38;5;201mW\u001b[0m contrast check",
+    "\u001b[38;2;255;176;86mamber\u001b[0m  \u001b[38;2;102;198;255mblue\u001b[0m  \u001b[38;2;214;145;255mviolet\u001b[0m"
+  ].join("\n")}
   displaySurfaceMode="dark"
-  displayColorMode="phosphor-green"
+  displayColorMode="ansi-extended"
   displayPadding={{ block: 12, inline: 14 }}
 />
 ```
 
 Reach for `displaySurfaceMode="light"` when the LCD should feel like paper, enamel, or a sunlit
-instrument panel. Keep `displaySurfaceMode="dark"` for the classic terminal-glass look.
+instrument panel. Keep `displaySurfaceMode="dark"` for the classic terminal-glass look. The
+same ANSI palette will still be remapped for readable contrast against each surface.
 
 ## Modes Of Use
 
@@ -110,9 +117,7 @@ instrument panel. Keep `displaySurfaceMode="dark"` for the classic terminal-glas
 
 Use `mode="value"` when the display is just there to speak.
 
-<video src="https://github.com/user-attachments/assets/df1d92f1-3ce4-48b8-aecb-23732d01bb5b" autoplay controls loop muted playsinline title="Quiet Output Demo">
-  Your browser does not support the video tag.
-</video>
+[![Quiet Output Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi/main/docs/assets/react-retro-display-tty-ansi-quiet-output.webp)](https://github.com/user-attachments/assets/0d92a410-7151-4da8-bfc1-3b47151301b3)
 
 ```tsx
 <RetroLcd
@@ -125,9 +130,7 @@ Use `mode="value"` when the display is just there to speak.
 
 Turn on `editable` when you want the same surface to behave like a controlled input.
 
-<video src="https://github.com/user-attachments/assets/128ae33f-6dc7-467f-8ebc-bb09759d4341" autoplay controls loop muted playsinline title="Editable Drafting Demo">
-  Your browser does not support the video tag.
-</video>
+[![Editable Drafting Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi/main/docs/assets/react-retro-display-tty-ansi-editable-drafting.webp)](https://github.com/user-attachments/assets/6ce552c8-dd19-433a-8b14-9e64f376a33c)
 
 ```tsx
 import { useState } from "react";
@@ -155,9 +158,7 @@ export function DraftPad() {
 
 Use a controller when the display should follow external writes over time.
 
-<video src="https://github.com/user-attachments/assets/e422599f-f233-4f24-9b2f-44912eb69944" autoplay controls loop muted playsinline title="Terminal Output Demo">
-  Your browser does not support the video tag.
-</video>
+[![Terminal Output Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi/main/docs/assets/react-retro-display-tty-ansi-terminal-output.webp)](https://github.com/user-attachments/assets/79731222-0f78-482b-8684-dfc6aeb7d08c)
 
 ```tsx
 import { useEffect } from "react";
@@ -190,9 +191,7 @@ or `initialBuffer`.
 
 Use `mode="prompt"` when the interface should feel like a guided shell.
 
-<video src="https://github.com/user-attachments/assets/701eb6a5-8c0f-4537-b9d9-f6f1ee9125b4" autoplay controls loop muted playsinline title="Prompt Interaction Demo">
-  Your browser does not support the video tag.
-</video>
+[![Prompt Interaction Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi/main/docs/assets/react-retro-display-tty-ansi-prompt-loop.webp)](https://github.com/user-attachments/assets/c346c616-14fd-4b84-813b-545cd5d92f21)
 
 ```tsx
 <RetroLcd
@@ -272,9 +271,7 @@ demo also cycles through tight screen padding, multiple border alphabets, oversi
 and every monochrome plus ANSI display mode so the same terminal program can be watched under
 different visual projections.
 
-<video src="https://github.com/user-attachments/assets/f1b457ad-e086-4e34-b6a2-c11bf1986298" autoplay controls loop muted playsinline title="Auto Resize Probe Demo">
-  Your browser does not support the video tag.
-</video>
+[![Auto Resize Probe Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi/main/docs/assets/react-retro-display-tty-ansi-auto-resize-probe.webp)](https://github.com/user-attachments/assets/3cec7079-0a4b-4467-9c1b-84fea9875395)
 
 ```tsx
 import {
@@ -318,9 +315,7 @@ Use `displayColorMode` to decide how semantic terminal color should be projected
 The phosphor modes keep the retro LCD personality even when the source emits ANSI color. The ANSI
 modes preserve more of the source terminal palette.
 
-<video src="https://github.com/user-attachments/assets/9e3f99a4-512c-4dc6-a962-9bc3fb6c6eb1" autoplay controls loop muted playsinline title="Display Color Modes Demo">
-  Your browser does not support the video tag.
-</video>
+[![Display Color Modes Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi/main/docs/assets/react-retro-display-tty-ansi-display-color-modes.webp)](https://github.com/user-attachments/assets/c51b8e39-74e8-4a9f-add7-d26299886938)
 
 Available modes:
 
@@ -351,9 +346,7 @@ The terminal path is now tested against an xterm oracle and can faithfully repla
 character effects like carriage return rewrites, erase-in-line, scroll regions, insert-line
 updates, ANSI 16-color, indexed 256-color, and truecolor output.
 
-<video src="https://github.com/user-attachments/assets/b022b96b-6f16-4181-9721-f822f8f97da9" autoplay controls loop muted playsinline title="Control Character Replay Demo">
-  Your browser does not support the video tag.
-</video>
+[![Control Character Replay Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi/main/docs/assets/react-retro-display-tty-ansi-control-character-replay.webp)](https://github.com/user-attachments/assets/35d6ba0e-cf4c-4ac5-8a5d-ebe090fa6b54)
 
 ```tsx
 import {
