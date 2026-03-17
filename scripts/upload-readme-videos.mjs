@@ -41,7 +41,7 @@ const filterHeaders = (headers) =>
   Object.fromEntries(Object.entries(headers).filter(([, value]) => value !== undefined && value !== null));
 
 const buildVideoTag = (src, title) =>
-  `<video src="${src}" controls loop title="${title}">\n  Your browser does not support the video tag.\n</video>`;
+  `<video src="${src}" autoplay controls loop muted playsinline title="${title}">\n  Your browser does not support the video tag.\n</video>`;
 
 const uploadVideo = async (filePath) => {
   const fileName = basename(filePath);
@@ -142,7 +142,7 @@ const updateReadme = async (uploads) => {
       "g"
     );
     const videoTagPattern = new RegExp(
-      String.raw`<video src="[^"]+" controls loop title="${title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}">\n  Your browser does not support the video tag\.\n<\/video>`,
+      String.raw`<video src="[^"]+"[^>]*title="${title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*>\n  Your browser does not support the video tag\.\n<\/video>`,
       "g"
     );
     const replacement = buildVideoTag(href, title);

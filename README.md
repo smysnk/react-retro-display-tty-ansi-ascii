@@ -1,4 +1,4 @@
-<video src="https://github.com/user-attachments/assets/23fb32a3-0ad7-4abf-abfb-5e1eb6858f1c" controls loop title="Feature Tour Demo">
+<video src="https://github.com/user-attachments/assets/23fb32a3-0ad7-4abf-abfb-5e1eb6858f1c" autoplay controls loop muted playsinline title="Feature Tour Demo">
   Your browser does not support the video tag.
 </video>
 
@@ -41,7 +41,7 @@ wrapping, cursor rendering, and terminal feel.
 
 Use `mode="value"` when the display is just there to speak.
 
-<video src="https://github.com/user-attachments/assets/b9de7508-09d2-4e7c-b109-c789a1eb42d8" controls loop title="Quiet Output Demo">
+<video src="https://github.com/user-attachments/assets/b9de7508-09d2-4e7c-b109-c789a1eb42d8" autoplay controls loop muted playsinline title="Quiet Output Demo">
   Your browser does not support the video tag.
 </video>
 
@@ -56,7 +56,7 @@ Use `mode="value"` when the display is just there to speak.
 
 Turn on `editable` when you want the same surface to behave like a controlled input.
 
-<video src="https://github.com/user-attachments/assets/6fba4e01-3ad2-4167-9c0b-60f23b48e022" controls loop title="Editable Drafting Demo">
+<video src="https://github.com/user-attachments/assets/6fba4e01-3ad2-4167-9c0b-60f23b48e022" autoplay controls loop muted playsinline title="Editable Drafting Demo">
   Your browser does not support the video tag.
 </video>
 
@@ -86,7 +86,7 @@ export function DraftPad() {
 
 Use a controller when the display should follow external writes over time.
 
-<video src="https://github.com/user-attachments/assets/2eb03e39-c108-4dd1-ad09-f81b8d749e29" controls loop title="Terminal Output Demo">
+<video src="https://github.com/user-attachments/assets/2eb03e39-c108-4dd1-ad09-f81b8d749e29" autoplay controls loop muted playsinline title="Terminal Output Demo">
   Your browser does not support the video tag.
 </video>
 
@@ -121,7 +121,7 @@ or `initialBuffer`.
 
 Use `mode="prompt"` when the interface should feel like a guided shell.
 
-<video src="https://github.com/user-attachments/assets/d11a9267-1fb2-4675-aa07-1c8ad052b089" controls loop title="Prompt Interaction Demo">
+<video src="https://github.com/user-attachments/assets/d11a9267-1fb2-4675-aa07-1c8ad052b089" autoplay controls loop muted playsinline title="Prompt Interaction Demo">
   Your browser does not support the video tag.
 </video>
 
