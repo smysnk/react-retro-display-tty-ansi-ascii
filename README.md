@@ -5,7 +5,6 @@
 [![npm](https://img.shields.io/npm/v/react-retro-display-tty-ansi?label=npm)](https://www.npmjs.com/package/react-retro-display-tty-ansi)
 [![tests](https://img.shields.io/endpoint?url=https%3A%2F%2Fsmysnk.github.io%2Freact-retro-display-tty-ansi%2Fbadges%2Ftests.json)](https://smysnk.github.io/react-retro-display-tty-ansi/)
 [![coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fsmysnk.github.io%2Freact-retro-display-tty-ansi%2Fbadges%2Fcoverage.json)](https://smysnk.github.io/react-retro-display-tty-ansi/)
-[![health](https://img.shields.io/endpoint?url=https%3A%2F%2Fsmysnk.github.io%2Freact-retro-display-tty-ansi%2Fbadges%2Fhealth.json)](https://smysnk.github.io/react-retro-display-tty-ansi/)
 
 Storybook: [smysnk.github.io/react-retro-display-tty-ansi](https://smysnk.github.io/react-retro-display-tty-ansi/)
 
