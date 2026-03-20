@@ -1,18 +1,29 @@
-name: Tests
+name: CI
 
 on:
   push:
     branches:
       - main
-      - master
-  pull_request:
   workflow_dispatch:
+    inputs:
+      publish_npm:
+        description: "Publish the npm package after validation"
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  test:
+  ci:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -22,6 +33,10 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Upgrade npm
+        run: npm install --global npm@latest
 
       - name: Enable Corepack
         run: corepack enable
@@ -102,7 +117,7 @@ jobs:
           EOF
 
       - name: Publish test-station ingest
-        if: always() && hashFiles('.test-results/test-station/report.json') != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+        if: always() && hashFiles('.test-results/test-station/report.json') != ''
         env:
           TEST_STATION_INGEST_ENDPOINT: https://test-station.smysnk.com/api/ingest
           TEST_STATION_INGEST_PROJECT_KEY: react-retro-display-tty-ansi
@@ -129,52 +144,65 @@ jobs:
         if: always()
         run: exit "${{ steps.test_station.outputs.exit_code }}"
 
-  storybook-pages-build:
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "20"
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Activate project Yarn
-        run: corepack prepare "$(node -p 'require("./package.json").packageManager')" --activate
-
-      - name: Check Yarn version
-        run: yarn --version
-
-      - name: Install dependencies
-        run: yarn install --immutable
-
       - name: Build Storybook for GitHub Pages
         env:
           STORYBOOK_BASE_PATH: /react-retro-display-tty-ansi/
         run: yarn storybook:build
+
+      - name: Build test-station badge payloads
+        run: |
+          npx --yes @test-station/cli@0.2.40 pages --input ./.test-results/test-station/report.json --output ./.tmp-test-station-pages
+          mkdir -p storybook-static/badges
+          cp -R ./.tmp-test-station-pages/badges/. storybook-static/badges/
 
       - name: Upload Storybook Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
           path: storybook-static
 
-  storybook-pages-deploy:
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-    needs: storybook-pages-build
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - name: Deploy Storybook to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Set npm package version from build number
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          VERSION_MAJOR: ${{ vars.NPM_VERSION_MAJOR }}
+          VERSION_MINOR: ${{ vars.NPM_VERSION_MINOR }}
+          PATCH_MODE: ${{ vars.NPM_VERSION_PATCH_MODE }}
+          PATCH_FIXED: ${{ vars.NPM_VERSION_PATCH_FIXED }}
+        run: bash ./scripts/release/set-version-from-build.sh
+
+      - name: Validate npm release package
+        shell: bash
+        run: bash ./scripts/release/release-npm-package.sh
+
+      - name: Check whether this version is already published
+        id: package_version
+        shell: bash
+        run: |
+          package_name="$(node -p "require('./package.json').name")"
+          package_version="$(node -p "require('./package.json').version")"
+
+          echo "package_name=$package_name" >> "$GITHUB_OUTPUT"
+          echo "package_version=$package_version" >> "$GITHUB_OUTPUT"
+
+          if npm view "$package_name@$package_version" version >/dev/null 2>&1; then
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            echo "Package $package_name@$package_version is already on npm. Skipping publish." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+            echo "Package $package_name@$package_version is not on npm yet. Publishing after checks pass." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Build package for npm publish
+        if: steps.package_version.outputs.should_publish == 'true'
+        run: yarn build
+
+      - name: Publish npm package
+        if: steps.package_version.outputs.should_publish == 'true' && (github.event_name == 'push' || inputs.publish_npm)
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_PUBLISH: "1"
+          NPM_PROVENANCE: "1"
+        run: bash ./scripts/release/release-npm-package.sh
