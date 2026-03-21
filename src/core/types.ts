@@ -47,6 +47,8 @@ export type RetroLcdSharedProps = {
   displayColorMode?: RetroLcdDisplayColorMode;
   displaySurfaceMode?: RetroLcdDisplaySurfaceMode;
   displayPadding?: RetroLcdDisplayPadding;
+  displayFontScale?: number;
+  displayRowScale?: number;
   resizable?: boolean | RetroLcdResizeMode;
   resizableLeadingEdges?: boolean;
   cursorMode?: CursorMode;

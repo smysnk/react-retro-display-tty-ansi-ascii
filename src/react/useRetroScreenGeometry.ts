@@ -33,6 +33,7 @@ type UseRetroLcdGeometryOptions = {
   gridMode?: RetroLcdGridMode;
   rows?: number;
   cols?: number;
+  fontScale?: number;
   onGeometryChange?: (geometry: RetroLcdGeometry) => void;
 };
 
@@ -46,7 +47,7 @@ const measureCurrentGeometry = ({
   cols
 }: Pick<
   UseRetroLcdGeometryOptions,
-  "screenRef" | "probeRef" | "gridMode" | "rows" | "cols"
+  "screenRef" | "probeRef" | "gridMode" | "rows" | "cols" | "fontScale"
 >): RetroLcdGeometry => {
   const screenNode = screenRef.current;
   const probeNode = probeRef.current;
@@ -103,15 +104,16 @@ export const useRetroLcdGeometry = ({
   gridMode,
   rows,
   cols,
+  fontScale,
   onGeometryChange
 }: UseRetroLcdGeometryOptions) => {
   const [geometry, setGeometry] = useState(() =>
-    measureCurrentGeometry({ screenRef, probeRef, gridMode, rows, cols })
+    measureCurrentGeometry({ screenRef, probeRef, gridMode, rows, cols, fontScale })
   );
 
   useIsomorphicLayoutEffect(() => {
-    setGeometry(measureCurrentGeometry({ screenRef, probeRef, gridMode, rows, cols }));
-  }, [cols, gridMode, probeRef, rows, screenRef]);
+    setGeometry(measureCurrentGeometry({ screenRef, probeRef, gridMode, rows, cols, fontScale }));
+  }, [cols, fontScale, gridMode, probeRef, rows, screenRef]);
 
   useEffect(() => {
     const screenNode = screenRef.current;
@@ -121,12 +123,12 @@ export const useRetroLcdGeometry = ({
     }
 
     const observer = new ResizeObserver(() => {
-      setGeometry(measureCurrentGeometry({ screenRef, probeRef, gridMode, rows, cols }));
+      setGeometry(measureCurrentGeometry({ screenRef, probeRef, gridMode, rows, cols, fontScale }));
     });
 
     observer.observe(screenNode);
     return () => observer.disconnect();
-  }, [cols, gridMode, probeRef, rows, screenRef]);
+  }, [cols, fontScale, gridMode, probeRef, rows, screenRef]);
 
   useEffect(() => {
     if (typeof document === "undefined" || !("fonts" in document) || !document.fonts?.ready) {
@@ -136,7 +138,9 @@ export const useRetroLcdGeometry = ({
     let cancelled = false;
     const syncGeometry = () => {
       if (!cancelled) {
-        setGeometry(measureCurrentGeometry({ screenRef, probeRef, gridMode, rows, cols }));
+        setGeometry(
+          measureCurrentGeometry({ screenRef, probeRef, gridMode, rows, cols, fontScale })
+        );
       }
     };
 
@@ -145,7 +149,7 @@ export const useRetroLcdGeometry = ({
     return () => {
       cancelled = true;
     };
-  }, [cols, gridMode, probeRef, rows, screenRef]);
+  }, [cols, fontScale, gridMode, probeRef, rows, screenRef]);
 
   useEffect(() => {
     onGeometryChange?.(geometry);

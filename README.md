@@ -442,6 +442,47 @@ Available modes:
 Reach for `ansi-classic` when you want the familiar 16-color terminal profile, or
 `ansi-extended` when 256-color and truecolor cells should survive all the way to the display.
 
+## ANSI Art Playback
+
+Storybook now includes a dedicated `Bad Apple ANSI` demo that loads the real ANSI release,
+decodes the original IBM VGA / CP437 bytes, and plays it back through `RetroScreen` at the
+asset's native `80 x 25` geometry. The demo uses the full `BADAPPLE.ANS` payload, not a trimmed
+excerpt, and tightens the glyph scale so the character rows visually sit flush instead of leaving
+air between scanlines.
+
+Credit for the original ANSI release goes to [Mistigris](https://mistigris.org/).
+
+Open it here:
+[smysnk.github.io/react-retro-display-tty-ansi/?path=/story/retroscreen-ansi-display-buffer--bad-apple-ansi](https://smysnk.github.io/react-retro-display-tty-ansi/?path=/story/retroscreen-ansi-display-buffer--bad-apple-ansi)
+
+The Storybook demo is backed by the bundled asset at
+[src/stories/assets/bad-apple.ans](/Users/josh/play/react-retro-display/src/stories/assets/bad-apple.ans).
+
+The key styling for this kind of ANSI-art playback is:
+
+```tsx
+<RetroScreen
+  mode="terminal"
+  controller={controller}
+  gridMode="static"
+  rows={25}
+  cols={80}
+  displayColorMode="ansi-classic"
+  displayPadding={{ block: 8, inline: 12 }}
+  displayFontScale={1.22}
+  displayRowScale={1.14}
+  style={{ width: "1010px", height: "642px" }}
+/>
+```
+
+Use `gridMode="static"` with the asset's native `rows` and `cols` so the art is not reflowed.
+Use `displayFontScale` to densify the rendered glyphs within each row when you want ANSI art to
+read as a continuous image rather than as separated text lines. Use `displayRowScale` when you
+need to close the last 1-2px of visual gap between rows by letting the glyphs overlap slightly
+inside each fixed terminal row. For the Bad Apple panel, the demo also uses a container size that
+lands on exact `12x24` cell geometry after padding and bezel chrome, which avoids fractional row
+heights and helps eliminate subpixel seams.
+
 ## Control-Character Playback
 
 The terminal path is now tested against an xterm oracle and can faithfully replay real control
@@ -507,6 +548,7 @@ It includes stories for the main user journeys:
 - resizable live panels with scripted handle demos
 - auto-resize geometry probing
 - live TTY bridge wiring
+- ANSI art playback
 - ANSI styling
 - display color mode projection
 - light and dark surface modes

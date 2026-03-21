@@ -92,7 +92,7 @@ export class RetroLcdScreenBuffer {
     this.rows = clampDimension(options.rows);
     this.cols = clampDimension(options.cols);
     this.scrollbackLimit = Math.max(0, Math.floor(options.scrollback ?? 200));
-    this.tabWidth = Math.max(1, Math.floor(options.tabWidth ?? 4));
+    this.tabWidth = Math.max(1, Math.floor(options.tabWidth ?? 8));
     this.primarySurface = this.createSurfaceState({
       cursorMode: options.cursorMode ?? "solid"
     });

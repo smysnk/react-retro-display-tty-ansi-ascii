@@ -27,6 +27,8 @@ export type RetroLcdRenderModel = {
 
 const DEFAULT_RENDER_CELL_STYLE: RetroLcdCellStyle = {
   intensity: "normal",
+  bold: false,
+  faint: false,
   inverse: false,
   conceal: false,
   blink: false,

@@ -96,7 +96,7 @@
 }
 
 .retro-lcd__grid {
-  --retro-lcd-cursor-height: 1em;
+  --retro-lcd-cursor-height: var(--retro-lcd-font-size, 24px);
   --retro-lcd-cursor-y-offset: max(
     0px,
     calc((var(--retro-lcd-cell-height) - var(--retro-lcd-cursor-height)) / 2)
@@ -107,7 +107,7 @@
   overflow: hidden;
   color: var(--retro-lcd-color);
   font-family: "IBM Plex Mono", monospace;
-  font-size: var(--retro-lcd-font-size, 24px);
+  font-size: calc(var(--retro-lcd-font-size, 24px) * var(--retro-lcd-font-scale, 1));
   line-height: var(--retro-lcd-cell-height);
   letter-spacing: 0.015em;
   text-shadow:
@@ -157,9 +157,11 @@
 .retro-lcd__line {
   display: block;
   height: var(--retro-lcd-cell-height);
-  overflow: hidden;
+  overflow: visible;
   white-space: pre;
   color: inherit;
+  transform: scaleY(var(--retro-lcd-row-scale, 1));
+  transform-origin: top center;
 }
 
 .retro-lcd__cell {

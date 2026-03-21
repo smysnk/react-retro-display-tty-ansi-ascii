@@ -15,7 +15,7 @@ const readHandles = async () =>
   }));
 
 test("storybook resize demos expose every resize handle by default", async () => {
-  await harness.gotoStory("retroscreen--resizable-panel");
+  await harness.gotoStory("retroscreen-resize-responsive--resizable-panel");
   await page().waitForSelector(".retro-lcd");
 
   const summary = await readHandles();
@@ -31,7 +31,7 @@ test("storybook resize demos expose every resize handle by default", async () =>
 });
 
 test("leading-edge resize handles can still grow the panel from left and top", async () => {
-  await harness.gotoStory("retroscreen--resizable-panel-leading-edges");
+  await harness.gotoStory("retroscreen-resize-responsive--resizable-panel-leading-edges");
   await page().waitForSelector(".retro-lcd");
 
   const root = page().locator(".retro-lcd");

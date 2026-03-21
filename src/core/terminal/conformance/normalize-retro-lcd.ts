@@ -11,8 +11,8 @@ const DEFAULT_COLOR = {
 };
 
 const normalizeCellStyle = (cell: RetroLcdCell): RetroLcdNormalizedCellStyle => ({
-  bold: cell.style.intensity === "bold",
-  faint: cell.style.intensity === "faint",
+  bold: cell.style.bold,
+  faint: cell.style.faint,
   inverse: cell.style.inverse,
   conceal: cell.style.conceal,
   blink: cell.style.blink,

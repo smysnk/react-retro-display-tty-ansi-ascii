@@ -219,7 +219,7 @@ const runFfmpegMp4 = ({ framesDir, fps, outputFile }) => {
 const captures = [
   {
     name: "feature tour",
-    storyId: "retroscreen--feature-tour",
+    storyId: "retroscreen-capture--feature-tour",
     selector: "[data-feature-tour-root='true']",
     waitMs: 300,
     fps: featureTourFps,
@@ -231,7 +231,7 @@ const captures = [
   },
   {
     name: "quiet output",
-    storyId: "retroscreen--quiet-output-demo",
+    storyId: "retroscreen-capture--quiet-output-demo",
     selector: "[data-demo-capture='quiet-output']",
     waitMs: 220,
     fps: 16,
@@ -243,7 +243,7 @@ const captures = [
   },
   {
     name: "editable drafting",
-    storyId: "retroscreen--editable-mode-demo",
+    storyId: "retroscreen-capture--editable-mode-demo",
     selector: "[data-demo-capture='editable-drafting']",
     waitMs: 220,
     fps: 16,
@@ -255,7 +255,7 @@ const captures = [
   },
   {
     name: "terminal output",
-    storyId: "retroscreen--terminal-mode-demo",
+    storyId: "retroscreen-capture--terminal-mode-demo",
     selector: "[data-demo-capture='terminal-output']",
     waitMs: 220,
     fps: 15,
@@ -267,7 +267,7 @@ const captures = [
   },
   {
     name: "prompt loop",
-    storyId: "retroscreen--prompt-mode-demo",
+    storyId: "retroscreen-capture--prompt-mode-demo",
     selector: "[data-demo-capture='prompt-interaction']",
     waitMs: 220,
     fps: 15,
@@ -279,7 +279,7 @@ const captures = [
   },
   {
     name: "display color modes",
-    storyId: "retroscreen--display-color-modes-demo",
+    storyId: "retroscreen-capture--display-color-modes-demo",
     selector: "[data-demo-capture='display-color-modes']",
     waitMs: 180,
     fps: 16,
@@ -291,7 +291,7 @@ const captures = [
   },
   {
     name: "light and dark hosts",
-    storyId: "retroscreen--light-dark-hosts-demo",
+    storyId: "retroscreen-capture--light-dark-hosts-demo",
     selector: "[data-demo-capture='light-dark-hosts']",
     waitMs: 180,
     fps: 16,
@@ -303,7 +303,7 @@ const captures = [
   },
   {
     name: "control character replay",
-    storyId: "retroscreen--control-character-replay-demo",
+    storyId: "retroscreen-capture--control-character-replay-demo",
     selector: "[data-demo-capture='control-character-replay']",
     waitMs: 180,
     fps: 16,
@@ -315,7 +315,7 @@ const captures = [
   },
   {
     name: "auto resize probe",
-    storyId: "retroscreen--auto-resize-probe-demo",
+    storyId: "retroscreen-resize-responsive--auto-resize-probe-capture",
     selector: "[data-demo-capture='auto-resize-probe']",
     waitMs: 240,
     fps: 16,
@@ -327,7 +327,7 @@ const captures = [
   },
   {
     name: "resizable panel",
-    storyId: "retroscreen--resizable-panel-demo",
+    storyId: "retroscreen-resize-responsive--resizable-panel-capture",
     selector: "[data-demo-capture='resizable-panel']",
     waitMs: 260,
     fps: 16,
@@ -339,7 +339,7 @@ const captures = [
   },
   {
     name: "live tty terminal bridge",
-    storyId: "retroscreen--live-tty-terminal-bridge-demo",
+    storyId: "retroscreen-capture--live-tty-terminal-bridge-demo",
     selector: "[data-demo-capture='live-tty-terminal-bridge']",
     waitMs: 220,
     fps: 16,

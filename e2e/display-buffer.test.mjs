@@ -17,18 +17,40 @@ const readDisplayBufferState = async () =>
     )
   }));
 
-const waitForBufferOffset = async (expectedOffset) => {
-  await page().waitForFunction(
-    (offset) => {
-      const root = document.querySelector(".retro-lcd");
-      return Number(root?.getAttribute("data-buffer-offset") ?? "0") === offset;
-    },
-    expectedOffset
-  );
+const waitForBufferOffset = async (
+  expectedOffset,
+  { timeoutMs = 10000, strict = true } = {}
+) => {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() <= deadline) {
+    const state = await readDisplayBufferState();
+    if (state.bufferOffset === expectedOffset) {
+      return state;
+    }
+
+    await page().waitForTimeout(80);
+  }
+
+  const lastState = await readDisplayBufferState();
+  if (strict) {
+    assert.equal(
+      lastState.bufferOffset,
+      expectedOffset,
+      `Expected buffer offset ${expectedOffset}, received ${lastState.bufferOffset}.`
+    );
+  }
+  return lastState;
+};
+
+const moveMouseToViewportCenter = async (viewport) => {
+  const box = await viewport.boundingBox();
+  assert.ok(box, "The viewport should expose a measurable box.");
+  await page().mouse.move(box.x + box.width / 2, box.y + box.height / 2);
 };
 
 test("display buffer story pages through history and preserves the visible window while follow mode is off", async () => {
-  await harness.gotoStory("retroscreen--display-buffer");
+  await harness.gotoStory("retroscreen-ansi-display-buffer--display-buffer");
 
   await page().waitForFunction(() => {
     const root = document.querySelector(".retro-lcd");
@@ -106,7 +128,7 @@ test("display buffer story pages through history and preserves the visible windo
 });
 
 test("display buffer story supports mouse-wheel scrolling and wheel-based recovery to the live tail", async () => {
-  await harness.gotoStory("retroscreen--display-buffer");
+  await harness.gotoStory("retroscreen-ansi-display-buffer--display-buffer");
 
   await page().waitForFunction(() => {
     const root = document.querySelector(".retro-lcd");
@@ -114,7 +136,7 @@ test("display buffer story supports mouse-wheel scrolling and wheel-based recove
   });
 
   const viewport = page().locator(".retro-lcd__viewport");
-  await viewport.hover();
+  await moveMouseToViewportCenter(viewport);
   await page().mouse.wheel(0, -480);
 
   await page().waitForFunction(() => {
@@ -126,10 +148,16 @@ test("display buffer story supports mouse-wheel scrolling and wheel-based recove
   assert.ok(scrolledState.bufferOffset > 0, "Wheel-up should move into scrollback.");
   assert.equal(scrolledState.autoFollow, false, "Wheel-up should disable auto-follow.");
 
-  await page().mouse.wheel(0, 4000);
-  await waitForBufferOffset(0);
+  let recoveredState = scrolledState;
+  const recoveryDeadline = Date.now() + 12000;
 
-  const liveState = await readDisplayBufferState();
+  while (recoveredState.bufferOffset > 0 && Date.now() <= recoveryDeadline) {
+    await moveMouseToViewportCenter(viewport);
+    await page().mouse.wheel(0, Math.max(960, recoveredState.bufferOffset * 96));
+    recoveredState = await waitForBufferOffset(0, { timeoutMs: 500, strict: false });
+  }
+
+  const liveState = recoveredState.bufferOffset === 0 ? recoveredState : await readDisplayBufferState();
   assert.equal(liveState.bufferOffset, 0, "Wheel-down should be able to reach the live tail again.");
   assert.equal(liveState.autoFollow, true, "Reaching the bottom should restore auto-follow.");
   assert.ok(

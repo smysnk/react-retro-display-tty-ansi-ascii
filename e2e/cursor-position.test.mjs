@@ -162,7 +162,7 @@ const readDescenderMetrics = async () =>
   });
 
 test("editable story keeps the visible cursor after the latest typed character", async () => {
-  await harness.gotoStory("retroscreen--editable-notebook");
+  await harness.gotoStory("retroscreen-editor--editable-notebook");
   await page().locator(".retro-lcd__input").click();
 
   const initialCols = Number(await page().locator(".retro-lcd").getAttribute("data-cols"));

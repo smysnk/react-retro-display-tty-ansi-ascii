@@ -9,6 +9,8 @@ export const cloneColor = (color: RetroLcdTerminalColor): RetroLcdTerminalColor 
 
 export const DEFAULT_CELL_STYLE: RetroLcdCellStyle = {
   intensity: "normal",
+  bold: false,
+  faint: false,
   inverse: false,
   conceal: false,
   blink: false,
@@ -21,6 +23,10 @@ export const cloneStyle = (style: RetroLcdCellStyle): RetroLcdCellStyle => ({
   foreground: cloneColor(style.foreground),
   background: cloneColor(style.background)
 });
+
+const syncIntensity = (style: RetroLcdCellStyle) => {
+  style.intensity = style.bold ? "bold" : style.faint ? "faint" : "normal";
+};
 
 const clampColorByte = (value: number) =>
   Math.max(0, Math.min(255, Number.isFinite(value) ? Math.floor(value) : 0));
@@ -78,10 +84,12 @@ export const applySgrParameters = (style: RetroLcdCellStyle, params: number[]) =
         Object.assign(nextStyle, cloneStyle(DEFAULT_CELL_STYLE));
         break;
       case 1:
-        nextStyle.intensity = "bold";
+        nextStyle.bold = true;
+        syncIntensity(nextStyle);
         break;
       case 2:
-        nextStyle.intensity = "faint";
+        nextStyle.faint = true;
+        syncIntensity(nextStyle);
         break;
       case 5:
         nextStyle.blink = true;
@@ -93,7 +101,9 @@ export const applySgrParameters = (style: RetroLcdCellStyle, params: number[]) =
         nextStyle.conceal = true;
         break;
       case 22:
-        nextStyle.intensity = "normal";
+        nextStyle.bold = false;
+        nextStyle.faint = false;
+        syncIntensity(nextStyle);
         break;
       case 25:
         nextStyle.blink = false;

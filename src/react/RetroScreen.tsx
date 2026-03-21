@@ -31,6 +31,7 @@ import { RetroScreenDisplay } from "./RetroScreenDisplay";
 import { RetroScreenInputOverlay } from "./RetroScreenInputOverlay";
 import { getDisplayModeRootVars } from "./retro-screen-display-color";
 import { getDisplayPaddingVars } from "./retro-screen-display-padding";
+import { getDisplayTypographyVars } from "./retro-screen-display-typography";
 import {
   getRetroLcdPointerGridHit,
   getRetroLcdPointerGridPosition
@@ -150,6 +151,7 @@ export function RetroScreen(props: RetroLcdProps) {
     gridMode: props.gridMode,
     rows: props.rows,
     cols: props.cols,
+    fontScale: props.displayFontScale,
     onGeometryChange: props.onGeometryChange
   });
   const { snapshot: terminalSnapshot, terminalController } = useRetroLcdTerminalRenderModel({
@@ -961,6 +963,7 @@ export function RetroScreen(props: RetroLcdProps) {
     "--retro-lcd-cols": `${geometry.cols}`,
     ...getDisplayModeRootVars(displayColorMode, displaySurfaceMode, props.color),
     ...getDisplayPaddingVars(props.displayPadding),
+    ...getDisplayTypographyVars(props.displayFontScale, props.displayRowScale),
     ...cssVars,
     ...props.style,
     ...resizablePanel.inlineSizeStyle

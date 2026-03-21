@@ -6,6 +6,8 @@ describe("applySgrParameters", () => {
     const nextStyle = applySgrParameters(DEFAULT_CELL_STYLE, [31, 44, 91, 102]);
 
     expect(nextStyle).toMatchObject({
+      bold: false,
+      faint: false,
       foreground: {
         mode: "palette",
         value: 9
@@ -30,6 +32,8 @@ describe("applySgrParameters", () => {
     ]);
 
     expect(nextStyle).toMatchObject({
+      bold: false,
+      faint: false,
       foreground: {
         mode: "palette",
         value: 196
@@ -46,6 +50,8 @@ describe("applySgrParameters", () => {
     const reset = applySgrParameters(colored, [39, 49]);
 
     expect(reset).toMatchObject({
+      bold: false,
+      faint: false,
       foreground: {
         mode: "default",
         value: 0
@@ -54,6 +60,22 @@ describe("applySgrParameters", () => {
         mode: "default",
         value: 0
       }
+    });
+  });
+
+  it("tracks bold and faint independently until SGR 22 resets both", () => {
+    const emphasized = applySgrParameters(DEFAULT_CELL_STYLE, [1, 2]);
+    const reset = applySgrParameters(emphasized, [22]);
+
+    expect(emphasized).toMatchObject({
+      bold: true,
+      faint: true,
+      intensity: "bold"
+    });
+    expect(reset).toMatchObject({
+      bold: false,
+      faint: false,
+      intensity: "normal"
     });
   });
 });

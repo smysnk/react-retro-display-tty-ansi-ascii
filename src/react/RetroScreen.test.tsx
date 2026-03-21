@@ -1008,6 +1008,16 @@ describe("RetroLcd", () => {
     expect(sideRoot?.style.getPropertyValue("--retro-lcd-padding-left")).toBe("1.5rem");
   });
 
+  it("supports scaling the rendered glyphs inside each screen cell", () => {
+    const { container } = render(
+      <RetroLcd mode="value" value="grid" displayFontScale={1.22} displayRowScale={1.08} />
+    );
+
+    const root = container.querySelector(".retro-lcd") as HTMLElement | null;
+    expect(root?.style.getPropertyValue("--retro-lcd-font-scale")).toBe("1.22");
+    expect(root?.style.getPropertyValue("--retro-lcd-row-scale")).toBe("1.08");
+  });
+
   it("supports a static grid mode with caller-supplied rows and columns", () => {
     const onGeometryChange = vi.fn();
     const { container } = render(

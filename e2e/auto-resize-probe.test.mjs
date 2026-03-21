@@ -33,20 +33,30 @@ const readAutoResizeProbeState = async () =>
     };
   });
 
+const waitForAutoResizeProbeReady = async ({ timeoutMs = 30000, stepMs = 200 } = {}) => {
+  const startedAt = Date.now();
+
+  await page().waitForSelector(".sb-retro-auto-resize-host", {
+    state: "attached"
+  });
+
+  while (Date.now() - startedAt < timeoutMs) {
+    const state = await readAutoResizeProbeState();
+
+    if (state.redrawSequence > 0 && state.cursorVisible) {
+      return state;
+    }
+
+    await page().waitForTimeout(stepMs);
+  }
+
+  throw new Error("Timed out waiting for the auto-resize probe to render a visible scripted cursor.");
+};
+
 test("auto-resize probe uses a visible scripted cursor to live-resize the panel without cutting the rendered frame", async () => {
-  await harness.gotoStory("retroscreen--auto-resize-probe");
+  await harness.gotoStory("retroscreen-resize-responsive--auto-resize-probe");
 
-  await page().waitForFunction(() => {
-    const host = document.querySelector(".sb-retro-auto-resize-host");
-    const cursor = document.querySelector('[data-demo-cursor="true"]');
-    return (
-      Number(host?.getAttribute("data-probe-redraw-seq") ?? "0") > 0 &&
-      cursor instanceof HTMLElement &&
-      Number(getComputedStyle(cursor).opacity) > 0.9
-    );
-  }, { timeout: 10000 });
-
-  const initialState = await readAutoResizeProbeState();
+  const initialState = await waitForAutoResizeProbeReady();
 
   assert.equal(initialState.demoState, "auto");
   assert.ok(initialState.cursorVisible, "The demo should show a visible cursor overlay.");

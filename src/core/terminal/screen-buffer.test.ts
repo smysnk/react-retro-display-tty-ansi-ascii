@@ -354,12 +354,16 @@ describe("RetroLcdScreenBuffer", () => {
 
     const snapshot = buffer.getSnapshot();
     expect(snapshot.cells[0][0].style).toMatchObject({
+      bold: true,
+      faint: false,
       intensity: "bold",
       inverse: false,
       conceal: false
     });
     expect(snapshot.cells[0][1].style).toMatchObject({
-      intensity: "faint"
+      bold: true,
+      faint: true,
+      intensity: "bold"
     });
     expect(snapshot.cells[0][2].style).toMatchObject({
       inverse: true
@@ -368,6 +372,8 @@ describe("RetroLcdScreenBuffer", () => {
       conceal: true
     });
     expect(snapshot.cells[0][4].style).toMatchObject({
+      bold: false,
+      faint: false,
       intensity: "normal",
       inverse: false,
       conceal: false

@@ -16,6 +16,7 @@ import { createRetroLcdController } from "../core/terminal/controller";
 import { createRetroLcdWebSocketSession } from "../core/terminal/websocket-session";
 import type { RetroLcdDisplayColorMode, RetroLcdGeometry } from "../core/types";
 import { RetroScreen } from "../react/RetroScreen";
+import { loadBadAppleAnsiAsset, type BadAppleAnsiAsset } from "./bad-apple-ansi";
 
 const STORY_COLOR = "#97ff9b";
 
@@ -1238,7 +1239,7 @@ function CaptureStage({
   );
 }
 
-function QuietOutputDemoStory() {
+export function QuietOutputDemoStory() {
   const [value, setValue] = useState("");
 
   useEffect(() => {
@@ -1272,7 +1273,7 @@ function QuietOutputDemoStory() {
   );
 }
 
-function EditableModeDemoStory() {
+export function EditableModeDemoStory() {
   const [value, setValue] = useState("");
   const hostRef = useRef<HTMLDivElement | null>(null);
 
@@ -1335,7 +1336,7 @@ function EditableModeDemoStory() {
   );
 }
 
-function EditableNotebookStory() {
+export function EditableNotebookStory() {
   const [value, setValue] = useState("");
   const [submitted, setSubmitted] = useState("Nothing committed yet.");
 
@@ -1368,7 +1369,7 @@ function EditableNotebookStory() {
   );
 }
 
-function EditorSelectionLabStory() {
+export function EditorSelectionLabStory() {
   const [value, setValue] = useState("ABCD");
   const [selection, setSelection] = useState("0:0");
 
@@ -1404,7 +1405,7 @@ function EditorSelectionLabStory() {
   );
 }
 
-function EditorSelectionWrappedStory() {
+export function EditorSelectionWrappedStory() {
   const [value, setValue] = useState("ABCDEFGHIJKL");
   const [selection, setSelection] = useState("0:0");
 
@@ -1440,7 +1441,7 @@ function EditorSelectionWrappedStory() {
   );
 }
 
-function EditorWordSelectionLabStory() {
+export function EditorWordSelectionLabStory() {
   const [value, setValue] = useState("retro display tty");
   const [selection, setSelection] = useState("0:0");
 
@@ -1476,7 +1477,7 @@ function EditorWordSelectionLabStory() {
   );
 }
 
-function EditorSelectionReadOnlyStory() {
+export function EditorSelectionReadOnlyStory() {
   const [selection, setSelection] = useState("0:0");
 
   return (
@@ -1574,7 +1575,7 @@ function TerminalStreamStory() {
   );
 }
 
-function TerminalModeDemoStory() {
+export function TerminalModeDemoStory() {
   const [controller] = useState(() =>
     createRetroLcdController({
       rows: 9,
@@ -1676,7 +1677,7 @@ function PromptConsoleStory() {
   );
 }
 
-function PromptModeDemoStory() {
+export function PromptModeDemoStory() {
   const hostRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -1750,7 +1751,7 @@ function PromptModeDemoStory() {
   );
 }
 
-function DisplayColorModesDemoStory() {
+export function DisplayColorModesDemoStory() {
   const [controller] = useState(() =>
     createRetroLcdController({
       rows: 6,
@@ -1801,7 +1802,7 @@ function DisplayColorModesDemoStory() {
   );
 }
 
-function ControlCharacterReplayStory() {
+export function ControlCharacterReplayStory() {
   const [scenarioId, setScenarioId] = useState(traceScenarios[0].id);
   const [runToken, setRunToken] = useState(0);
   const [controller] = useState(() =>
@@ -1868,7 +1869,7 @@ function ControlCharacterReplayStory() {
   );
 }
 
-function ControlCharacterReplayDemoStory() {
+export function ControlCharacterReplayDemoStory() {
   const [controller] = useState(() =>
     createRetroLcdController({
       rows: 6,
@@ -1906,7 +1907,7 @@ function ControlCharacterReplayDemoStory() {
   );
 }
 
-function DisplayBufferStory() {
+export function DisplayBufferStory() {
   const [controller] = useState(() =>
     createRetroLcdController({
       rows: 8,
@@ -1960,6 +1961,133 @@ function DisplayBufferStory() {
       </div>
       <Stage maxWidth={820}>
         <RetroLcd mode="terminal" controller={controller} />
+      </Stage>
+    </StoryShell>
+  );
+}
+
+export function BadAppleAnsiStory() {
+  const [controller] = useState(() =>
+    createRetroLcdController({
+      rows: 25,
+      cols: 80,
+      scrollback: 0,
+      cursorMode: "solid"
+    })
+  );
+  const [asset, setAsset] = useState<BadAppleAnsiAsset | null>(null);
+  const [playbackState, setPlaybackState] = useState<"loading" | "playing" | "failed">(
+    "loading"
+  );
+  const [frameIndex, setFrameIndex] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+
+    controller.reset();
+    controller.resize(25, 80);
+    controller.setCursorVisible(false);
+    controller.write("Loading Bad Apple ANSI...\r\nWaiting for CP437 decode.");
+
+    loadBadAppleAnsiAsset()
+      .then((nextAsset) => {
+        if (!active) {
+          return;
+        }
+
+        controller.reset();
+        controller.resize(nextAsset.height, nextAsset.width);
+        controller.setCursorVisible(false);
+        setAsset(nextAsset);
+        setFrameIndex(0);
+        setPlaybackState("playing");
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+
+        controller.reset();
+        controller.resize(25, 80);
+        controller.setCursorVisible(false);
+        controller.write(`Bad Apple ANSI failed to load.\r\n${String(error)}`);
+        setPlaybackState("failed");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [controller]);
+
+  useEffect(() => {
+    if (!asset || playbackState !== "playing" || asset.frames.length === 0) {
+      return;
+    }
+
+    let active = true;
+    let currentFrame = 0;
+    let timer = 0;
+
+    const paintFrame = () => {
+      if (!active) {
+        return;
+      }
+
+      if (currentFrame === 0) {
+        controller.reset();
+        controller.resize(asset.height, asset.width);
+        controller.setCursorVisible(false);
+      }
+
+      controller.write(asset.frames[currentFrame] ?? "");
+      setFrameIndex(currentFrame);
+      currentFrame = (currentFrame + 1) % asset.frames.length;
+      timer = window.setTimeout(paintFrame, asset.frameDelayMs);
+    };
+
+    paintFrame();
+
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [asset, controller, playbackState]);
+
+  return (
+    <StoryShell
+      kicker="ANSI Playback"
+      title="Play Bad Apple!! inside RetroScreen at its native 80x25 geometry."
+      copy="This demo loads the full original ANSI release, decodes its IBM VGA CP437 bytes, and replays every frame directly through the terminal surface. The panel is locked to the asset's native 80 columns by 25 rows, and the container is sized so the grid lands on exact 12x24 cells with extra row overlap for dense ANSI-art playback."
+      footer={
+        <div className="sb-retro-status">
+          <span>
+            {asset
+              ? `Frame ${String(frameIndex + 1).padStart(2, "0")} / ${asset.frames.length} · ${asset.width}x${asset.height} · ${asset.font}`
+              : "Loading Mistigris ANSI release..."}
+          </span>
+          <span>
+            Credit:{" "}
+            <a href="https://mistigris.org/" rel="noreferrer" target="_blank">
+              Mistigris
+            </a>
+            {asset ? ` · ${asset.title} by ${asset.author}` : ""}
+          </span>
+        </div>
+      }
+    >
+      <Stage maxWidth={1100}>
+        <RetroLcd
+          mode="terminal"
+          controller={controller}
+          gridMode="static"
+          rows={25}
+          cols={80}
+          displayColorMode="ansi-classic"
+          displayFontScale={1.22}
+          displayRowScale={1.14}
+          displayPadding={{ block: 8, inline: 12 }}
+          style={{ width: "1010px", height: "642px" }}
+        />
       </Stage>
     </StoryShell>
   );
@@ -2099,7 +2227,7 @@ function LiveTtyTerminalBridgeStory() {
   );
 }
 
-function LiveTtyTerminalBridgeDemoStory() {
+export function LiveTtyTerminalBridgeDemoStory() {
   const [config] = useState<LiveTtyDemoConfig | null>(() => resolveLiveTtyDemoConfig());
   const openPayloadSignature = JSON.stringify(config?.openPayload ?? {});
   const session = useMemo(() => {
@@ -2156,7 +2284,7 @@ function LiveTtyTerminalBridgeDemoStory() {
   );
 }
 
-function AutoResizeProbeStory() {
+export function AutoResizeProbeStory() {
   const [lastReply, setLastReply] = useState<string>("");
   const [sceneState, setSceneState] = useState<ProbeSceneState>({
     displayColorMode: probeDisplayColorModes[0],
@@ -2212,6 +2340,7 @@ function AutoResizeProbeSurface({
 }) {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const panelHostRef = useRef<HTMLDivElement | null>(null);
+  const windowResizePauseArmedRef = useRef(false);
   const [controller] = useState(() =>
     createRetroLcdController({
       rows: 9,
@@ -2274,7 +2403,22 @@ function AutoResizeProbeSurface({
   }, []);
 
   useEffect(() => {
+    const armTimer = window.setTimeout(() => {
+      windowResizePauseArmedRef.current = true;
+    }, 1400);
+
+    return () => {
+      window.clearTimeout(armTimer);
+      windowResizePauseArmedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
     const pauseAutoResize = () => {
+      if (!windowResizePauseArmedRef.current) {
+        return;
+      }
+
       setResizePaused(true);
     };
 
@@ -2417,7 +2561,7 @@ function AutoResizeProbeSurface({
   );
 }
 
-function AutoResizeProbeDemoStory() {
+export function AutoResizeProbeDemoStory() {
   return (
     <CaptureStage captureId="auto-resize-probe" maxWidth={920}>
       <div className="sb-retro-auto-resize-capture-shell">
@@ -2526,7 +2670,7 @@ function ResizablePanelLiveSurface({
   );
 }
 
-function ResizablePanelStory() {
+export function ResizablePanelStory() {
   const [paused, setPaused] = useState(false);
   const [activeHandleLabel, setActiveHandleLabel] = useState(
     resizablePanelLiveSteps[0]?.label ?? "right edge"
@@ -2559,7 +2703,7 @@ function ResizablePanelStory() {
   );
 }
 
-function ResizablePanelLeadingEdgesStory() {
+export function ResizablePanelLeadingEdgesStory() {
   const [paused, setPaused] = useState(false);
   const [activeHandleLabel, setActiveHandleLabel] = useState(
     resizablePanelLeadingSteps[0]?.label ?? "top-left corner"
@@ -2593,7 +2737,7 @@ function ResizablePanelLeadingEdgesStory() {
   );
 }
 
-function ResizablePanelDemoStory() {
+export function ResizablePanelDemoStory() {
   return (
     <CaptureStage captureId="resizable-panel" maxWidth={920}>
       <div className="sb-retro-resizable-capture-shell">
@@ -2603,7 +2747,7 @@ function ResizablePanelDemoStory() {
   );
 }
 
-function ResponsivePanelStory() {
+export function ResponsivePanelStory() {
   const widths = [
     { label: "Compact", value: 420 },
     { label: "Balanced", value: 620 },
@@ -2877,7 +3021,7 @@ function LightDarkHostsStory() {
   );
 }
 
-function LightDarkHostsDemoStory() {
+export function LightDarkHostsDemoStory() {
   return (
     <CaptureStage captureId="light-dark-hosts" maxWidth={980}>
       <LightDarkHostsSurface activeTheme="both" animated />
@@ -2885,7 +3029,7 @@ function LightDarkHostsDemoStory() {
   );
 }
 
-function FeatureTourStory() {
+export function FeatureTourStory() {
   const [tick, setTick] = useState(0);
   const cycleMs = 30000;
   const now = tick % cycleMs;
@@ -3020,6 +3164,7 @@ const meta = {
   title: "RetroScreen",
   component: RetroScreen,
   tags: ["autodocs"],
+  excludeStories: /.*Story$/,
   args: {
     color: STORY_COLOR
   }
@@ -3050,32 +3195,12 @@ export const CalmReadout: Story = {
   )
 };
 
-export const EditableNotebook: Story = {
-  render: () => <EditableNotebookStory />
-};
-
-export const EditorSelectionLab: Story = {
-  render: () => <EditorSelectionLabStory />
-};
-
-export const EditorSelectionWrapped: Story = {
-  render: () => <EditorSelectionWrappedStory />
-};
-
-export const EditorWordSelectionLab: Story = {
-  render: () => <EditorWordSelectionLabStory />
-};
-
-export const EditorSelectionReadOnly: Story = {
-  render: () => <EditorSelectionReadOnlyStory />
-};
-
 export const TerminalStream: Story = {
   render: () => <TerminalStreamStory />
 };
 
-export const AnsiSurface: Story = {
-  render: () => (
+export function AnsiSurfaceStory() {
+  return (
     <StoryShell
       kicker="ANSI Styling"
       title="Use terminal emphasis without a browser theme system."
@@ -3102,27 +3227,11 @@ export const AnsiSurface: Story = {
         />
       </Stage>
     </StoryShell>
-  )
-};
+  );
+}
 
 export const PromptLoop: Story = {
   render: () => <PromptConsoleStory />
-};
-
-export const ResponsivePanel: Story = {
-  render: () => <ResponsivePanelStory />
-};
-
-export const ResizablePanel: Story = {
-  render: () => <ResizablePanelStory />
-};
-
-export const ResizablePanelLeadingEdges: Story = {
-  render: () => <ResizablePanelLeadingEdgesStory />
-};
-
-export const AutoResizeProbe: Story = {
-  render: () => <AutoResizeProbeStory />
 };
 
 export const DisplayColorModes: Story = {
@@ -3133,154 +3242,7 @@ export const LightDarkHosts: Story = {
   render: () => <LightDarkHostsStory />
 };
 
-export const ControlCharacterReplay: Story = {
-  render: () => <ControlCharacterReplayStory />
-};
-
-export const DisplayBuffer: Story = {
-  render: () => <DisplayBufferStory />
-};
-
 export const LiveTtyTerminalBridge: Story = {
   name: "Live Tty Terminal Bridge",
   render: () => <LiveTtyTerminalBridgeStory />
-};
-
-export const FeatureTour: Story = {
-  parameters: {
-    controls: {
-      disable: true
-    }
-  },
-  render: () => <FeatureTourStory />
-};
-
-export const QuietOutputDemo: Story = {
-  name: "Capture / Quiet Output Demo",
-  parameters: {
-    controls: {
-      disable: true
-    },
-    docs: {
-      disable: true
-    }
-  },
-  render: () => <QuietOutputDemoStory />
-};
-
-export const EditableModeDemo: Story = {
-  name: "Capture / Editable Mode Demo",
-  parameters: {
-    controls: {
-      disable: true
-    },
-    docs: {
-      disable: true
-    }
-  },
-  render: () => <EditableModeDemoStory />
-};
-
-export const TerminalModeDemo: Story = {
-  name: "Capture / Terminal Mode Demo",
-  parameters: {
-    controls: {
-      disable: true
-    },
-    docs: {
-      disable: true
-    }
-  },
-  render: () => <TerminalModeDemoStory />
-};
-
-export const PromptModeDemo: Story = {
-  name: "Capture / Prompt Mode Demo",
-  parameters: {
-    controls: {
-      disable: true
-    },
-    docs: {
-      disable: true
-    }
-  },
-  render: () => <PromptModeDemoStory />
-};
-
-export const DisplayColorModesDemo: Story = {
-  name: "Capture / Display Color Modes Demo",
-  parameters: {
-    controls: {
-      disable: true
-    },
-    docs: {
-      disable: true
-    }
-  },
-  render: () => <DisplayColorModesDemoStory />
-};
-
-export const LightDarkHostsDemo: Story = {
-  name: "Capture / Light And Dark Hosts Demo",
-  parameters: {
-    controls: {
-      disable: true
-    },
-    docs: {
-      disable: true
-    }
-  },
-  render: () => <LightDarkHostsDemoStory />
-};
-
-export const ControlCharacterReplayDemo: Story = {
-  name: "Capture / Control Character Replay Demo",
-  parameters: {
-    controls: {
-      disable: true
-    },
-    docs: {
-      disable: true
-    }
-  },
-  render: () => <ControlCharacterReplayDemoStory />
-};
-
-export const AutoResizeProbeDemo: Story = {
-  name: "Capture / Auto Resize Probe Demo",
-  parameters: {
-    controls: {
-      disable: true
-    },
-    docs: {
-      disable: true
-    }
-  },
-  render: () => <AutoResizeProbeDemoStory />
-};
-
-export const ResizablePanelDemo: Story = {
-  name: "Capture / Resizable Panel Demo",
-  parameters: {
-    controls: {
-      disable: true
-    },
-    docs: {
-      disable: true
-    }
-  },
-  render: () => <ResizablePanelDemoStory />
-};
-
-export const LiveTtyTerminalBridgeDemo: Story = {
-  name: "Capture / Live Tty Terminal Bridge Demo",
-  parameters: {
-    controls: {
-      disable: true
-    },
-    docs: {
-      disable: true
-    }
-  },
-  render: () => <LiveTtyTerminalBridgeDemoStory />
 };

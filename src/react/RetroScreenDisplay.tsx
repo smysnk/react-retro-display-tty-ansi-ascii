@@ -28,8 +28,8 @@ const joinClassNames = (...classNames: Array<string | undefined>) =>
 const getCellClassName = (cell: RetroLcdRenderCell) =>
   joinClassNames(
     "retro-lcd__cell",
-    cell.style.intensity === "bold" ? "retro-lcd__cell--bold" : undefined,
-    cell.style.intensity === "faint" ? "retro-lcd__cell--faint" : undefined,
+    cell.style.bold ? "retro-lcd__cell--bold" : undefined,
+    cell.style.faint ? "retro-lcd__cell--faint" : undefined,
     cell.style.inverse ? "retro-lcd__cell--inverse" : undefined,
     cell.style.conceal ? "retro-lcd__cell--conceal" : undefined,
     cell.style.blink ? "retro-lcd__cell--blink" : undefined,

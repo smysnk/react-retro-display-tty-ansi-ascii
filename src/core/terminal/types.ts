@@ -18,6 +18,8 @@ export type RetroLcdTerminalColor =
 
 export type RetroLcdCellStyle = {
   intensity: RetroLcdCellIntensity;
+  bold: boolean;
+  faint: boolean;
   inverse: boolean;
   conceal: boolean;
   blink: boolean;
