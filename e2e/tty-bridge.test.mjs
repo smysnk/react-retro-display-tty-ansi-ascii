@@ -10,6 +10,8 @@ const harness = createStorybookBrowserHarness();
 const page = () => harness.page;
 const scriptPath = fileURLToPath(new URL("../scripts/tty-test-terminal.mjs", import.meta.url));
 const ttySupportError = getNodeTtySupportError();
+const ciTtyBridgeUnsupported =
+  process.env.GITHUB_ACTIONS === "true" && process.env.RUN_TTY_BRIDGE_E2E !== "true";
 
 const waitForTerminalText = async (fragment) => {
   await page().waitForFunction(
@@ -42,7 +44,7 @@ const submitCommand = async (value) => {
 };
 
 test("live TTY bridge story can drive a real TTY session end to end", {
-  skip: Boolean(ttySupportError)
+  skip: Boolean(ttySupportError) || ciTtyBridgeUnsupported
 }, async (t) => {
   const server = await startTtyWebSocketServer({
     port: 0,
