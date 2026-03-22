@@ -350,7 +350,7 @@ const captures = [
     storyId: "retroscreen-capture--bad-apple-ansi",
     selector: "[data-demo-capture='ansi-art-bad-apple']",
     waitMs: 350,
-    fps: 16,
+    fps: 10,
     durationMs: 30000,
     outputs: [
       { type: "webp", file: badAppleAnsiWebpFile },

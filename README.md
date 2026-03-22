@@ -458,7 +458,7 @@ stabilized full-screen `80 x 25` snapshots while the parent owns byte loading an
 demo uses the full `BADAPPLE.ANS` payload, not a trimmed excerpt, and tightens the glyph scale so
 the character rows visually sit flush instead of leaving air between scanlines.
 
-[![Bad Apple ANSI Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi/main/docs/assets/react-retro-display-tty-ansi-bad-apple-ansi.webp)](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi/main/docs/assets/react-retro-display-tty-ansi-bad-apple-ansi.mp4)
+[![Bad Apple ANSI Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi/main/docs/assets/react-retro-display-tty-ansi-bad-apple-ansi.webp)](https://github.com/user-attachments/assets/82d505be-5296-4139-ab64-83aae59804ad)
 
 The README clip is a 30-second capture of the real ANSI-art playback path, not a separate video renderer.
 
