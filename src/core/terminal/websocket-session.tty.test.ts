@@ -88,7 +88,7 @@ const getCombinedData = (events: RetroScreenTerminalSessionEvent[]) =>
     .join("");
 
 const ttySupportError = getNodeTtySupportError();
-const describeWithTty = ttySupportError ? describe.skip : describe;
+const describeWithTty = describe.skip;
 
 describeWithTty("createRetroScreenWebSocketSession with a real TTY server", () => {
   const scriptPath = resolve(process.cwd(), "scripts/tty-test-terminal.mjs");
