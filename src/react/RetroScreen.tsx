@@ -960,8 +960,8 @@ export function RetroScreen(props: RetroScreenProps) {
   };
 
   const inlineStyle = {
-    "--retro-lcd-rows": `${geometry.rows}`,
-    "--retro-lcd-cols": `${geometry.cols}`,
+    "--retro-screen-rows": `${geometry.rows}`,
+    "--retro-screen-cols": `${geometry.cols}`,
     ...getDisplayModeRootVars(displayColorMode, displaySurfaceMode, props.color),
     ...getDisplayPaddingVars(props.displayPadding),
     ...getDisplayTypographyVars(props.displayFontScale, props.displayRowScale),
@@ -973,7 +973,7 @@ export function RetroScreen(props: RetroScreenProps) {
   return (
     <div
       ref={resizablePanel.rootRef}
-      className={joinClassNames("retro-lcd", props.className)}
+      className={joinClassNames("retro-screen", props.className)}
       style={inlineStyle}
       data-mode={props.mode}
       data-cursor-mode={renderModel.cursor?.mode ?? cursorMode}
@@ -1001,7 +1001,7 @@ export function RetroScreen(props: RetroScreenProps) {
       data-session-title={props.mode === "terminal" ? sessionTitle ?? undefined : undefined}
       data-session-bell-count={props.mode === "terminal" ? String(sessionBellCount) : undefined}
     >
-      <div className="retro-lcd__bezel" aria-hidden="true" />
+      <div className="retro-screen__bezel" aria-hidden="true" />
       <RetroScreenDisplay
         mode={props.mode}
         renderModel={renderModel}
@@ -1125,10 +1125,10 @@ export function RetroScreen(props: RetroScreenProps) {
           autoCorrect="off"
           aria-label={
             props.mode === "prompt"
-              ? "Retro LCD prompt"
+              ? "RetroScreen prompt"
               : props.mode === "editor"
-                ? "Retro LCD editor"
-                : "Retro LCD input"
+                ? "RetroScreen editor"
+                : "RetroScreen input"
           }
         />
       </RetroScreenDisplay>
@@ -1136,7 +1136,7 @@ export function RetroScreen(props: RetroScreenProps) {
         <>
           {resizablePanel.resizeMode === "width" || resizablePanel.resizeMode === "both" ? (
             <div
-              className="retro-lcd__resize-handle retro-lcd__resize-handle--width"
+              className="retro-screen__resize-handle retro-screen__resize-handle--width"
               data-resize-handle="right"
               data-active={resizablePanel.activeHandle === "right" ? "true" : undefined}
               onMouseDown={resizablePanel.beginResize("right")}
@@ -1145,7 +1145,7 @@ export function RetroScreen(props: RetroScreenProps) {
           ) : null}
           {resizablePanel.resizeMode === "height" || resizablePanel.resizeMode === "both" ? (
             <div
-              className="retro-lcd__resize-handle retro-lcd__resize-handle--height"
+              className="retro-screen__resize-handle retro-screen__resize-handle--height"
               data-resize-handle="bottom"
               data-active={resizablePanel.activeHandle === "bottom" ? "true" : undefined}
               onMouseDown={resizablePanel.beginResize("bottom")}
@@ -1154,7 +1154,7 @@ export function RetroScreen(props: RetroScreenProps) {
           ) : null}
           {resizablePanel.resizeMode === "both" ? (
             <div
-              className="retro-lcd__resize-handle retro-lcd__resize-handle--corner"
+              className="retro-screen__resize-handle retro-screen__resize-handle--corner"
               data-resize-handle="bottom-right"
               data-active={resizablePanel.activeHandle === "bottom-right" ? "true" : undefined}
               onMouseDown={resizablePanel.beginResize("bottom-right")}
@@ -1164,7 +1164,7 @@ export function RetroScreen(props: RetroScreenProps) {
           {resizablePanel.hasLeadingHandles &&
           (resizablePanel.resizeMode === "width" || resizablePanel.resizeMode === "both") ? (
             <div
-              className="retro-lcd__resize-handle retro-lcd__resize-handle--left"
+              className="retro-screen__resize-handle retro-screen__resize-handle--left"
               data-resize-handle="left"
               data-active={resizablePanel.activeHandle === "left" ? "true" : undefined}
               onMouseDown={resizablePanel.beginResize("left")}
@@ -1174,7 +1174,7 @@ export function RetroScreen(props: RetroScreenProps) {
           {resizablePanel.hasLeadingHandles &&
           (resizablePanel.resizeMode === "height" || resizablePanel.resizeMode === "both") ? (
             <div
-              className="retro-lcd__resize-handle retro-lcd__resize-handle--top"
+              className="retro-screen__resize-handle retro-screen__resize-handle--top"
               data-resize-handle="top"
               data-active={resizablePanel.activeHandle === "top" ? "true" : undefined}
               onMouseDown={resizablePanel.beginResize("top")}
@@ -1183,7 +1183,7 @@ export function RetroScreen(props: RetroScreenProps) {
           ) : null}
           {resizablePanel.hasLeadingHandles && resizablePanel.resizeMode === "both" ? (
             <div
-              className="retro-lcd__resize-handle retro-lcd__resize-handle--top-left"
+              className="retro-screen__resize-handle retro-screen__resize-handle--top-left"
               data-resize-handle="top-left"
               data-active={resizablePanel.activeHandle === "top-left" ? "true" : undefined}
               onMouseDown={resizablePanel.beginResize("top-left")}

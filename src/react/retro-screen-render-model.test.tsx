@@ -64,7 +64,7 @@ describe("retro screen render model", () => {
       />
     );
 
-    const selectedCells = Array.from(container.querySelectorAll(".retro-lcd__cell--selected"));
+    const selectedCells = Array.from(container.querySelectorAll(".retro-screen__cell--selected"));
 
     expect(selectedCells).toHaveLength(4);
     expect(selectedCells.map((cell) => cell.getAttribute("data-source-offset"))).toEqual([

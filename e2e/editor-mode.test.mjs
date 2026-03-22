@@ -6,8 +6,8 @@ const harness = createStorybookBrowserHarness();
 const page = () => harness.page;
 
 const readEditorState = async () =>
-  page().locator(".retro-lcd").evaluate((root) => {
-    const input = root.querySelector(".retro-lcd__input");
+  page().locator(".retro-screen").evaluate((root) => {
+    const input = root.querySelector(".retro-screen__input");
 
     return {
       mode: root.getAttribute("data-mode"),
@@ -16,10 +16,10 @@ const readEditorState = async () =>
       value: input?.value ?? "",
       selectionStart: input?.selectionStart ?? 0,
       selectionEnd: input?.selectionEnd ?? 0,
-      selectedOffsets: Array.from(root.querySelectorAll(".retro-lcd__cell--selected")).map((cell) =>
+      selectedOffsets: Array.from(root.querySelectorAll(".retro-screen__cell--selected")).map((cell) =>
         Number((cell instanceof HTMLElement ? cell.dataset.sourceOffset : "") ?? "-1")
       ),
-      lines: Array.from(root.querySelectorAll(".retro-lcd__line")).map((line) =>
+      lines: Array.from(root.querySelectorAll(".retro-screen__line")).map((line) =>
         (line.textContent ?? "").replace(/\u00a0/gu, " ")
       ),
       activeElementClassName:
@@ -33,8 +33,8 @@ const getGridPoint = async ({
   ratioX = 0.5,
   ratioY = 0.5
 }) => {
-  const root = page().locator(".retro-lcd");
-  const grid = page().locator(".retro-lcd__grid");
+  const root = page().locator(".retro-screen");
+  const grid = page().locator(".retro-screen__grid");
   const [attrs, box] = await Promise.all([
     root.evaluate((node) => ({
       rows: Number(node.getAttribute("data-rows") ?? "0"),
@@ -67,7 +67,7 @@ const dragSelection = async (startCell, endCell) => {
 
 test("editor story selects text with the mouse and deletes it with Backspace", async () => {
   await harness.gotoStory("retroscreen-editor--editor-selection-lab");
-  await page().waitForSelector('.retro-lcd[data-mode="editor"]');
+  await page().waitForSelector('.retro-screen[data-mode="editor"]');
 
   await dragSelection(
     { row: 1, col: 2, ratioX: 0.1 },
@@ -76,7 +76,7 @@ test("editor story selects text with the mouse and deletes it with Backspace", a
 
   const selectedState = await readEditorState();
   assert.deepEqual(selectedState.selectedOffsets, [1, 2]);
-  assert.match(selectedState.activeElementClassName, /retro-lcd__input/u);
+  assert.match(selectedState.activeElementClassName, /retro-screen__input/u);
 
   await page().keyboard.press("Backspace");
 
@@ -89,7 +89,7 @@ test("editor story selects text with the mouse and deletes it with Backspace", a
 
 test("editor story supports reverse drag selection and Delete removal", async () => {
   await harness.gotoStory("retroscreen-editor--editor-selection-lab");
-  await page().waitForSelector('.retro-lcd[data-mode="editor"]');
+  await page().waitForSelector('.retro-screen[data-mode="editor"]');
 
   await dragSelection(
     { row: 1, col: 3, ratioX: 0.95 },
@@ -110,7 +110,7 @@ test("editor story supports reverse drag selection and Delete removal", async ()
 
 test("wrapped editor selections delete cleanly without overflowing the measured grid", async () => {
   await harness.gotoStory("retroscreen-editor--editor-selection-wrapped");
-  await page().waitForSelector('.retro-lcd[data-mode="editor"]');
+  await page().waitForSelector('.retro-screen[data-mode="editor"]');
 
   await dragSelection(
     { row: 1, col: 3, ratioX: 0.1 },
@@ -133,7 +133,7 @@ test("wrapped editor selections delete cleanly without overflowing the measured 
 
 test("double-click selects a whole word in editor mode", async () => {
   await harness.gotoStory("retroscreen-editor--editor-word-selection-lab");
-  await page().waitForSelector('.retro-lcd[data-mode="editor"]');
+  await page().waitForSelector('.retro-screen[data-mode="editor"]');
 
   const point = await getGridPoint({
     row: 1,
@@ -151,9 +151,9 @@ test("double-click selects a whole word in editor mode", async () => {
 
 test("keyboard word-selection shortcuts delete the selected word cleanly", async () => {
   await harness.gotoStory("retroscreen-editor--editor-word-selection-lab");
-  await page().waitForSelector('.retro-lcd[data-mode="editor"]');
+  await page().waitForSelector('.retro-screen[data-mode="editor"]');
 
-  await page().locator(".retro-lcd__input").evaluate((input) => {
+  await page().locator(".retro-screen__input").evaluate((input) => {
     if (!(input instanceof HTMLTextAreaElement)) {
       return;
     }
@@ -187,7 +187,7 @@ test("keyboard word-selection shortcuts delete the selected word cleanly", async
 
 test("read-only editor story preserves its content when delete keys are pressed", async () => {
   await harness.gotoStory("retroscreen-editor--editor-selection-read-only");
-  await page().waitForSelector('.retro-lcd[data-mode="editor"]');
+  await page().waitForSelector('.retro-screen[data-mode="editor"]');
 
   await dragSelection(
     { row: 1, col: 2, ratioX: 0.1 },

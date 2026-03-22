@@ -16,15 +16,15 @@ test("render smoke stories stay stable in the browser", async (t) => {
 
     for (const story of stories) {
       await harness.gotoStory(story.id);
-      await page().waitForSelector(".retro-lcd");
+      await page().waitForSelector(".retro-screen");
 
-      const summary = await page().locator(".retro-lcd").evaluate((root) => ({
+      const summary = await page().locator(".retro-screen").evaluate((root) => ({
         mode: root.getAttribute("data-mode"),
         rows: Number(root.getAttribute("data-rows")),
         cols: Number(root.getAttribute("data-cols")),
-        lineCount: root.querySelectorAll(".retro-lcd__line").length,
-        hasCursor: Boolean(root.querySelector(".retro-lcd__cursor")),
-        text: (root.querySelector(".retro-lcd__body")?.textContent ?? "")
+        lineCount: root.querySelectorAll(".retro-screen__line").length,
+        hasCursor: Boolean(root.querySelector(".retro-screen__cursor")),
+        text: (root.querySelector(".retro-screen__body")?.textContent ?? "")
           .replace(/\u00a0/gu, " ")
           .trim()
       }));
@@ -42,12 +42,12 @@ test("render smoke stories stay stable in the browser", async (t) => {
 
   await t.test("matrix code rain story loads the Matrix font and animates visible columns", async () => {
     await harness.gotoStory("retroscreen--matrix-code-rain");
-    await page().waitForSelector(".retro-lcd");
+    await page().waitForSelector(".retro-screen");
     await page().waitForTimeout(240);
 
-    const initial = await page().locator(".retro-lcd").evaluate((root) => {
-      const body = root.querySelector(".retro-lcd__body");
-      const grid = root.querySelector(".retro-lcd__grid");
+    const initial = await page().locator(".retro-screen").evaluate((root) => {
+      const body = root.querySelector(".retro-screen__body");
+      const grid = root.querySelector(".retro-screen__grid");
 
       return {
         text: (body?.textContent ?? "").replace(/\u00a0/gu, " "),
@@ -55,14 +55,14 @@ test("render smoke stories stay stable in the browser", async (t) => {
         cols: Number(root.getAttribute("data-cols") ?? "0"),
         fontFamily:
           grid instanceof HTMLElement ? getComputedStyle(grid).fontFamily : "",
-        lineCount: root.querySelectorAll(".retro-lcd__line").length
+        lineCount: root.querySelectorAll(".retro-screen__line").length
       };
     });
 
     await page().waitForTimeout(420);
 
     const nextText = await page()
-      .locator(".retro-lcd .retro-lcd__body")
+      .locator(".retro-screen .retro-screen__body")
       .evaluate((body) => (body.textContent ?? "").replace(/\u00a0/gu, " "));
 
     assert.equal(initial.rows, 24);
@@ -85,9 +85,9 @@ test("render smoke stories stay stable in the browser", async (t) => {
       const modes = await page().locator("[data-display-mode-card]").evaluateAll((cards) =>
         cards.map((card) => {
           const mode = card.getAttribute("data-display-mode-card") ?? "";
-          const root = card.querySelector(".retro-lcd");
-          const firstCell = root?.querySelector(".retro-lcd__cell");
-          const lines = Array.from(root?.querySelectorAll(".retro-lcd__line") ?? []).map((line) =>
+          const root = card.querySelector(".retro-screen");
+          const firstCell = root?.querySelector(".retro-screen__cell");
+          const lines = Array.from(root?.querySelectorAll(".retro-screen__line") ?? []).map((line) =>
             (line.textContent ?? "").replace(/\u00a0/gu, " ").trim()
           );
 
@@ -95,7 +95,7 @@ test("render smoke stories stay stable in the browser", async (t) => {
             mode,
             dataMode: root?.getAttribute("data-display-color-mode") ?? "",
             accent:
-              root instanceof HTMLElement ? root.style.getPropertyValue("--retro-lcd-color") : "",
+              root instanceof HTMLElement ? root.style.getPropertyValue("--retro-screen-color") : "",
             firstCellColor:
               firstCell instanceof HTMLElement ? getComputedStyle(firstCell).color : "missing",
             firstCellBackground:
@@ -129,11 +129,11 @@ test("render smoke stories stay stable in the browser", async (t) => {
       assert.equal(ansiClassic?.firstCellBackground, "rgb(120, 165, 245)");
 
       const ansiExtendedMetrics = await page()
-        .locator('[data-display-mode-card="ansi-extended"] .retro-lcd')
+        .locator('[data-display-mode-card="ansi-extended"] .retro-screen')
         .evaluate((root) => {
-          const rows = Array.from(root.querySelectorAll(".retro-lcd__line"));
-          const firstLineCells = rows[0]?.querySelectorAll(".retro-lcd__cell") ?? [];
-          const secondLineCells = rows[1]?.querySelectorAll(".retro-lcd__cell") ?? [];
+          const rows = Array.from(root.querySelectorAll(".retro-screen__line"));
+          const firstLineCells = rows[0]?.querySelectorAll(".retro-screen__cell") ?? [];
+          const secondLineCells = rows[1]?.querySelectorAll(".retro-screen__cell") ?? [];
           const indexedCell = firstLineCells[0];
           const truecolorCell = secondLineCells[0];
 
@@ -169,8 +169,8 @@ test("render smoke stories stay stable in the browser", async (t) => {
 
     await page().waitForFunction(
       () => {
-        const root = document.querySelector(".retro-lcd");
-        const text = (root?.querySelector(".retro-lcd__body")?.textContent ?? "").replace(
+        const root = document.querySelector(".retro-screen");
+        const text = (root?.querySelector(".retro-screen__body")?.textContent ?? "").replace(
           /\u00a0/gu,
           " "
         );
@@ -185,10 +185,10 @@ test("render smoke stories stay stable in the browser", async (t) => {
     );
 
     const summary = await page().evaluate(() => {
-      const root = document.querySelector(".retro-lcd");
+      const root = document.querySelector(".retro-screen");
       const shell = document.querySelector(".sb-retro-shell");
       const creditLink = shell?.querySelector('a[href="https://mistigris.org/"]');
-      const text = (root?.querySelector(".retro-lcd__body")?.textContent ?? "").replace(
+      const text = (root?.querySelector(".retro-screen__body")?.textContent ?? "").replace(
         /\u00a0/gu,
         " "
       );
@@ -225,9 +225,9 @@ test("render smoke stories stay stable in the browser", async (t) => {
 
       const summary = await page().locator("[data-demo-capture]").evaluate((root) => {
         const frameRect = root.getBoundingClientRect();
-        const lcd = root.querySelector(".retro-lcd");
+        const lcd = root.querySelector(".retro-screen");
         const lcdRect = lcd?.getBoundingClientRect();
-        const text = (lcd?.querySelector(".retro-lcd__body")?.textContent ?? "").replace(
+        const text = (lcd?.querySelector(".retro-screen__body")?.textContent ?? "").replace(
           /\u00a0/gu,
           " "
         );
@@ -276,7 +276,7 @@ test("render smoke stories stay stable in the browser", async (t) => {
       const initial = await page().locator("[data-demo-capture]").evaluate((root) => {
         const cursor = root.querySelector('[data-demo-cursor="true"]');
         const host = root.querySelector(".sb-retro-auto-resize-host, .sb-retro-resize-demo-host");
-        const panel = root.querySelector(".retro-lcd");
+        const panel = root.querySelector(".retro-screen");
         const hostRect = host?.getBoundingClientRect();
         const panelRect = panel?.getBoundingClientRect();
 

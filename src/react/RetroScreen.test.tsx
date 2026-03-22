@@ -8,10 +8,10 @@ import { wrapTextToColumns } from "../core/geometry/wrap";
 import type { RetroScreenTerminalSession, RetroScreenTerminalSessionEvent } from "../core/terminal/session-types";
 
 const getBodyText = (container: HTMLElement) =>
-  container.querySelector(".retro-lcd__body")?.textContent?.replace(/\u00a0/gu, " ") ?? "";
+  container.querySelector(".retro-screen__body")?.textContent?.replace(/\u00a0/gu, " ") ?? "";
 
 const getVisibleLines = (container: HTMLElement) =>
-  Array.from(container.querySelectorAll(".retro-lcd__line")).map((line) =>
+  Array.from(container.querySelectorAll(".retro-screen__line")).map((line) =>
     (line.textContent ?? "").replace(/\u00a0/gu, " ")
   );
 
@@ -27,7 +27,7 @@ const createClipboardData = () => {
 };
 
 const mockScreenRect = (container: HTMLElement, rect: DOMRectInit) => {
-  const screenNode = container.querySelector(".retro-lcd__grid") as HTMLDivElement | null;
+  const screenNode = container.querySelector(".retro-screen__grid") as HTMLDivElement | null;
   expect(screenNode).not.toBeNull();
   vi.spyOn(screenNode!, "getBoundingClientRect").mockImplementation(
     () =>
@@ -116,7 +116,7 @@ describe("RetroScreen", () => {
     const text = "X".repeat(50);
     const { container } = render(<RetroScreen mode="value" value={text} />);
 
-    const lines = Array.from(container.querySelectorAll(".retro-lcd__line"))
+    const lines = Array.from(container.querySelectorAll(".retro-screen__line"))
       .map((line) => line.textContent)
       .filter((line) => line && line.trim().length > 0);
 
@@ -141,7 +141,7 @@ describe("RetroScreen", () => {
     const bodyText = getBodyText(container);
     expect(bodyText).toContain("line one");
     expect(bodyText).toContain("line two");
-    expect(container.querySelector(".retro-lcd__cursor")).toHaveAttribute(
+    expect(container.querySelector(".retro-screen__cursor")).toHaveAttribute(
       "data-cursor-mode",
       "hollow"
     );
@@ -150,7 +150,7 @@ describe("RetroScreen", () => {
   it("supports width-only resizing when configured", () => {
     const { container } = render(<RetroScreen mode="value" value="Resize me" resizable="width" />);
 
-    const root = container.querySelector(".retro-lcd") as HTMLDivElement | null;
+    const root = container.querySelector(".retro-screen") as HTMLDivElement | null;
     const widthHandle = container.querySelector(
       '[data-resize-handle="right"]'
     ) as HTMLDivElement | null;
@@ -201,7 +201,7 @@ describe("RetroScreen", () => {
       />
     );
 
-    const root = container.querySelector(".retro-lcd") as HTMLDivElement | null;
+    const root = container.querySelector(".retro-screen") as HTMLDivElement | null;
 
     expect(root).not.toBeNull();
     expect(root!.style.width).toBe("672px");
@@ -219,7 +219,7 @@ describe("RetroScreen", () => {
   it("supports corner resizing when both axes are enabled", () => {
     const { container } = render(<RetroScreen mode="value" value="Resize me" resizable />);
 
-    const root = container.querySelector(".retro-lcd") as HTMLDivElement | null;
+    const root = container.querySelector(".retro-screen") as HTMLDivElement | null;
     const cornerHandle = container.querySelector(
       '[data-resize-handle="bottom-right"]'
     ) as HTMLDivElement | null;
@@ -263,7 +263,7 @@ describe("RetroScreen", () => {
       <RetroScreen mode="value" value="Resize me" resizable="both" resizableLeadingEdges />
     );
 
-    const root = container.querySelector(".retro-lcd") as HTMLDivElement | null;
+    const root = container.querySelector(".retro-screen") as HTMLDivElement | null;
     const leftHandle = container.querySelector(
       '[data-resize-handle="left"]'
     ) as HTMLDivElement | null;
@@ -370,7 +370,7 @@ describe("RetroScreen", () => {
       <RetroScreen mode="terminal" session={session} gridMode="static" rows={4} cols={12} />
     );
 
-    const root = container.querySelector(".retro-lcd") as HTMLElement | null;
+    const root = container.querySelector(".retro-screen") as HTMLElement | null;
     expect(root).not.toBeNull();
     expect(root).toHaveAttribute("data-session-state", "open");
     expect(root).toHaveAttribute("data-session-bell-count", "0");
@@ -404,7 +404,7 @@ describe("RetroScreen", () => {
       />
     );
 
-    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLDivElement | null;
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
     expect(viewport).not.toBeNull();
 
     fireEvent.keyDown(viewport!, {
@@ -446,8 +446,8 @@ describe("RetroScreen", () => {
       />
     );
 
-    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLDivElement | null;
-    const root = container.querySelector(".retro-lcd") as HTMLElement | null;
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
+    const root = container.querySelector(".retro-screen") as HTMLElement | null;
     expect(viewport).not.toBeNull();
     expect(root?.dataset.bufferOffset).toBe("0");
 
@@ -481,8 +481,8 @@ describe("RetroScreen", () => {
       />
     );
 
-    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLDivElement | null;
-    const root = container.querySelector(".retro-lcd") as HTMLElement | null;
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
+    const root = container.querySelector(".retro-screen") as HTMLElement | null;
     expect(viewport).not.toBeNull();
 
     fireEvent.keyDown(viewport!, {
@@ -512,7 +512,7 @@ describe("RetroScreen", () => {
       controller.write("\u001b[?1h");
     });
 
-    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLDivElement | null;
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
     expect(viewport).not.toBeNull();
 
     fireEvent.keyDown(viewport!, {
@@ -536,7 +536,7 @@ describe("RetroScreen", () => {
       />
     );
 
-    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLDivElement | null;
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
     expect(viewport).not.toBeNull();
 
     fireEvent.keyDown(viewport!, {
@@ -567,7 +567,7 @@ describe("RetroScreen", () => {
       controller.write("\u001b[?2004h");
     });
 
-    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLDivElement | null;
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
     expect(viewport).not.toBeNull();
 
     fireEvent.paste(viewport!, {
@@ -604,7 +604,7 @@ describe("RetroScreen", () => {
       controller.write("\u001b[?1004h");
     });
 
-    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLDivElement | null;
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
     expect(viewport).not.toBeNull();
 
     fireEvent.focus(viewport!);
@@ -643,7 +643,7 @@ describe("RetroScreen", () => {
       controller.write("\u001b[?1002h\u001b[?1006h");
     });
 
-    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLDivElement | null;
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
     expect(viewport).not.toBeNull();
 
     fireEvent.mouseDown(viewport!, {
@@ -724,8 +724,8 @@ describe("RetroScreen", () => {
       );
     });
 
-    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLDivElement | null;
-    const root = container.querySelector(".retro-lcd") as HTMLElement | null;
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
+    const root = container.querySelector(".retro-screen") as HTMLElement | null;
     expect(viewport).not.toBeNull();
     expect(root).not.toBeNull();
 
@@ -767,8 +767,8 @@ describe("RetroScreen", () => {
       );
     });
 
-    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLDivElement | null;
-    const root = container.querySelector(".retro-lcd") as HTMLElement | null;
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
+    const root = container.querySelector(".retro-screen") as HTMLElement | null;
     expect(viewport).not.toBeNull();
     expect(root).not.toBeNull();
 
@@ -803,7 +803,7 @@ describe("RetroScreen", () => {
       controller.write("\u001b[?1004h");
     });
 
-    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLDivElement | null;
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
     expect(viewport).not.toBeNull();
 
     fireEvent.focus(viewport!);
@@ -818,7 +818,7 @@ describe("RetroScreen", () => {
       <RetroScreen mode="terminal" autoFocus gridMode="static" rows={3} cols={12} />
     );
 
-    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLDivElement | null;
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
     expect(viewport).not.toBeNull();
     expect(document.activeElement).toBe(viewport);
   });
@@ -831,11 +831,11 @@ describe("RetroScreen", () => {
       controller.write("\u001b[1mA\u001b[2mB\u001b[7mC\u001b[8mD\u001b[5mE");
     });
 
-    expect(container.querySelector(".retro-lcd__cell--bold")).not.toBeNull();
-    expect(container.querySelector(".retro-lcd__cell--faint")).not.toBeNull();
-    expect(container.querySelector(".retro-lcd__cell--inverse")).not.toBeNull();
-    expect(container.querySelector(".retro-lcd__cell--conceal")).not.toBeNull();
-    expect(container.querySelector(".retro-lcd__cell--blink")).not.toBeNull();
+    expect(container.querySelector(".retro-screen__cell--bold")).not.toBeNull();
+    expect(container.querySelector(".retro-screen__cell--faint")).not.toBeNull();
+    expect(container.querySelector(".retro-screen__cell--inverse")).not.toBeNull();
+    expect(container.querySelector(".retro-screen__cell--conceal")).not.toBeNull();
+    expect(container.querySelector(".retro-screen__cell--blink")).not.toBeNull();
   });
 
   it("projects ANSI semantic colors through the ansi-classic display mode", () => {
@@ -848,7 +848,7 @@ describe("RetroScreen", () => {
       controller.write("\u001b[31;44mA");
     });
 
-    const cell = container.querySelector(".retro-lcd__cell") as HTMLElement | null;
+    const cell = container.querySelector(".retro-screen__cell") as HTMLElement | null;
     expect(cell).not.toBeNull();
     expect(window.getComputedStyle(cell!).color).not.toBe("rgb(151, 255, 155)");
     expect(window.getComputedStyle(cell!).backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
@@ -864,7 +864,7 @@ describe("RetroScreen", () => {
       controller.write("\u001b[38;5;196;48;5;25mA\u001b[38;2;17;34;51;48;2;68;85;102mB");
     });
 
-    const cells = Array.from(container.querySelectorAll(".retro-lcd__cell")) as HTMLElement[];
+    const cells = Array.from(container.querySelectorAll(".retro-screen__cell")) as HTMLElement[];
     expect(cells.length).toBeGreaterThanOrEqual(2);
     expect(window.getComputedStyle(cells[0]!).color).toBe("rgb(255, 0, 0)");
     expect(window.getComputedStyle(cells[1]!).color).toBe("rgb(17, 34, 51)");
@@ -881,11 +881,11 @@ describe("RetroScreen", () => {
       />
     );
 
-    const root = container.querySelector(".retro-lcd") as HTMLElement | null;
+    const root = container.querySelector(".retro-screen") as HTMLElement | null;
     expect(root).not.toBeNull();
     expect(root).toHaveAttribute("data-display-surface-mode", "light");
-    expect(root?.style.getPropertyValue("--retro-lcd-color")).not.toBe("#97ff9b");
-    expect(root?.style.getPropertyValue("--retro-lcd-bg-bottom")).toBe("#edf5e7");
+    expect(root?.style.getPropertyValue("--retro-screen-color")).not.toBe("#97ff9b");
+    expect(root?.style.getPropertyValue("--retro-screen-bg-bottom")).toBe("#edf5e7");
   });
 
   it("keeps ansi foreground and background colors legible in light surface mode", () => {
@@ -903,7 +903,7 @@ describe("RetroScreen", () => {
       controller.write("\u001b[38;5;196;48;5;25mA");
     });
 
-    const cell = container.querySelector(".retro-lcd__cell") as HTMLElement | null;
+    const cell = container.querySelector(".retro-screen__cell") as HTMLElement | null;
     expect(cell).not.toBeNull();
 
     const computedStyle = window.getComputedStyle(cell!);
@@ -925,7 +925,7 @@ describe("RetroScreen", () => {
     const view = render(<RetroScreen mode="prompt" onCommand={onCommand} autoFocus />);
     const { container } = view;
 
-    const input = container.querySelector(".retro-lcd__input") as HTMLTextAreaElement | null;
+    const input = container.querySelector(".retro-screen__input") as HTMLTextAreaElement | null;
     expect(input).not.toBeNull();
     await user.type(input!, "help{enter}");
 
@@ -951,7 +951,7 @@ describe("RetroScreen", () => {
     );
     const { container } = view;
 
-    const input = container.querySelector(".retro-lcd__input") as HTMLTextAreaElement | null;
+    const input = container.querySelector(".retro-screen__input") as HTMLTextAreaElement | null;
     expect(input).not.toBeNull();
     await user.type(input!, "bad{enter}");
 
@@ -972,8 +972,8 @@ describe("RetroScreen", () => {
       />
     );
 
-    const root = container.querySelector(".retro-lcd");
-    expect(root?.style.getPropertyValue("--retro-lcd-color")).toBe("#66ff88");
+    const root = container.querySelector(".retro-screen");
+    expect(root?.style.getPropertyValue("--retro-screen-color")).toBe("#66ff88");
     expect(root).toHaveAttribute("data-rows");
     expect(root).toHaveAttribute("data-cols");
     expect(onGeometryChange).toHaveBeenCalledWith(
@@ -986,10 +986,10 @@ describe("RetroScreen", () => {
 
   it("supports uniform and side-specific display padding", () => {
     const uniformView = render(<RetroScreen mode="value" value="grid" displayPadding={10} />);
-    const uniformRoot = uniformView.container.querySelector(".retro-lcd") as HTMLElement | null;
+    const uniformRoot = uniformView.container.querySelector(".retro-screen") as HTMLElement | null;
 
-    expect(uniformRoot?.style.getPropertyValue("--retro-lcd-padding-top")).toBe("10px");
-    expect(uniformRoot?.style.getPropertyValue("--retro-lcd-padding-right")).toBe("10px");
+    expect(uniformRoot?.style.getPropertyValue("--retro-screen-padding-top")).toBe("10px");
+    expect(uniformRoot?.style.getPropertyValue("--retro-screen-padding-right")).toBe("10px");
 
     uniformView.unmount();
 
@@ -1000,12 +1000,12 @@ describe("RetroScreen", () => {
         displayPadding={{ block: 12, inline: "1.5rem", top: 6 }}
       />
     );
-    const sideRoot = sideView.container.querySelector(".retro-lcd") as HTMLElement | null;
+    const sideRoot = sideView.container.querySelector(".retro-screen") as HTMLElement | null;
 
-    expect(sideRoot?.style.getPropertyValue("--retro-lcd-padding-top")).toBe("6px");
-    expect(sideRoot?.style.getPropertyValue("--retro-lcd-padding-right")).toBe("1.5rem");
-    expect(sideRoot?.style.getPropertyValue("--retro-lcd-padding-bottom")).toBe("12px");
-    expect(sideRoot?.style.getPropertyValue("--retro-lcd-padding-left")).toBe("1.5rem");
+    expect(sideRoot?.style.getPropertyValue("--retro-screen-padding-top")).toBe("6px");
+    expect(sideRoot?.style.getPropertyValue("--retro-screen-padding-right")).toBe("1.5rem");
+    expect(sideRoot?.style.getPropertyValue("--retro-screen-padding-bottom")).toBe("12px");
+    expect(sideRoot?.style.getPropertyValue("--retro-screen-padding-left")).toBe("1.5rem");
   });
 
   it("supports scaling the rendered glyphs inside each screen cell", () => {
@@ -1013,9 +1013,9 @@ describe("RetroScreen", () => {
       <RetroScreen mode="value" value="grid" displayFontScale={1.22} displayRowScale={1.08} />
     );
 
-    const root = container.querySelector(".retro-lcd") as HTMLElement | null;
-    expect(root?.style.getPropertyValue("--retro-lcd-font-scale")).toBe("1.22");
-    expect(root?.style.getPropertyValue("--retro-lcd-row-scale")).toBe("1.08");
+    const root = container.querySelector(".retro-screen") as HTMLElement | null;
+    expect(root?.style.getPropertyValue("--retro-screen-font-scale")).toBe("1.22");
+    expect(root?.style.getPropertyValue("--retro-screen-row-scale")).toBe("1.08");
   });
 
   it("supports a static grid mode with caller-supplied rows and columns", () => {
@@ -1031,7 +1031,7 @@ describe("RetroScreen", () => {
       />
     );
 
-    const root = container.querySelector(".retro-lcd");
+    const root = container.querySelector(".retro-screen");
     expect(root).toHaveAttribute("data-grid-mode", "static");
     expect(root).toHaveAttribute("data-rows", "4");
     expect(root).toHaveAttribute("data-cols", "18");
@@ -1046,8 +1046,8 @@ describe("RetroScreen", () => {
   it("switches the base palette when a phosphor display color mode is selected", () => {
     const { container } = render(<RetroScreen mode="value" value="grid" displayColorMode="phosphor-amber" />);
 
-    const root = container.querySelector(".retro-lcd");
-    expect(root?.style.getPropertyValue("--retro-lcd-color")).toBe("#ffc96b");
+    const root = container.querySelector(".retro-screen");
+    expect(root?.style.getPropertyValue("--retro-screen-color")).toBe("#ffc96b");
     expect(root).toHaveAttribute("data-display-color-mode", "phosphor-amber");
   });
 
@@ -1056,7 +1056,7 @@ describe("RetroScreen", () => {
       <RetroScreen mode="value" value="draft" editable autoFocus cursorMode="solid" />
     );
 
-    expect(container.querySelector(".retro-lcd__cursor")).toHaveAttribute(
+    expect(container.querySelector(".retro-screen__cursor")).toHaveAttribute(
       "data-cursor-mode",
       "solid"
     );
@@ -1068,7 +1068,7 @@ describe("RetroScreen", () => {
     );
 
     const placeholderLine = placeholderView.container.querySelector(
-      ".retro-lcd__line"
+      ".retro-screen__line"
     ) as HTMLElement | null;
     expect(placeholderLine).not.toBeNull();
     const placeholderColor = window.getComputedStyle(placeholderLine!).color;
@@ -1082,7 +1082,7 @@ describe("RetroScreen", () => {
       controller.write("\u001b[2mOK\u001b[0m");
     });
 
-    const faintCell = faintView.container.querySelector(".retro-lcd__cell--faint") as
+    const faintCell = faintView.container.querySelector(".retro-screen__cell--faint") as
       | HTMLElement
       | null;
     expect(faintCell).not.toBeNull();
@@ -1098,7 +1098,7 @@ describe("RetroScreen", () => {
       controller.write("status");
     });
 
-    const cursor = view.container.querySelector(".retro-lcd__cursor") as HTMLElement | null;
+    const cursor = view.container.querySelector(".retro-screen__cursor") as HTMLElement | null;
     expect(cursor).not.toBeNull();
     expect(cursor).toHaveAttribute("data-cursor-mode", "solid");
 
@@ -1132,7 +1132,7 @@ describe("RetroScreen", () => {
     };
     const { container } = render(<Harness />);
 
-    const input = container.querySelector(".retro-lcd__input") as HTMLTextAreaElement | null;
+    const input = container.querySelector(".retro-screen__input") as HTMLTextAreaElement | null;
     expect(input).not.toBeNull();
 
     await user.type(input!, "first line{Shift>}{Enter}{/Shift}second line");
@@ -1152,7 +1152,7 @@ describe("RetroScreen", () => {
       </>
     );
 
-    await user.click(screen.getByLabelText("Retro LCD input"));
+    await user.click(screen.getByLabelText("RetroScreen input"));
     await user.click(screen.getByRole("button", { name: "outside" }));
 
     expect(onFocusChange).toHaveBeenNthCalledWith(1, true);
@@ -1168,12 +1168,12 @@ describe("RetroScreen", () => {
       </>
     );
 
-    const root = view.container.querySelector(".retro-lcd") as HTMLDivElement | null;
+    const root = view.container.querySelector(".retro-screen") as HTMLDivElement | null;
     expect(root).not.toBeNull();
     expect(root?.getAttribute("data-focus-glow")).toBe("true");
     expect(root?.getAttribute("data-focused")).toBe("false");
 
-    await user.click(screen.getByLabelText("Retro LCD input"));
+    await user.click(screen.getByLabelText("RetroScreen input"));
     expect(root?.getAttribute("data-focused")).toBe("true");
 
     await user.click(screen.getByRole("button", { name: "outside" }));
@@ -1183,12 +1183,12 @@ describe("RetroScreen", () => {
   it("allows the focus glow to be disabled explicitly", async () => {
     const user = userEvent.setup();
     const view = render(<RetroScreen mode="value" value="" editable focusGlow={false} />);
-    const root = view.container.querySelector(".retro-lcd") as HTMLDivElement | null;
+    const root = view.container.querySelector(".retro-screen") as HTMLDivElement | null;
 
     expect(root).not.toBeNull();
     expect(root?.getAttribute("data-focus-glow")).toBe("false");
 
-    await user.click(screen.getByLabelText("Retro LCD input"));
+    await user.click(screen.getByLabelText("RetroScreen input"));
     expect(root?.getAttribute("data-focused")).toBe("true");
     expect(root?.getAttribute("data-focus-glow")).toBe("false");
   });
@@ -1199,7 +1199,7 @@ describe("RetroScreen", () => {
       <RetroScreen mode="value" value="Compose inline." editable autoFocus />
     );
 
-    const input = container.querySelector(".retro-lcd__input") as HTMLTextAreaElement | null;
+    const input = container.querySelector(".retro-screen__input") as HTMLTextAreaElement | null;
     expect(input).not.toBeNull();
 
     act(() => {
@@ -1209,8 +1209,8 @@ describe("RetroScreen", () => {
 
     rerender(<RetroScreen mode="value" value={appendedValue} editable autoFocus />);
 
-    const root = container.querySelector(".retro-lcd") as HTMLElement | null;
-    const cursor = container.querySelector(".retro-lcd__cursor") as HTMLElement | null;
+    const root = container.querySelector(".retro-screen") as HTMLElement | null;
+    const cursor = container.querySelector(".retro-screen__cursor") as HTMLElement | null;
     expect(root).not.toBeNull();
     expect(cursor).not.toBeNull();
     expect(input!.selectionStart).toBe(appendedValue.length);
@@ -1220,8 +1220,8 @@ describe("RetroScreen", () => {
     const expectedRow = wrappedLines.length - 1;
     const expectedCol = wrappedLines[expectedRow]?.length ?? 0;
 
-    expect(cursor!.style.getPropertyValue("--retro-lcd-cursor-row")).toBe(String(expectedRow));
-    expect(cursor!.style.getPropertyValue("--retro-lcd-cursor-col")).toBe(String(expectedCol));
+    expect(cursor!.style.getPropertyValue("--retro-screen-cursor-row")).toBe(String(expectedRow));
+    expect(cursor!.style.getPropertyValue("--retro-screen-cursor-col")).toBe(String(expectedCol));
   });
 
   it("supports mouse drag selection in editor mode", async () => {
@@ -1237,8 +1237,8 @@ describe("RetroScreen", () => {
       height: 72
     });
 
-    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLDivElement | null;
-    const input = container.querySelector(".retro-lcd__input") as HTMLTextAreaElement | null;
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
+    const input = container.querySelector(".retro-screen__input") as HTMLTextAreaElement | null;
     expect(viewport).not.toBeNull();
     expect(input).not.toBeNull();
 
@@ -1255,14 +1255,14 @@ describe("RetroScreen", () => {
       clientY: 12
     });
 
-    const selectedCells = Array.from(container.querySelectorAll(".retro-lcd__cell--selected"));
+    const selectedCells = Array.from(container.querySelectorAll(".retro-screen__cell--selected"));
     expect(selectedCells.map((cell) => cell.getAttribute("data-source-offset"))).toEqual(["1", "2"]);
     expect(document.activeElement).toBe(input);
 
     await user.keyboard("{Backspace}");
 
     expect(getBodyText(container)).toContain("AD");
-    expect(container.querySelectorAll(".retro-lcd__cell--selected")).toHaveLength(0);
+    expect(container.querySelectorAll(".retro-screen__cell--selected")).toHaveLength(0);
   });
 
   it("deletes reverse-drag editor selections with the Delete key", async () => {
@@ -1291,7 +1291,7 @@ describe("RetroScreen", () => {
       height: 72
     });
 
-    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLDivElement | null;
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
     expect(viewport).not.toBeNull();
 
     fireEvent.mouseDown(viewport!, {
@@ -1307,13 +1307,13 @@ describe("RetroScreen", () => {
       clientY: 12
     });
 
-    const selectedCells = Array.from(container.querySelectorAll(".retro-lcd__cell--selected"));
+    const selectedCells = Array.from(container.querySelectorAll(".retro-screen__cell--selected"));
     expect(selectedCells.map((cell) => cell.getAttribute("data-source-offset"))).toEqual(["1", "2"]);
 
     await user.keyboard("{Delete}");
 
     expect(getBodyText(container)).toContain("AD");
-    expect(container.querySelectorAll(".retro-lcd__cell--selected")).toHaveLength(0);
+    expect(container.querySelectorAll(".retro-screen__cell--selected")).toHaveLength(0);
   });
 
   it("supports keyboard word selection shortcuts in editor mode", () => {
@@ -1329,7 +1329,7 @@ describe("RetroScreen", () => {
       />
     );
 
-    const input = container.querySelector(".retro-lcd__input") as HTMLTextAreaElement | null;
+    const input = container.querySelector(".retro-screen__input") as HTMLTextAreaElement | null;
     expect(input).not.toBeNull();
 
     act(() => {
@@ -1347,7 +1347,7 @@ describe("RetroScreen", () => {
     expect(input!.selectionStart).toBe(0);
     expect(input!.selectionEnd).toBe(5);
     expect(
-      Array.from(container.querySelectorAll(".retro-lcd__cell--selected")).map((cell) =>
+      Array.from(container.querySelectorAll(".retro-screen__cell--selected")).map((cell) =>
         cell.getAttribute("data-source-offset")
       )
     ).toEqual(["0", "1", "2", "3", "4"]);
@@ -1372,7 +1372,7 @@ describe("RetroScreen", () => {
     };
     const { container } = render(<Harness />);
 
-    const input = container.querySelector(".retro-lcd__input") as HTMLTextAreaElement | null;
+    const input = container.querySelector(".retro-screen__input") as HTMLTextAreaElement | null;
     expect(input).not.toBeNull();
 
     act(() => {
@@ -1422,8 +1422,8 @@ describe("RetroScreen", () => {
       height: 96
     });
 
-    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLDivElement | null;
-    const input = container.querySelector(".retro-lcd__input") as HTMLTextAreaElement | null;
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
+    const input = container.querySelector(".retro-screen__input") as HTMLTextAreaElement | null;
     expect(viewport).not.toBeNull();
     expect(input).not.toBeNull();
 
@@ -1435,7 +1435,7 @@ describe("RetroScreen", () => {
     expect(input!.selectionStart).toBe(6);
     expect(input!.selectionEnd).toBe(13);
     expect(
-      Array.from(container.querySelectorAll(".retro-lcd__cell--selected")).map((cell) =>
+      Array.from(container.querySelectorAll(".retro-screen__cell--selected")).map((cell) =>
         cell.getAttribute("data-source-offset")
       )
     ).toEqual(["6", "7", "8", "9", "10", "11", "12"]);
@@ -1451,8 +1451,8 @@ describe("RetroScreen", () => {
       );
     });
 
-    const root = container.querySelector(".retro-lcd") as HTMLElement | null;
-    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLElement | null;
+    const root = container.querySelector(".retro-screen") as HTMLElement | null;
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLElement | null;
     expect(root).not.toBeNull();
     expect(viewport).not.toBeNull();
 
@@ -1489,8 +1489,8 @@ describe("RetroScreen", () => {
       );
     });
 
-    const root = container.querySelector(".retro-lcd") as HTMLElement | null;
-    const viewport = container.querySelector(".retro-lcd__viewport") as HTMLElement | null;
+    const root = container.querySelector(".retro-screen") as HTMLElement | null;
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLElement | null;
     expect(root).not.toBeNull();
     expect(viewport).not.toBeNull();
 
@@ -1530,7 +1530,7 @@ describe("RetroScreen", () => {
       />
     );
 
-    const root = container.querySelector(".retro-lcd") as HTMLElement | null;
+    const root = container.querySelector(".retro-screen") as HTMLElement | null;
     expect(root).not.toBeNull();
     expect(root).toHaveAttribute("data-buffer-max-offset", "2");
   });
@@ -1547,7 +1547,7 @@ describe("RetroScreen", () => {
       controller.write("ALT");
     });
 
-    const root = container.querySelector(".retro-lcd") as HTMLElement | null;
+    const root = container.querySelector(".retro-screen") as HTMLElement | null;
     expect(root).not.toBeNull();
     expect(root).toHaveAttribute("data-terminal-alternate-screen", "true");
     expect(getVisibleLines(container)).toEqual(["ALT     ", "        "]);

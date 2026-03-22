@@ -725,11 +725,11 @@ const resolveStoryPanelNode = (targetNode: HTMLDivElement | null) => {
     return null;
   }
 
-  if (targetNode.matches(".retro-lcd")) {
+  if (targetNode.matches(".retro-screen")) {
     return targetNode;
   }
 
-  return targetNode.querySelector<HTMLDivElement>(".retro-lcd");
+  return targetNode.querySelector<HTMLDivElement>(".retro-screen");
 };
 
 const getScriptedResizeDelta = (
@@ -1302,7 +1302,7 @@ export function EditableModeDemoStory() {
     const run = async () => {
       await wait(260);
 
-      const input = hostRef.current?.querySelector(".retro-lcd__input");
+      const input = hostRef.current?.querySelector(".retro-screen__input");
       if (!(input instanceof HTMLTextAreaElement)) {
         return;
       }
@@ -1886,7 +1886,7 @@ export function PromptModeDemoStory() {
     const run = async () => {
       await wait(260);
 
-      const input = hostRef.current?.querySelector(".retro-lcd__input");
+      const input = hostRef.current?.querySelector(".retro-screen__input");
       if (!(input instanceof HTMLTextAreaElement)) {
         return;
       }

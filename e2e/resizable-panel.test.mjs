@@ -6,7 +6,7 @@ const harness = createStorybookBrowserHarness();
 const page = () => harness.page;
 
 const readHandles = async () =>
-  page().locator(".retro-lcd").evaluate((root) => ({
+  page().locator(".retro-screen").evaluate((root) => ({
     resizableMode: root.getAttribute("data-resizable-mode") ?? "",
     leadingEdges: root.getAttribute("data-resizable-leading-edges") ?? "",
     handles: Array.from(root.querySelectorAll("[data-resize-handle]")).map((handle) =>
@@ -16,7 +16,7 @@ const readHandles = async () =>
 
 test("storybook resize demos expose every resize handle by default", async () => {
   await harness.gotoStory("retroscreen-responsive--resizable-panel");
-  await page().waitForSelector(".retro-lcd");
+  await page().waitForSelector(".retro-screen");
 
   const summary = await readHandles();
 
@@ -32,9 +32,9 @@ test("storybook resize demos expose every resize handle by default", async () =>
 
 test("leading-edge resize handles can still grow the panel from left and top", async () => {
   await harness.gotoStory("retroscreen-responsive--resizable-panel-leading-edges");
-  await page().waitForSelector(".retro-lcd");
+  await page().waitForSelector(".retro-screen");
 
-  const root = page().locator(".retro-lcd");
+  const root = page().locator(".retro-screen");
   const leftHandle = page().locator('[data-resize-handle="left"]');
   const topHandle = page().locator('[data-resize-handle="top"]');
   const topLeftHandle = page().locator('[data-resize-handle="top-left"]');

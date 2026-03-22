@@ -78,7 +78,7 @@ export function RetroScreenDocsPage() {
     }
 
     return (
-      <div className="sb-retro-docs-story" key={key}>
+      <div className="sb-retro-docs-story" data-docs-story={key} key={key}>
         {story.name ? <h3>{story.name}</h3> : null}
         {story.render(story.args ?? {})}
       </div>

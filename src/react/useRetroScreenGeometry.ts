@@ -158,9 +158,9 @@ export const useRetroScreenGeometry = ({
   const cssVars = useMemo(
     () =>
       ({
-        "--retro-lcd-cell-width": `${geometry.cellWidth}px`,
-        "--retro-lcd-cell-height": `${geometry.cellHeight}px`,
-        "--retro-lcd-font-size": `${geometry.fontSize}px`
+        "--retro-screen-cell-width": `${geometry.cellWidth}px`,
+        "--retro-screen-cell-height": `${geometry.cellHeight}px`,
+        "--retro-screen-font-size": `${geometry.fontSize}px`
       }) as CSSProperties,
     [geometry.cellHeight, geometry.cellWidth, geometry.fontSize]
   );

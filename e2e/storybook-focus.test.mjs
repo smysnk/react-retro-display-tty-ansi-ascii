@@ -16,21 +16,21 @@ test("screen selection keeps keyboard input inside RetroScreen instead of Storyb
   await page().waitForSelector("main iframe", { timeout: 60_000 });
   const previewFrame = page().frameLocator("main iframe");
   await previewFrame
-    .locator('.retro-lcd__input[aria-label="Retro LCD prompt"]')
+    .locator('.retro-screen__input[aria-label="RetroScreen prompt"]')
     .waitFor({ timeout: 60_000 });
 
-  const previewInput = previewFrame.locator(".retro-lcd__input");
+  const previewInput = previewFrame.locator(".retro-screen__input");
   await previewInput.evaluate((input) => {
     if (input instanceof HTMLTextAreaElement) {
       input.blur();
     }
   });
 
-  await previewFrame.locator(".retro-lcd__viewport").click();
+  await previewFrame.locator(".retro-screen__viewport").click();
   await page().keyboard.type("status");
 
-  const typedState = await previewFrame.locator(".retro-lcd").evaluate((root) => {
-    const input = root.querySelector(".retro-lcd__input");
+  const typedState = await previewFrame.locator(".retro-screen").evaluate((root) => {
+    const input = root.querySelector(".retro-screen__input");
 
     return {
       activeTag:
@@ -42,7 +42,7 @@ test("screen selection keeps keyboard input inside RetroScreen instead of Storyb
   });
 
   assert.equal(typedState.activeTag, "TEXTAREA");
-  assert.match(typedState.activeClassName, /retro-lcd__input/u);
+  assert.match(typedState.activeClassName, /retro-screen__input/u);
   assert.equal(
     typedState.value,
     "status",
@@ -51,11 +51,11 @@ test("screen selection keeps keyboard input inside RetroScreen instead of Storyb
 
   await page().keyboard.press("Enter");
 
-  await previewFrame.locator(".retro-lcd").evaluate(async (root) => {
+  await previewFrame.locator(".retro-screen").evaluate(async (root) => {
     const wait = (duration) => new Promise((resolve) => window.setTimeout(resolve, duration));
 
     for (let attempt = 0; attempt < 20; attempt += 1) {
-      const transcript = Array.from(root.querySelectorAll(".retro-lcd__line")).map((line) =>
+      const transcript = Array.from(root.querySelectorAll(".retro-screen__line")).map((line) =>
         (line.textContent ?? "").replace(/\u00a0/gu, " ")
       );
 
@@ -74,8 +74,8 @@ test("screen selection keeps keyboard input inside RetroScreen instead of Storyb
     return iframe instanceof HTMLIFrameElement && document.activeElement === iframe;
   });
 
-  const promptState = await previewFrame.locator(".retro-lcd").evaluate((root) => {
-    const input = root.querySelector(".retro-lcd__input");
+  const promptState = await previewFrame.locator(".retro-screen").evaluate((root) => {
+    const input = root.querySelector(".retro-screen__input");
 
     return {
       activeTag:
@@ -83,14 +83,14 @@ test("screen selection keeps keyboard input inside RetroScreen instead of Storyb
       activeClassName:
         document.activeElement instanceof HTMLElement ? document.activeElement.className : "",
       value: input instanceof HTMLTextAreaElement ? input.value : "",
-      transcript: Array.from(root.querySelectorAll(".retro-lcd__line")).map((line) =>
+      transcript: Array.from(root.querySelectorAll(".retro-screen__line")).map((line) =>
         (line.textContent ?? "").replace(/\u00a0/gu, " ")
       )
     };
   });
 
   assert.equal(promptState.activeTag, "TEXTAREA");
-  assert.match(promptState.activeClassName, /retro-lcd__input/u);
+  assert.match(promptState.activeClassName, /retro-screen__input/u);
   assert.equal(promptState.value, "");
   assert.ok(
     promptState.transcript.some((line) => /READY/u.test(line)),

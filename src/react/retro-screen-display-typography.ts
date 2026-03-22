@@ -7,11 +7,11 @@ export const getDisplayTypographyVars = (
   const vars = {} as CSSProperties;
 
   if (Number.isFinite(displayFontScale) && displayFontScale !== undefined) {
-    vars["--retro-lcd-font-scale"] = String(Math.max(0.1, displayFontScale));
+    vars["--retro-screen-font-scale"] = String(Math.max(0.1, displayFontScale));
   }
 
   if (Number.isFinite(displayRowScale) && displayRowScale !== undefined) {
-    vars["--retro-lcd-row-scale"] = String(Math.max(0.1, displayRowScale));
+    vars["--retro-screen-row-scale"] = String(Math.max(0.1, displayRowScale));
   }
 
   return vars;

@@ -7,12 +7,12 @@ const page = () => harness.page;
 
 const readAutoResizeProbeState = async () =>
   page().locator(".sb-retro-auto-resize-host").evaluate((host) => {
-    const root = host.querySelector(".retro-lcd");
+    const root = host.querySelector(".retro-screen");
     const hostRect = host.getBoundingClientRect();
     const rootRect = root?.getBoundingClientRect();
     const stage = host.parentElement;
     const cursor = stage?.querySelector('[data-demo-cursor="true"]');
-    const lines = Array.from(root?.querySelectorAll(".retro-lcd__line") ?? []).map((line) =>
+    const lines = Array.from(root?.querySelectorAll(".retro-screen__line") ?? []).map((line) =>
       (line.textContent ?? "").replace(/\u00a0/gu, " ")
     );
 

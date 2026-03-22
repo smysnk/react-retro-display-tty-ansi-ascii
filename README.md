@@ -207,7 +207,7 @@ import { RetroScreen, createRetroScreenController } from "react-retro-display-tt
 
 const controller = createRetroScreenController({ rows: 24, cols: 58 });
 const matrixFontStyle = {
-  "--retro-lcd-font-family": "\"Matrix\""
+  "--retro-screen-font-family": "\"Matrix\""
 } as CSSProperties;
 
 <RetroScreen

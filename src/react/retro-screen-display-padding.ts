@@ -35,10 +35,10 @@ export const getDisplayPaddingVars = (
     const resolved = toCssLength(displayPadding) as string;
 
     return {
-      "--retro-lcd-padding-top": resolved,
-      "--retro-lcd-padding-right": resolved,
-      "--retro-lcd-padding-bottom": resolved,
-      "--retro-lcd-padding-left": resolved
+      "--retro-screen-padding-top": resolved,
+      "--retro-screen-padding-right": resolved,
+      "--retro-screen-padding-bottom": resolved,
+      "--retro-screen-padding-left": resolved
     } as CSSProperties;
   }
 
@@ -46,10 +46,10 @@ export const getDisplayPaddingVars = (
   const block = displayPadding.block;
   const inline = displayPadding.inline;
 
-  setVar(vars, "--retro-lcd-padding-top", displayPadding.top ?? block);
-  setVar(vars, "--retro-lcd-padding-right", displayPadding.right ?? inline);
-  setVar(vars, "--retro-lcd-padding-bottom", displayPadding.bottom ?? block);
-  setVar(vars, "--retro-lcd-padding-left", displayPadding.left ?? inline);
+  setVar(vars, "--retro-screen-padding-top", displayPadding.top ?? block);
+  setVar(vars, "--retro-screen-padding-right", displayPadding.right ?? inline);
+  setVar(vars, "--retro-screen-padding-bottom", displayPadding.bottom ?? block);
+  setVar(vars, "--retro-screen-padding-left", displayPadding.left ?? inline);
 
   return vars;
 };

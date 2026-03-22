@@ -83,18 +83,18 @@ const harness = createStorybookBrowserHarness();
 const page = () => harness.page;
 
 const readCursorState = async () =>
-  page().locator(".retro-lcd").evaluate((root) => {
-    const input = root.querySelector(".retro-lcd__input");
-    const cursor = root.querySelector(".retro-lcd__cursor");
+  page().locator(".retro-screen").evaluate((root) => {
+    const input = root.querySelector(".retro-screen__input");
+    const cursor = root.querySelector(".retro-screen__cursor");
 
     return {
       cols: Number(root.getAttribute("data-cols")),
       rows: Number(root.getAttribute("data-rows")),
       value: input?.value ?? "",
       selectionStart: input?.selectionStart ?? 0,
-      cursorRow: Number(cursor?.style.getPropertyValue("--retro-lcd-cursor-row") ?? -1),
-      cursorCol: Number(cursor?.style.getPropertyValue("--retro-lcd-cursor-col") ?? -1),
-      lineTexts: Array.from(root.querySelectorAll(".retro-lcd__line")).map((line) =>
+      cursorRow: Number(cursor?.style.getPropertyValue("--retro-screen-cursor-row") ?? -1),
+      cursorCol: Number(cursor?.style.getPropertyValue("--retro-screen-cursor-col") ?? -1),
+      lineTexts: Array.from(root.querySelectorAll(".retro-screen__line")).map((line) =>
         (line.textContent ?? "").replace(/\u00a0/gu, " ")
       )
     };
@@ -127,9 +127,9 @@ const assertCursorTracksTypedText = async () => {
 };
 
 const readDescenderMetrics = async () =>
-  page().locator(".retro-lcd").evaluate((root) => {
-    const grid = root.querySelector(".retro-lcd__grid");
-    const descenderLine = Array.from(root.querySelectorAll(".retro-lcd__line")).find((line) =>
+  page().locator(".retro-screen").evaluate((root) => {
+    const grid = root.querySelector(".retro-screen__grid");
+    const descenderLine = Array.from(root.querySelectorAll(".retro-screen__line")).find((line) =>
       /[gjpqy]/iu.test(line.textContent ?? "")
     );
 
@@ -163,9 +163,9 @@ const readDescenderMetrics = async () =>
 
 test("editable story keeps the visible cursor after the latest typed character", async () => {
   await harness.gotoStory("retroscreen-editor--editable-notebook");
-  await page().locator(".retro-lcd__input").click();
+  await page().locator(".retro-screen__input").click();
 
-  const initialCols = Number(await page().locator(".retro-lcd").getAttribute("data-cols"));
+  const initialCols = Number(await page().locator(".retro-screen").getAttribute("data-cols"));
   const initialSequence = "calm";
   const wrapSequence = "x".repeat(Math.max(1, initialCols + 3 - initialSequence.length));
 
@@ -192,7 +192,7 @@ test("quiet output story leaves enough room for descender glyphs", async () => {
   await harness.gotoStory("retroscreen--calm-readout");
 
   await page().waitForFunction(() => {
-    const lines = Array.from(document.querySelectorAll(".retro-lcd__line")).map((line) =>
+    const lines = Array.from(document.querySelectorAll(".retro-screen__line")).map((line) =>
       (line.textContent ?? "").replace(/\u00a0/gu, " ")
     );
     return lines.some((line) => /[gjpqy]/iu.test(line));

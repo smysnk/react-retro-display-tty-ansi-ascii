@@ -34,13 +34,20 @@ export async function publishIngestPayload(options = {}) {
     throw new Error("payload is required");
   }
 
-  const response = await fetch(endpoint, {
+  const fetchImpl = options.fetchImpl || globalThis.fetch;
+  if (typeof fetchImpl !== "function") {
+    throw new Error("A fetch implementation is required to publish ingest payloads.");
+  }
+
+  const serializedPayload = sanitizeJsonForIngest(JSON.stringify(payload));
+
+  const response = await fetchImpl(endpoint, {
     method: "POST",
     headers: {
       authorization: `Bearer ${sharedKey}`,
       "content-type": "application/json"
     },
-    body: JSON.stringify(payload)
+    body: serializedPayload
   });
 
   const text = await response.text();
@@ -51,6 +58,16 @@ export async function publishIngestPayload(options = {}) {
   }
 
   return body;
+}
+
+export function sanitizeJsonForIngest(jsonText) {
+  if (typeof jsonText !== "string") {
+    throw new Error("jsonText must be a string");
+  }
+
+  // Some downstream JSON parsers are stricter about non-scalar Unicode values than Node/V8.
+  // Replace any escaped lone surrogate halves with U+FFFD while preserving valid pairs.
+  return jsonText.replace(/\\u[dD][89aAbB][0-9a-fA-F]{2}(?!\\u[dD][c-fC-F][0-9a-fA-F]{2})|(?<!\\u[dD][89aAbB][0-9a-fA-F]{2})\\u[dD][c-fC-F][0-9a-fA-F]{2}/g, "\\ufffd");
 }
 
 export function normalizeStorageOptions(storage = {}) {

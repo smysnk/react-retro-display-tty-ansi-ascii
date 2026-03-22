@@ -14,5 +14,5 @@ export function RetroScreenInputOverlay({
     return null;
   }
 
-  return <textarea ref={inputRef} className="retro-lcd__input" rows={1} {...props} />;
+  return <textarea ref={inputRef} className="retro-screen__input" rows={1} {...props} />;
 }

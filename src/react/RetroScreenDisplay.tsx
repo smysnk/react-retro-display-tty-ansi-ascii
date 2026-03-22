@@ -27,13 +27,13 @@ const joinClassNames = (...classNames: Array<string | undefined>) =>
 
 const getCellClassName = (cell: RetroScreenRenderCell) =>
   joinClassNames(
-    "retro-lcd__cell",
-    cell.style.bold ? "retro-lcd__cell--bold" : undefined,
-    cell.style.faint ? "retro-lcd__cell--faint" : undefined,
-    cell.style.inverse ? "retro-lcd__cell--inverse" : undefined,
-    cell.style.conceal ? "retro-lcd__cell--conceal" : undefined,
-    cell.style.blink ? "retro-lcd__cell--blink" : undefined,
-    cell.isSelected ? "retro-lcd__cell--selected" : undefined
+    "retro-screen__cell",
+    cell.style.bold ? "retro-screen__cell--bold" : undefined,
+    cell.style.faint ? "retro-screen__cell--faint" : undefined,
+    cell.style.inverse ? "retro-screen__cell--inverse" : undefined,
+    cell.style.conceal ? "retro-screen__cell--conceal" : undefined,
+    cell.style.blink ? "retro-screen__cell--blink" : undefined,
+    cell.isSelected ? "retro-screen__cell--selected" : undefined
   );
 
 type RetroScreenDisplayProps = {
@@ -84,10 +84,10 @@ export function RetroScreenDisplay({
   children
 }: RetroScreenDisplayProps) {
   return (
-    <div className="retro-lcd__screen">
+    <div className="retro-screen__screen">
       <div
         ref={viewportRef}
-        className="retro-lcd__viewport"
+        className="retro-screen__viewport"
         onClick={onViewportClick}
         onFocus={onViewportFocus}
         onBlur={onViewportBlur}
@@ -105,17 +105,17 @@ export function RetroScreenDisplay({
         <div
           ref={screenRef}
           className={joinClassNames(
-            "retro-lcd__grid",
-            renderModel.isDimmed ? "retro-lcd__grid--dimmed" : undefined
+            "retro-screen__grid",
+            renderModel.isDimmed ? "retro-screen__grid--dimmed" : undefined
           )}
         >
-          <span ref={probeRef} className="retro-lcd__probe" aria-hidden="true">
+          <span ref={probeRef} className="retro-screen__probe" aria-hidden="true">
             M
           </span>
-          <div className="retro-lcd__body" aria-live={mode === "terminal" ? "polite" : undefined}>
+          <div className="retro-screen__body" aria-live={mode === "terminal" ? "polite" : undefined}>
             {renderModel.cells
               ? renderModel.cells.map((line, rowIndex) => (
-                  <div className="retro-lcd__line" key={`cells-${rowIndex}`}>
+                  <div className="retro-screen__line" key={`cells-${rowIndex}`}>
                     {line.map((cell, colIndex) => (
                       <span
                         className={getCellClassName(cell)}
@@ -129,19 +129,19 @@ export function RetroScreenDisplay({
                   </div>
                 ))
               : renderModel.lines.map((line, index) => (
-                  <div className="retro-lcd__line" key={`${index}-${line}`}>
+                  <div className="retro-screen__line" key={`${index}-${line}`}>
                     {getLineDisplayText(line)}
                   </div>
                 ))}
           </div>
           {renderModel.cursor ? (
             <div
-              className="retro-lcd__cursor"
+              className="retro-screen__cursor"
               data-cursor-mode={renderModel.cursor.mode}
               style={
                 {
-                  "--retro-lcd-cursor-row": renderModel.cursor.row,
-                  "--retro-lcd-cursor-col": renderModel.cursor.col
+                  "--retro-screen-cursor-row": renderModel.cursor.row,
+                  "--retro-screen-cursor-col": renderModel.cursor.col
                 } as CSSProperties
               }
               aria-hidden="true"

@@ -1,27 +1,27 @@
-.retro-lcd {
-  --retro-lcd-color: #97ff9b;
-  --retro-lcd-color-soft: color-mix(in srgb, var(--retro-lcd-color), black 18%);
-  --retro-lcd-color-dim: color-mix(in srgb, var(--retro-lcd-color), black 44%);
-  --retro-lcd-bg-top: color-mix(in srgb, var(--retro-lcd-color), #071008 92%);
-  --retro-lcd-bg-bottom: #071008;
-  --retro-lcd-inverse-foreground: #071008;
-  --retro-lcd-inverse-background: var(--retro-lcd-color);
-  --retro-lcd-padding-top: 28px;
-  --retro-lcd-padding-right: 32px;
-  --retro-lcd-padding-bottom: 28px;
-  --retro-lcd-padding-left: 32px;
-  --retro-lcd-cell-width: 12px;
-  --retro-lcd-cell-height: 24px;
+.retro-screen {
+  --retro-screen-color: #97ff9b;
+  --retro-screen-color-soft: color-mix(in srgb, var(--retro-screen-color), black 18%);
+  --retro-screen-color-dim: color-mix(in srgb, var(--retro-screen-color), black 44%);
+  --retro-screen-bg-top: color-mix(in srgb, var(--retro-screen-color), #071008 92%);
+  --retro-screen-bg-bottom: #071008;
+  --retro-screen-inverse-foreground: #071008;
+  --retro-screen-inverse-background: var(--retro-screen-color);
+  --retro-screen-padding-top: 28px;
+  --retro-screen-padding-right: 32px;
+  --retro-screen-padding-bottom: 28px;
+  --retro-screen-padding-left: 32px;
+  --retro-screen-cell-width: 12px;
+  --retro-screen-cell-height: 24px;
   position: relative;
   display: block;
   width: min(840px, 100%);
   min-height: 220px;
   overflow: hidden;
   border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--retro-lcd-color), transparent 82%);
+  border: 1px solid color-mix(in srgb, var(--retro-screen-color), transparent 82%);
   background:
-    radial-gradient(circle at 50% 20%, color-mix(in srgb, var(--retro-lcd-color), transparent 92%), transparent 42%),
-    linear-gradient(180deg, var(--retro-lcd-bg-top), var(--retro-lcd-bg-bottom));
+    radial-gradient(circle at 50% 20%, color-mix(in srgb, var(--retro-screen-color), transparent 92%), transparent 42%),
+    linear-gradient(180deg, var(--retro-screen-bg-top), var(--retro-screen-bg-bottom));
   transition:
     border-color 180ms ease,
     box-shadow 180ms ease,
@@ -29,72 +29,72 @@
   box-shadow:
     0 0 0 1px rgba(18, 25, 19, 0.92),
     0 18px 40px rgba(0, 0, 0, 0.28),
-    inset 0 0 0 1px color-mix(in srgb, var(--retro-lcd-color), transparent 94%),
-    inset 0 0 48px color-mix(in srgb, var(--retro-lcd-color), transparent 88%);
+    inset 0 0 0 1px color-mix(in srgb, var(--retro-screen-color), transparent 94%),
+    inset 0 0 48px color-mix(in srgb, var(--retro-screen-color), transparent 88%);
 }
 
-.retro-lcd[data-display-surface-mode="light"] {
-  border-color: color-mix(in srgb, var(--retro-lcd-color), transparent 78%);
+.retro-screen[data-display-surface-mode="light"] {
+  border-color: color-mix(in srgb, var(--retro-screen-color), transparent 78%);
   box-shadow:
     0 0 0 1px rgba(226, 232, 240, 0.96),
     0 18px 38px rgba(78, 92, 110, 0.16),
-    inset 0 0 0 1px color-mix(in srgb, var(--retro-lcd-color), transparent 96%),
-    inset 0 0 34px color-mix(in srgb, var(--retro-lcd-color), transparent 94%);
+    inset 0 0 0 1px color-mix(in srgb, var(--retro-screen-color), transparent 96%),
+    inset 0 0 34px color-mix(in srgb, var(--retro-screen-color), transparent 94%);
 }
 
-.retro-lcd[data-focus-glow="true"][data-focused="true"] {
-  border-color: color-mix(in srgb, var(--retro-lcd-color), transparent 56%);
+.retro-screen[data-focus-glow="true"][data-focused="true"] {
+  border-color: color-mix(in srgb, var(--retro-screen-color), transparent 56%);
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--retro-lcd-color), transparent 54%),
-    0 0 26px color-mix(in srgb, var(--retro-lcd-color), transparent 82%),
-    0 0 56px color-mix(in srgb, var(--retro-lcd-color), transparent 92%),
+    0 0 0 1px color-mix(in srgb, var(--retro-screen-color), transparent 54%),
+    0 0 26px color-mix(in srgb, var(--retro-screen-color), transparent 82%),
+    0 0 56px color-mix(in srgb, var(--retro-screen-color), transparent 92%),
     0 18px 40px rgba(0, 0, 0, 0.32),
-    inset 0 0 0 1px color-mix(in srgb, var(--retro-lcd-color), transparent 86%),
-    inset 0 0 56px color-mix(in srgb, var(--retro-lcd-color), transparent 82%);
+    inset 0 0 0 1px color-mix(in srgb, var(--retro-screen-color), transparent 86%),
+    inset 0 0 56px color-mix(in srgb, var(--retro-screen-color), transparent 82%);
 }
 
-.retro-lcd[data-focus-glow="true"][data-focused="true"][data-display-surface-mode="light"] {
-  border-color: color-mix(in srgb, var(--retro-lcd-color), transparent 48%);
+.retro-screen[data-focus-glow="true"][data-focused="true"][data-display-surface-mode="light"] {
+  border-color: color-mix(in srgb, var(--retro-screen-color), transparent 48%);
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--retro-lcd-color), transparent 68%),
-    0 0 18px color-mix(in srgb, var(--retro-lcd-color), transparent 92%),
-    0 0 34px color-mix(in srgb, var(--retro-lcd-color), transparent 96%),
+    0 0 0 1px color-mix(in srgb, var(--retro-screen-color), transparent 68%),
+    0 0 18px color-mix(in srgb, var(--retro-screen-color), transparent 92%),
+    0 0 34px color-mix(in srgb, var(--retro-screen-color), transparent 96%),
     0 18px 38px rgba(78, 92, 110, 0.2),
-    inset 0 0 0 1px color-mix(in srgb, var(--retro-lcd-color), transparent 92%),
-    inset 0 0 36px color-mix(in srgb, var(--retro-lcd-color), transparent 94%);
+    inset 0 0 0 1px color-mix(in srgb, var(--retro-screen-color), transparent 92%),
+    inset 0 0 36px color-mix(in srgb, var(--retro-screen-color), transparent 94%);
 }
 
-.retro-lcd__bezel,
-.retro-lcd__screen {
+.retro-screen__bezel,
+.retro-screen__screen {
   position: absolute;
   inset: 0;
 }
 
-.retro-lcd__bezel {
+.retro-screen__bezel {
   pointer-events: none;
   border-radius: inherit;
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--retro-lcd-color), transparent 92%),
+    inset 0 0 0 1px color-mix(in srgb, var(--retro-screen-color), transparent 92%),
     inset 0 0 0 12px transparent;
 }
 
-.retro-lcd[data-focus-glow="true"][data-focused="true"] .retro-lcd__bezel {
+.retro-screen[data-focus-glow="true"][data-focused="true"] .retro-screen__bezel {
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--retro-lcd-color), transparent 86%),
-    inset 0 0 22px color-mix(in srgb, var(--retro-lcd-color), transparent 92%);
+    inset 0 0 0 1px color-mix(in srgb, var(--retro-screen-color), transparent 86%),
+    inset 0 0 22px color-mix(in srgb, var(--retro-screen-color), transparent 92%);
 }
 
-.retro-lcd__screen {
+.retro-screen__screen {
   inset: 12px;
   overflow: hidden;
   display: block;
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--retro-lcd-color), transparent 92%);
+  border: 1px solid color-mix(in srgb, var(--retro-screen-color), transparent 92%);
   background:
     repeating-linear-gradient(
       180deg,
-      color-mix(in srgb, var(--retro-lcd-color), transparent 94%) 0,
-      color-mix(in srgb, var(--retro-lcd-color), transparent 94%) 1px,
+      color-mix(in srgb, var(--retro-screen-color), transparent 94%) 0,
+      color-mix(in srgb, var(--retro-screen-color), transparent 94%) 1px,
       transparent 1px,
       transparent 4px
     ),
@@ -104,84 +104,84 @@
     box-shadow 180ms ease;
 }
 
-.retro-lcd[data-display-surface-mode="light"] .retro-lcd__screen {
-  border-color: color-mix(in srgb, var(--retro-lcd-color), transparent 88%);
+.retro-screen[data-display-surface-mode="light"] .retro-screen__screen {
+  border-color: color-mix(in srgb, var(--retro-screen-color), transparent 88%);
   background:
     repeating-linear-gradient(
       180deg,
-      color-mix(in srgb, var(--retro-lcd-color), white 90%) 0,
-      color-mix(in srgb, var(--retro-lcd-color), white 90%) 1px,
+      color-mix(in srgb, var(--retro-screen-color), white 90%) 0,
+      color-mix(in srgb, var(--retro-screen-color), white 90%) 1px,
       transparent 1px,
       transparent 4px
     ),
     radial-gradient(circle at center, transparent 56%, rgba(84, 101, 120, 0.08) 100%);
 }
 
-.retro-lcd[data-focus-glow="true"][data-focused="true"] .retro-lcd__screen {
-  border-color: color-mix(in srgb, var(--retro-lcd-color), transparent 78%);
+.retro-screen[data-focus-glow="true"][data-focused="true"] .retro-screen__screen {
+  border-color: color-mix(in srgb, var(--retro-screen-color), transparent 78%);
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--retro-lcd-color), transparent 92%),
-    0 0 18px color-mix(in srgb, var(--retro-lcd-color), transparent 94%);
+    inset 0 0 0 1px color-mix(in srgb, var(--retro-screen-color), transparent 92%),
+    0 0 18px color-mix(in srgb, var(--retro-screen-color), transparent 94%);
 }
 
-.retro-lcd[data-focus-glow="true"][data-focused="true"][data-display-surface-mode="light"] .retro-lcd__screen {
-  border-color: color-mix(in srgb, var(--retro-lcd-color), transparent 74%);
+.retro-screen[data-focus-glow="true"][data-focused="true"][data-display-surface-mode="light"] .retro-screen__screen {
+  border-color: color-mix(in srgb, var(--retro-screen-color), transparent 74%);
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--retro-lcd-color), transparent 94%),
-    0 0 12px color-mix(in srgb, var(--retro-lcd-color), transparent 97%);
+    inset 0 0 0 1px color-mix(in srgb, var(--retro-screen-color), transparent 94%),
+    0 0 12px color-mix(in srgb, var(--retro-screen-color), transparent 97%);
 }
 
-.retro-lcd__viewport {
+.retro-screen__viewport {
   box-sizing: border-box;
   position: relative;
   width: 100%;
   height: 100%;
-  padding: var(--retro-lcd-padding-top) var(--retro-lcd-padding-right)
-    var(--retro-lcd-padding-bottom) var(--retro-lcd-padding-left);
+  padding: var(--retro-screen-padding-top) var(--retro-screen-padding-right)
+    var(--retro-screen-padding-bottom) var(--retro-screen-padding-left);
 }
 
-.retro-lcd__viewport:focus {
+.retro-screen__viewport:focus {
   outline: none;
 }
 
-.retro-lcd__grid {
-  --retro-lcd-cursor-height: var(--retro-lcd-font-size, 24px);
-  --retro-lcd-cursor-y-offset: max(
+.retro-screen__grid {
+  --retro-screen-cursor-height: var(--retro-screen-font-size, 24px);
+  --retro-screen-cursor-y-offset: max(
     0px,
-    calc((var(--retro-lcd-cell-height) - var(--retro-lcd-cursor-height)) / 2)
+    calc((var(--retro-screen-cell-height) - var(--retro-screen-cursor-height)) / 2)
   );
   position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  color: var(--retro-lcd-color);
-  font-family: var(--retro-lcd-font-family, "IBM Plex Mono"), monospace;
-  font-size: calc(var(--retro-lcd-font-size, 24px) * var(--retro-lcd-font-scale, 1));
-  line-height: var(--retro-lcd-cell-height);
+  color: var(--retro-screen-color);
+  font-family: var(--retro-screen-font-family, "IBM Plex Mono"), monospace;
+  font-size: calc(var(--retro-screen-font-size, 24px) * var(--retro-screen-font-scale, 1));
+  line-height: var(--retro-screen-cell-height);
   letter-spacing: 0.015em;
   text-shadow:
-    0 0 10px color-mix(in srgb, var(--retro-lcd-color), transparent 84%),
-    0 0 22px color-mix(in srgb, var(--retro-lcd-color), transparent 92%);
+    0 0 10px color-mix(in srgb, var(--retro-screen-color), transparent 84%),
+    0 0 22px color-mix(in srgb, var(--retro-screen-color), transparent 92%);
 }
 
-.retro-lcd[data-display-surface-mode="light"] .retro-lcd__grid {
+.retro-screen[data-display-surface-mode="light"] .retro-screen__grid {
   text-shadow:
-    0 0 4px color-mix(in srgb, var(--retro-lcd-color), transparent 94%),
-    0 0 10px color-mix(in srgb, var(--retro-lcd-color), transparent 97%);
+    0 0 4px color-mix(in srgb, var(--retro-screen-color), transparent 94%),
+    0 0 10px color-mix(in srgb, var(--retro-screen-color), transparent 97%);
 }
 
-.retro-lcd__grid--dimmed {
-  color: var(--retro-lcd-color-dim);
+.retro-screen__grid--dimmed {
+  color: var(--retro-screen-color-dim);
   text-shadow:
-    0 0 8px color-mix(in srgb, var(--retro-lcd-color-dim), transparent 88%),
-    0 0 18px color-mix(in srgb, var(--retro-lcd-color-dim), transparent 94%);
+    0 0 8px color-mix(in srgb, var(--retro-screen-color-dim), transparent 88%),
+    0 0 18px color-mix(in srgb, var(--retro-screen-color-dim), transparent 94%);
 }
 
-.retro-lcd[data-display-surface-mode="light"] .retro-lcd__grid--dimmed {
+.retro-screen[data-display-surface-mode="light"] .retro-screen__grid--dimmed {
   text-shadow: none;
 }
 
-.retro-lcd__probe {
+.retro-screen__probe {
   position: absolute;
   top: 0;
   left: 0;
@@ -193,116 +193,116 @@
   letter-spacing: inherit;
 }
 
-.retro-lcd__body {
+.retro-screen__body {
   box-sizing: border-box;
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-rows: repeat(var(--retro-lcd-rows), var(--retro-lcd-cell-height));
+  grid-template-rows: repeat(var(--retro-screen-rows), var(--retro-screen-cell-height));
   width: 100%;
   min-height: 100%;
 }
 
-.retro-lcd__line {
+.retro-screen__line {
   display: block;
-  height: var(--retro-lcd-cell-height);
+  height: var(--retro-screen-cell-height);
   overflow: visible;
   white-space: pre;
   color: inherit;
-  transform: scaleY(var(--retro-lcd-row-scale, 1));
+  transform: scaleY(var(--retro-screen-row-scale, 1));
   transform-origin: top center;
 }
 
-.retro-lcd__cell {
+.retro-screen__cell {
   display: inline-block;
-  min-width: var(--retro-lcd-cell-width);
-  height: var(--retro-lcd-cell-height);
+  min-width: var(--retro-screen-cell-width);
+  height: var(--retro-screen-cell-height);
   color: inherit;
   background: transparent;
 }
 
-.retro-lcd__cell--bold {
+.retro-screen__cell--bold {
   filter: brightness(1.12);
 }
 
-.retro-lcd__cell--faint {
-  color: var(--retro-lcd-color-dim);
+.retro-screen__cell--faint {
+  color: var(--retro-screen-color-dim);
   text-shadow:
-    0 0 7px color-mix(in srgb, var(--retro-lcd-color-dim), transparent 86%),
-    0 0 14px color-mix(in srgb, var(--retro-lcd-color-dim), transparent 94%);
+    0 0 7px color-mix(in srgb, var(--retro-screen-color-dim), transparent 86%),
+    0 0 14px color-mix(in srgb, var(--retro-screen-color-dim), transparent 94%);
 }
 
-.retro-lcd[data-display-surface-mode="light"] .retro-lcd__cell--faint {
+.retro-screen[data-display-surface-mode="light"] .retro-screen__cell--faint {
   text-shadow: none;
 }
 
-.retro-lcd__cell--inverse {
-  color: var(--retro-lcd-inverse-foreground);
-  background: var(--retro-lcd-inverse-background);
+.retro-screen__cell--inverse {
+  color: var(--retro-screen-inverse-foreground);
+  background: var(--retro-screen-inverse-background);
 }
 
-.retro-lcd__cell--conceal {
+.retro-screen__cell--conceal {
   color: transparent;
   text-shadow: none;
 }
 
-.retro-lcd__cell--blink {
-  animation: retro-lcd-cell-blink 1.2s steps(1, end) infinite;
+.retro-screen__cell--blink {
+  animation: retro-screen-cell-blink 1.2s steps(1, end) infinite;
 }
 
-.retro-lcd__cell--selected {
-  background: color-mix(in srgb, var(--retro-lcd-color), black 72%);
+.retro-screen__cell--selected {
+  background: color-mix(in srgb, var(--retro-screen-color), black 72%);
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--retro-lcd-color), transparent 72%),
-    0 0 8px color-mix(in srgb, var(--retro-lcd-color), transparent 86%);
+    inset 0 0 0 1px color-mix(in srgb, var(--retro-screen-color), transparent 72%),
+    0 0 8px color-mix(in srgb, var(--retro-screen-color), transparent 86%);
 }
 
-.retro-lcd[data-display-surface-mode="light"] .retro-lcd__cell--selected {
-  background: color-mix(in srgb, var(--retro-lcd-color), white 70%);
+.retro-screen[data-display-surface-mode="light"] .retro-screen__cell--selected {
+  background: color-mix(in srgb, var(--retro-screen-color), white 70%);
 }
 
-.retro-lcd__cursor {
+.retro-screen__cursor {
   position: absolute;
   z-index: 2;
-  top: var(--retro-lcd-cursor-y-offset);
+  top: var(--retro-screen-cursor-y-offset);
   left: 0;
-  width: var(--retro-lcd-cell-width);
-  height: var(--retro-lcd-cursor-height);
+  width: var(--retro-screen-cell-width);
+  height: var(--retro-screen-cursor-height);
   box-sizing: border-box;
   transform: translate(
-    calc(var(--retro-lcd-cursor-col) * var(--retro-lcd-cell-width)),
-    calc(var(--retro-lcd-cursor-row) * var(--retro-lcd-cell-height))
+    calc(var(--retro-screen-cursor-col) * var(--retro-screen-cell-width)),
+    calc(var(--retro-screen-cursor-row) * var(--retro-screen-cell-height))
   );
-  background: color-mix(in srgb, var(--retro-lcd-color), transparent 14%);
+  background: color-mix(in srgb, var(--retro-screen-color), transparent 14%);
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--retro-lcd-color), transparent 16%),
-    0 0 12px color-mix(in srgb, var(--retro-lcd-color), transparent 68%);
-  animation: retro-lcd-cursor-blink 1.05s steps(1, end) infinite;
+    0 0 0 1px color-mix(in srgb, var(--retro-screen-color), transparent 16%),
+    0 0 12px color-mix(in srgb, var(--retro-screen-color), transparent 68%);
+  animation: retro-screen-cursor-blink 1.05s steps(1, end) infinite;
   pointer-events: none;
 }
 
-.retro-lcd[data-display-surface-mode="light"] .retro-lcd__cursor {
-  background: color-mix(in srgb, var(--retro-lcd-color), white 54%);
+.retro-screen[data-display-surface-mode="light"] .retro-screen__cursor {
+  background: color-mix(in srgb, var(--retro-screen-color), white 54%);
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--retro-lcd-color), transparent 44%),
-    0 0 10px color-mix(in srgb, var(--retro-lcd-color), transparent 84%);
+    0 0 0 1px color-mix(in srgb, var(--retro-screen-color), transparent 44%),
+    0 0 10px color-mix(in srgb, var(--retro-screen-color), transparent 84%);
 }
 
-.retro-lcd__cursor[data-cursor-mode="hollow"] {
+.retro-screen__cursor[data-cursor-mode="hollow"] {
   background: transparent;
-  border: 1.5px solid var(--retro-lcd-color-dim);
+  border: 1.5px solid var(--retro-screen-color-dim);
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--retro-lcd-color-dim), transparent 60%),
-    0 0 10px color-mix(in srgb, var(--retro-lcd-color-dim), transparent 72%);
+    inset 0 0 0 1px color-mix(in srgb, var(--retro-screen-color-dim), transparent 60%),
+    0 0 10px color-mix(in srgb, var(--retro-screen-color-dim), transparent 72%);
 }
 
-.retro-lcd[data-display-surface-mode="light"] .retro-lcd__cursor[data-cursor-mode="hollow"] {
+.retro-screen[data-display-surface-mode="light"] .retro-screen__cursor[data-cursor-mode="hollow"] {
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--retro-lcd-color-dim), transparent 72%),
-    0 0 8px color-mix(in srgb, var(--retro-lcd-color-dim), transparent 88%);
+    inset 0 0 0 1px color-mix(in srgb, var(--retro-screen-color-dim), transparent 72%),
+    0 0 8px color-mix(in srgb, var(--retro-screen-color-dim), transparent 88%);
 }
 
-.retro-lcd__resize-handle {
+.retro-screen__resize-handle {
   position: absolute;
   z-index: 6;
   opacity: 0;
@@ -312,36 +312,36 @@
   touch-action: none;
 }
 
-.retro-lcd__resize-handle::before {
+.retro-screen__resize-handle::before {
   content: "";
   position: absolute;
-  background: color-mix(in srgb, var(--retro-lcd-color), transparent 36%);
+  background: color-mix(in srgb, var(--retro-screen-color), transparent 36%);
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--retro-lcd-color), transparent 60%),
-    0 0 12px color-mix(in srgb, var(--retro-lcd-color), transparent 82%);
+    0 0 0 1px color-mix(in srgb, var(--retro-screen-color), transparent 60%),
+    0 0 12px color-mix(in srgb, var(--retro-screen-color), transparent 82%);
 }
 
-.retro-lcd[data-display-surface-mode="light"] .retro-lcd__resize-handle::before {
-  background: color-mix(in srgb, var(--retro-lcd-color), white 42%);
+.retro-screen[data-display-surface-mode="light"] .retro-screen__resize-handle::before {
+  background: color-mix(in srgb, var(--retro-screen-color), white 42%);
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--retro-lcd-color), transparent 72%),
-    0 0 10px color-mix(in srgb, var(--retro-lcd-color), transparent 90%);
+    0 0 0 1px color-mix(in srgb, var(--retro-screen-color), transparent 72%),
+    0 0 10px color-mix(in srgb, var(--retro-screen-color), transparent 90%);
 }
 
-.retro-lcd__resize-handle:hover,
-.retro-lcd__resize-handle[data-active="true"] {
+.retro-screen__resize-handle:hover,
+.retro-screen__resize-handle[data-active="true"] {
   opacity: 1;
 }
 
-.retro-lcd[data-resizing="true"] .retro-lcd__resize-handle {
+.retro-screen[data-resizing="true"] .retro-screen__resize-handle {
   opacity: 0;
 }
 
-.retro-lcd[data-resizing="true"] .retro-lcd__resize-handle[data-active="true"] {
+.retro-screen[data-resizing="true"] .retro-screen__resize-handle[data-active="true"] {
   opacity: 1;
 }
 
-.retro-lcd__resize-handle--width {
+.retro-screen__resize-handle--width {
   top: 16px;
   right: -1px;
   bottom: 16px;
@@ -349,7 +349,7 @@
   cursor: ew-resize;
 }
 
-.retro-lcd__resize-handle--width::before {
+.retro-screen__resize-handle--width::before {
   top: 8px;
   right: 6px;
   bottom: 8px;
@@ -357,7 +357,7 @@
   border-radius: 999px;
 }
 
-.retro-lcd__resize-handle--height {
+.retro-screen__resize-handle--height {
   left: 16px;
   right: 16px;
   bottom: -1px;
@@ -365,7 +365,7 @@
   cursor: ns-resize;
 }
 
-.retro-lcd__resize-handle--height::before {
+.retro-screen__resize-handle--height::before {
   right: 10px;
   bottom: 6px;
   left: 10px;
@@ -373,7 +373,7 @@
   border-radius: 999px;
 }
 
-.retro-lcd__resize-handle--corner {
+.retro-screen__resize-handle--corner {
   right: -1px;
   bottom: -1px;
   width: 28px;
@@ -381,24 +381,24 @@
   cursor: nwse-resize;
 }
 
-.retro-lcd__resize-handle--corner::before {
+.retro-screen__resize-handle--corner::before {
   right: 6px;
   bottom: 6px;
   width: 14px;
   height: 14px;
-  border-right: 4px solid color-mix(in srgb, var(--retro-lcd-color), transparent 36%);
-  border-bottom: 4px solid color-mix(in srgb, var(--retro-lcd-color), transparent 36%);
+  border-right: 4px solid color-mix(in srgb, var(--retro-screen-color), transparent 36%);
+  border-bottom: 4px solid color-mix(in srgb, var(--retro-screen-color), transparent 36%);
   border-radius: 0 0 6px 0;
   background: transparent;
   box-shadow: none;
 }
 
-.retro-lcd[data-display-surface-mode="light"] .retro-lcd__resize-handle--corner::before {
-  border-right-color: color-mix(in srgb, var(--retro-lcd-color), white 42%);
-  border-bottom-color: color-mix(in srgb, var(--retro-lcd-color), white 42%);
+.retro-screen[data-display-surface-mode="light"] .retro-screen__resize-handle--corner::before {
+  border-right-color: color-mix(in srgb, var(--retro-screen-color), white 42%);
+  border-bottom-color: color-mix(in srgb, var(--retro-screen-color), white 42%);
 }
 
-.retro-lcd__resize-handle--left {
+.retro-screen__resize-handle--left {
   top: 16px;
   left: -1px;
   bottom: 16px;
@@ -406,7 +406,7 @@
   cursor: ew-resize;
 }
 
-.retro-lcd__resize-handle--left::before {
+.retro-screen__resize-handle--left::before {
   top: 8px;
   left: 6px;
   bottom: 8px;
@@ -414,7 +414,7 @@
   border-radius: 999px;
 }
 
-.retro-lcd__resize-handle--top {
+.retro-screen__resize-handle--top {
   top: -1px;
   right: 16px;
   left: 16px;
@@ -422,7 +422,7 @@
   cursor: ns-resize;
 }
 
-.retro-lcd__resize-handle--top::before {
+.retro-screen__resize-handle--top::before {
   top: 6px;
   right: 10px;
   left: 10px;
@@ -430,7 +430,7 @@
   border-radius: 999px;
 }
 
-.retro-lcd__resize-handle--top-left {
+.retro-screen__resize-handle--top-left {
   top: -1px;
   left: -1px;
   width: 28px;
@@ -438,24 +438,24 @@
   cursor: nwse-resize;
 }
 
-.retro-lcd__resize-handle--top-left::before {
+.retro-screen__resize-handle--top-left::before {
   top: 6px;
   left: 6px;
   width: 14px;
   height: 14px;
-  border-top: 4px solid color-mix(in srgb, var(--retro-lcd-color), transparent 36%);
-  border-left: 4px solid color-mix(in srgb, var(--retro-lcd-color), transparent 36%);
+  border-top: 4px solid color-mix(in srgb, var(--retro-screen-color), transparent 36%);
+  border-left: 4px solid color-mix(in srgb, var(--retro-screen-color), transparent 36%);
   border-radius: 6px 0 0 0;
   background: transparent;
   box-shadow: none;
 }
 
-.retro-lcd[data-display-surface-mode="light"] .retro-lcd__resize-handle--top-left::before {
-  border-top-color: color-mix(in srgb, var(--retro-lcd-color), white 42%);
-  border-left-color: color-mix(in srgb, var(--retro-lcd-color), white 42%);
+.retro-screen[data-display-surface-mode="light"] .retro-screen__resize-handle--top-left::before {
+  border-top-color: color-mix(in srgb, var(--retro-screen-color), white 42%);
+  border-left-color: color-mix(in srgb, var(--retro-screen-color), white 42%);
 }
 
-.retro-lcd__input {
+.retro-screen__input {
   position: absolute;
   inset: 0;
   z-index: 3;
@@ -473,7 +473,7 @@
   letter-spacing: inherit;
 }
 
-@keyframes retro-lcd-cursor-blink {
+@keyframes retro-screen-cursor-blink {
   0%,
   49% {
     opacity: 1;
@@ -485,7 +485,7 @@
   }
 }
 
-@keyframes retro-lcd-cell-blink {
+@keyframes retro-screen-cell-blink {
   0%,
   49% {
     opacity: 1;

@@ -6,13 +6,13 @@ const harness = createStorybookBrowserHarness();
 const page = () => harness.page;
 
 const readDisplayBufferState = async () =>
-  page().locator(".retro-lcd").evaluate((root) => ({
+  page().locator(".retro-screen").evaluate((root) => ({
     rows: Number(root.getAttribute("data-rows") ?? "0"),
     cols: Number(root.getAttribute("data-cols") ?? "0"),
     bufferOffset: Number(root.getAttribute("data-buffer-offset") ?? "0"),
     maxBufferOffset: Number(root.getAttribute("data-buffer-max-offset") ?? "0"),
     autoFollow: root.getAttribute("data-auto-follow") === "true",
-    lines: Array.from(root.querySelectorAll(".retro-lcd__line")).map((line) =>
+    lines: Array.from(root.querySelectorAll(".retro-screen__line")).map((line) =>
       (line.textContent ?? "").replace(/\u00a0/gu, " ")
     )
   }));
@@ -53,13 +53,13 @@ test("display buffer story pages through history and preserves the visible windo
   await harness.gotoStory("retroscreen-display-buffer--display-buffer");
 
   await page().waitForFunction(() => {
-    const root = document.querySelector(".retro-lcd");
+    const root = document.querySelector(".retro-screen");
     const maxOffset = Number(root?.getAttribute("data-buffer-max-offset") ?? "0");
-    const text = (root?.querySelector(".retro-lcd__body")?.textContent ?? "").replace(/\u00a0/gu, " ");
+    const text = (root?.querySelector(".retro-screen__body")?.textContent ?? "").replace(/\u00a0/gu, " ");
     return maxOffset > 0 && text.includes("line-18");
   });
 
-  const viewport = page().locator(".retro-lcd__viewport");
+  const viewport = page().locator(".retro-screen__viewport");
   await viewport.click();
 
   const liveState = await readDisplayBufferState();
@@ -75,7 +75,7 @@ test("display buffer story pages through history and preserves the visible windo
 
   await page().keyboard.press("PageUp");
   await page().waitForFunction(() => {
-    const root = document.querySelector(".retro-lcd");
+    const root = document.querySelector(".retro-screen");
     return Number(root?.getAttribute("data-buffer-offset") ?? "0") > 0;
   });
 
@@ -91,7 +91,7 @@ test("display buffer story pages through history and preserves the visible windo
   const previousMaxBufferOffset = scrolledState.maxBufferOffset;
   await page().getByRole("button", { name: "Append live line" }).click();
   await page().waitForFunction((expectedMaxOffset) => {
-    const root = document.querySelector(".retro-lcd");
+    const root = document.querySelector(".retro-screen");
     return Number(root?.getAttribute("data-buffer-max-offset") ?? "0") > expectedMaxOffset;
   }, previousMaxBufferOffset);
 
@@ -114,7 +114,7 @@ test("display buffer story pages through history and preserves the visible windo
   await viewport.click();
   await page().keyboard.press("End");
   await page().waitForFunction(() => {
-    const root = document.querySelector(".retro-lcd");
+    const root = document.querySelector(".retro-screen");
     return Number(root?.getAttribute("data-buffer-offset") ?? "0") === 0;
   });
 
@@ -131,16 +131,16 @@ test("display buffer story supports mouse-wheel scrolling and wheel-based recove
   await harness.gotoStory("retroscreen-display-buffer--display-buffer");
 
   await page().waitForFunction(() => {
-    const root = document.querySelector(".retro-lcd");
+    const root = document.querySelector(".retro-screen");
     return Number(root?.getAttribute("data-buffer-max-offset") ?? "0") > 0;
   });
 
-  const viewport = page().locator(".retro-lcd__viewport");
+  const viewport = page().locator(".retro-screen__viewport");
   await moveMouseToViewportCenter(viewport);
   await page().mouse.wheel(0, -480);
 
   await page().waitForFunction(() => {
-    const root = document.querySelector(".retro-lcd");
+    const root = document.querySelector(".retro-screen");
     return Number(root?.getAttribute("data-buffer-offset") ?? "0") > 0;
   });
 

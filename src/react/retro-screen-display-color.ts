@@ -324,17 +324,17 @@ export const getDisplayModeRootVars = (
     displaySurfaceMode === "light" ? ensureContrast(baseAccent, surface.bottom, 6) : baseAccent;
 
   return {
-    "--retro-lcd-color": nextColor,
-    "--retro-lcd-color-soft": mixColors(nextColor, surface.bottom, 0.18),
-    "--retro-lcd-color-dim": mixColors(
+    "--retro-screen-color": nextColor,
+    "--retro-screen-color-soft": mixColors(nextColor, surface.bottom, 0.18),
+    "--retro-screen-color-dim": mixColors(
       nextColor,
       surface.bottom,
       displaySurfaceMode === "light" ? 0.42 : 0.5
     ),
-    "--retro-lcd-bg-top": surface.top,
-    "--retro-lcd-bg-bottom": surface.bottom,
-    "--retro-lcd-inverse-foreground": displaySurfaceMode === "light" ? surface.bottom : "#071008",
-    "--retro-lcd-inverse-background": nextColor
+    "--retro-screen-bg-top": surface.top,
+    "--retro-screen-bg-bottom": surface.bottom,
+    "--retro-screen-inverse-foreground": displaySurfaceMode === "light" ? surface.bottom : "#071008",
+    "--retro-screen-inverse-background": nextColor
   } as CSSProperties;
 };
 

@@ -197,7 +197,7 @@ export function MatrixCodeRainScreen({
     () =>
       ({
         minHeight: "660px",
-        "--retro-lcd-font-family": MATRIX_FONT_FAMILY,
+        "--retro-screen-font-family": MATRIX_FONT_FAMILY,
         ...style
       }) as CSSProperties,
     [style]

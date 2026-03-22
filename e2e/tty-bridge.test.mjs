@@ -16,7 +16,7 @@ const ciTtyBridgeUnsupported =
 const waitForTerminalText = async (fragment) => {
   await page().waitForFunction(
     (expected) =>
-      (document.querySelector(".retro-lcd__body")?.textContent ?? "")
+      (document.querySelector(".retro-screen__body")?.textContent ?? "")
         .replace(/\u00a0/gu, " ")
         .includes(expected),
     fragment
@@ -26,7 +26,7 @@ const waitForTerminalText = async (fragment) => {
 const waitForTerminalPattern = async (patternSource) => {
   await page().waitForFunction(
     (source) => {
-      const text = (document.querySelector(".retro-lcd__body")?.textContent ?? "").replace(/\u00a0/gu, " ");
+      const text = (document.querySelector(".retro-screen__body")?.textContent ?? "").replace(/\u00a0/gu, " ");
       return new RegExp(source, "u").test(text);
     },
     patternSource
@@ -35,7 +35,7 @@ const waitForTerminalPattern = async (patternSource) => {
 
 const getTerminalText = async () =>
   page()
-    .locator(".retro-lcd__body")
+    .locator(".retro-screen__body")
     .evaluate((node) => (node.textContent ?? "").replace(/\u00a0/gu, " "));
 
 const submitCommand = async (value) => {
@@ -66,11 +66,11 @@ test("live TTY bridge story can drive a real TTY session end to end", {
   });
 
   await harness.gotoStory("retroscreen--live-tty-terminal-bridge");
-  await page().waitForSelector('.retro-lcd[data-session-state="open"]');
+  await page().waitForSelector('.retro-screen[data-session-state="open"]');
   await waitForTerminalText("READY");
 
-  const viewport = page().locator(".retro-lcd__viewport");
-  const root = page().locator(".retro-lcd");
+  const viewport = page().locator(".retro-screen__viewport");
+  const root = page().locator(".retro-screen");
   await viewport.click();
 
   await submitCommand("PING");
@@ -84,7 +84,7 @@ test("live TTY bridge story can drive a real TTY session end to end", {
   await page().getByRole("button", { name: "Wide" }).click();
   await page().waitForFunction(
     ([rows, cols]) => {
-      const rootNode = document.querySelector(".retro-lcd");
+      const rootNode = document.querySelector(".retro-screen");
       return (
         Number(rootNode?.getAttribute("data-rows")) !== rows ||
         Number(rootNode?.getAttribute("data-cols")) !== cols
@@ -104,11 +104,11 @@ test("live TTY bridge story can drive a real TTY session end to end", {
 
   await viewport.focus();
   await submitCommand("TITLE Browser TTY Demo");
-  await page().waitForSelector('.retro-lcd[data-session-title="Browser TTY Demo"]');
+  await page().waitForSelector('.retro-screen[data-session-title="Browser TTY Demo"]');
 
   await viewport.focus();
   await submitCommand("BELL");
-  await page().waitForSelector('.retro-lcd[data-session-bell-count="1"]');
+  await page().waitForSelector('.retro-screen[data-session-bell-count="1"]');
 
   await viewport.focus();
   await submitCommand("FOCUSON");

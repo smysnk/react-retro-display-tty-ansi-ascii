@@ -4,6 +4,28 @@
   font-display: swap;
 }
 
+.sb-retro-page,
+.sb-retro-docs-page {
+  --sb-retro-interface-font:
+    "Nunito Sans",
+    -apple-system,
+    ".SFNSText-Regular",
+    "San Francisco",
+    system-ui,
+    "Segoe UI",
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    sans-serif;
+  --sb-retro-editorial-font:
+    "Iowan Old Style",
+    "Palatino Linotype",
+    "Book Antiqua",
+    Georgia,
+    serif;
+  font-family: var(--sb-retro-interface-font);
+}
+
 .sb-retro-page {
   min-height: 100vh;
   padding: 48px 24px;
@@ -35,6 +57,10 @@ body {
   color: #f2efe8;
 }
 
+.sb-retro-docs-page :where(h1, h2, h3, p, a, span, li, code) {
+  font-family: inherit;
+}
+
 .sb-retro-docs-hero {
   width: min(1120px, 100%);
   margin: 0 auto 28px;
@@ -48,6 +74,7 @@ body {
   line-height: 0.95;
   letter-spacing: -0.04em;
   color: #f2efe8;
+  font-family: var(--sb-retro-editorial-font);
 }
 
 .sb-retro-docs-description,
@@ -56,6 +83,7 @@ body {
   max-width: 840px;
   color: rgba(223, 217, 207, 0.78);
   line-height: 1.65;
+  font-family: var(--sb-retro-editorial-font);
 }
 
 .sb-retro-docs-badges {
@@ -99,11 +127,13 @@ body {
 .sb-retro-docs-section h2 {
   margin: 0;
   color: #f2efe8;
+  font-family: var(--sb-retro-editorial-font);
 }
 
 .sb-retro-docs-section p {
   margin: 0;
   color: rgba(223, 217, 207, 0.78);
+  font-family: var(--sb-retro-editorial-font);
 }
 
 .sb-retro-docs-story {
@@ -115,6 +145,7 @@ body {
   margin: 0;
   color: #f2efe8;
   font-size: 20px;
+  font-family: var(--sb-retro-editorial-font);
 }
 
 .sb-retro-docs-story > :last-child,
@@ -153,6 +184,7 @@ body {
   letter-spacing: 0.26em;
   text-transform: uppercase;
   color: rgba(209, 201, 189, 0.64);
+  font-family: var(--sb-retro-interface-font) !important;
 }
 
 .sb-retro-title {
@@ -160,6 +192,12 @@ body {
   font-size: clamp(30px, 4vw, 48px);
   line-height: 0.95;
   letter-spacing: -0.04em;
+  font-family: var(--sb-retro-editorial-font) !important;
+}
+
+.sb-retro-page .sb-retro-title,
+.sb-retro-docs-story .sb-retro-title {
+  font-family: var(--sb-retro-editorial-font) !important;
 }
 
 .sb-retro-copy {
@@ -168,6 +206,13 @@ body {
   font-size: 16px;
   line-height: 1.6;
   color: rgba(223, 217, 207, 0.72);
+  font-family: var(--sb-retro-editorial-font) !important;
+}
+
+.sb-retro-page .retro-screen__grid,
+.sb-retro-docs-page .retro-screen__grid {
+  font-family: var(--retro-screen-font-family, "IBM Plex Mono"), monospace !important;
+  font-size: calc(var(--retro-screen-font-size, 24px) * var(--retro-screen-font-scale, 1)) !important;
 }
 
 .sb-retro-stage {
@@ -269,7 +314,7 @@ body {
   box-shadow: 0 0 0 1px rgba(151, 255, 155, 0.08);
 }
 
-.sb-retro-live-tty-host .retro-lcd {
+.sb-retro-live-tty-host .retro-screen {
   width: 100%;
   height: 100%;
 }
@@ -598,21 +643,21 @@ body {
   color: rgba(219, 226, 218, 0.68);
 }
 
-[data-feature-tour-root="true"] .retro-lcd__cursor {
+[data-feature-tour-root="true"] .retro-screen__cursor {
   animation: none;
   opacity: 1;
 }
 
-[data-demo-capture] .retro-lcd__cursor {
+[data-demo-capture] .retro-screen__cursor {
   animation: none;
   opacity: 1;
 }
 
-[data-feature-tour-root="true"] .retro-lcd__cursor[data-cursor-mode="hollow"] {
-  border-color: color-mix(in srgb, var(--retro-lcd-color), white 18%);
+[data-feature-tour-root="true"] .retro-screen__cursor[data-cursor-mode="hollow"] {
+  border-color: color-mix(in srgb, var(--retro-screen-color), white 18%);
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--retro-lcd-color), white 28%),
-    0 0 16px color-mix(in srgb, var(--retro-lcd-color), transparent 56%);
+    inset 0 0 0 1px color-mix(in srgb, var(--retro-screen-color), white 28%),
+    0 0 16px color-mix(in srgb, var(--retro-screen-color), transparent 56%);
 }
 
 @media (max-width: 900px) {

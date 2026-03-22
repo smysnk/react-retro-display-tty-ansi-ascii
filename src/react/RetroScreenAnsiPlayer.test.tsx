@@ -5,7 +5,7 @@ import { RetroScreenAnsiPlayer } from "./RetroScreenAnsiPlayer";
 import type { RetroScreenAnsiPlayerState } from "./useRetroScreenAnsiPlayer";
 
 const getBodyText = (container: HTMLElement) =>
-  container.querySelector(".retro-lcd__body")?.textContent?.replace(/\u00a0/gu, " ") ?? "";
+  container.querySelector(".retro-screen__body")?.textContent?.replace(/\u00a0/gu, " ") ?? "";
 
 describe("RetroScreenAnsiPlayer", () => {
   it("renders streamed ANSI bytes without requiring RetroScreen to load files", async () => {
