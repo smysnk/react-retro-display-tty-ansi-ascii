@@ -141,6 +141,30 @@ body {
   gap: 14px;
 }
 
+.sb-retro-docs-story-preview {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+}
+
+.sb-retro-docs-story-preview--frame {
+  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: #0b1018;
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.sb-retro-docs-iframe {
+  display: block;
+  width: 100%;
+  min-height: 720px;
+  border: 0;
+  background: transparent;
+}
+
 .sb-retro-docs-story h3 {
   margin: 0;
   color: #f2efe8;
@@ -207,6 +231,24 @@ body {
   line-height: 1.6;
   color: rgba(223, 217, 207, 0.72);
   font-family: var(--sb-retro-editorial-font) !important;
+}
+
+.sb-retro-docs-story .sb-retro-kicker {
+  font-size: 12px !important;
+}
+
+.sb-retro-docs-story .sb-retro-title {
+  font-size: clamp(30px, 4vw, 48px) !important;
+}
+
+.sb-retro-docs-story .sb-retro-copy {
+  font-size: 16px !important;
+}
+
+.sb-retro-docs-story .retro-screen {
+  --retro-screen-font-size: 24px !important;
+  --retro-screen-cell-width: 14.765625px !important;
+  --retro-screen-cell-height: 24px !important;
 }
 
 .sb-retro-page .retro-screen__grid,

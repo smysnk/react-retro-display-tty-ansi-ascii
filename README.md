@@ -545,8 +545,8 @@ The key wiring for this kind of ANSI-art playback is:
   loop
   displayColorMode="ansi-classic"
   displayPadding={{ block: 8, inline: 12 }}
-  displayFontScale={1.22}
-  displayRowScale={1.14}
+  displayFontScale={1}
+  displayRowScale={2}
   style={{ width: "1010px", height: "642px" }}
 />
 ```
@@ -554,8 +554,10 @@ The key wiring for this kind of ANSI-art playback is:
 Use `RetroScreenAnsiPlayer` when a parent is responsible for supplying ANSI bytes or byte chunks,
 including incremental streams. Keep the asset loading outside the display component, pass the
 native `rows` and `cols` so the art is not reflowed, and use `displayFontScale` plus
-`displayRowScale` to densify the rendered glyphs when you want ANSI art to read as a continuous
-image instead of separated text lines. For the Bad Apple panel, the demo also uses a container
+`displayRowScale` to tune how the art occupies the grid. `BADAPPLE.ANS` uses lots of upper-half
+and lower-half block characters (`▀` / `▄`), so the demo keeps the font scale neutral and doubles
+the row scale to visually fuse those half-block rows into a continuous image instead of separated
+text lines. For the Bad Apple panel, the demo also uses a container
 size that lands on exact `12x24` cell geometry after padding and bezel chrome, which avoids
 fractional row heights and helps eliminate subpixel seams.
 

@@ -80,10 +80,32 @@ export function RetroScreenDocsPage() {
     return (
       <div className="sb-retro-docs-story" data-docs-story={key} key={key}>
         {story.name ? <h3>{story.name}</h3> : null}
-        {story.render(story.args ?? {})}
+        <div className="sb-retro-docs-story-preview">
+          {story.render(story.args ?? {})}
+        </div>
       </div>
     );
   };
+
+  const renderStoryFrame = (
+    title: string,
+    key: string,
+    storyId: string,
+    height: number
+  ) => (
+    <div className="sb-retro-docs-story" data-docs-story={key} key={key}>
+      <h3>{title}</h3>
+      <div className="sb-retro-docs-story-preview sb-retro-docs-story-preview--frame">
+        <iframe
+          className="sb-retro-docs-iframe"
+          loading="lazy"
+          src={`iframe.html?id=${storyId}&viewMode=story`}
+          title={title}
+        />
+      </div>
+      <style>{`.sb-retro-docs-story[data-docs-story="${key}"] .sb-retro-docs-iframe{height:${height}px;}`}</style>
+    </div>
+  );
 
   return (
     <div className="sb-retro-docs-page">
@@ -119,7 +141,7 @@ export function RetroScreenDocsPage() {
           renderStory(TerminalStream, "terminal-stream"),
           renderStory(PromptLoop, "prompt-loop"),
           renderStory(WhiteRabbitSignal, "white-rabbit-signal"),
-          renderStory(MatrixCodeRain, "matrix-code-rain"),
+          renderStoryFrame("Matrix Code Rain", "matrix-code-rain", "retroscreen--matrix-code-rain", 960),
           renderStory(DisplayColorModes, "display-color-modes"),
           renderStory(LightDarkHosts, "light-dark-hosts")
         ]}
@@ -151,9 +173,24 @@ export function RetroScreenDocsPage() {
         <p>Geometry-aware layouts, auto-resize behavior, and live resize handles.</p>
         {[
           renderStory(ResponsivePanel, "responsive-panel"),
-          renderStory(ResizablePanel, "resizable-panel"),
-          renderStory(ResizablePanelLeadingEdges, "resizable-panel-leading-edges"),
-          renderStory(AutoResizeProbe, "auto-resize-probe")
+          renderStoryFrame(
+            "Resizable Panel",
+            "resizable-panel",
+            "retroscreen-responsive--resizable-panel",
+            840
+          ),
+          renderStoryFrame(
+            "Resizable Panel Leading Edges",
+            "resizable-panel-leading-edges",
+            "retroscreen-responsive--resizable-panel-leading-edges",
+            840
+          ),
+          renderStoryFrame(
+            "Auto Resize Probe",
+            "auto-resize-probe",
+            "retroscreen-responsive--auto-resize-probe",
+            980
+          )
         ]}
       </section>
     </div>

@@ -825,10 +825,20 @@ const useScriptedResizePlayback = ({
 }: ScriptedResizePlaybackOptions) => {
   const [cursor, setCursor] = useState<DemoCursorState>(initialDemoCursorState);
   const cursorRef = useRef(initialDemoCursorState);
+  const onResizeFrameRef = useRef(onResizeFrame);
+  const onStepCompleteRef = useRef(onStepComplete);
 
   useEffect(() => {
     cursorRef.current = cursor;
   }, [cursor]);
+
+  useEffect(() => {
+    onResizeFrameRef.current = onResizeFrame;
+  }, [onResizeFrame]);
+
+  useEffect(() => {
+    onStepCompleteRef.current = onStepComplete;
+  }, [onStepComplete]);
 
   useEffect(() => {
     if (paused) {
@@ -865,6 +875,17 @@ const useScriptedResizePlayback = ({
         dragging
       };
 
+      const previousState = cursorRef.current;
+      if (
+        previousState.visible === nextState.visible &&
+        Math.abs(previousState.x - nextState.x) < 0.5 &&
+        Math.abs(previousState.y - nextState.y) < 0.5 &&
+        previousState.role === nextState.role &&
+        previousState.dragging === nextState.dragging
+      ) {
+        return;
+      }
+
       cursorRef.current = nextState;
       setCursor(nextState);
     };
@@ -887,7 +908,7 @@ const useScriptedResizePlayback = ({
         if (durationMs <= 0) {
           setCursorFromClientPoint(to.x, to.y, role, dragging);
           if (fromSize && toSize) {
-            onResizeFrame?.(toSize);
+            onResizeFrameRef.current?.(toSize);
           }
           resolve();
           return;
@@ -908,7 +929,7 @@ const useScriptedResizePlayback = ({
           setCursorFromClientPoint(nextX, nextY, role, dragging);
 
           if (fromSize && toSize) {
-            onResizeFrame?.({
+            onResizeFrameRef.current?.({
               width: Math.round(fromSize.width + (toSize.width - fromSize.width) * progress),
               height: Math.round(fromSize.height + (toSize.height - fromSize.height) * progress)
             });
@@ -996,10 +1017,10 @@ const useScriptedResizePlayback = ({
             },
             targetSize
           );
-          onResizeFrame?.(targetSize);
+          onResizeFrameRef.current?.(targetSize);
           setCursorFromClientPoint(endPoint.x, endPoint.y, cursorRole, false);
           previousPoint = endPoint;
-          onStepComplete?.(step);
+          onStepCompleteRef.current?.(step);
           await wait(step.settleMs ?? 700);
         }
 
@@ -1015,7 +1036,7 @@ const useScriptedResizePlayback = ({
       cancelled = true;
       window.cancelAnimationFrame(rafId);
     };
-  }, [loop, onResizeFrame, onStepComplete, paused, stageRef, startDelayMs, steps, targetRef]);
+  }, [loop, paused, stageRef, startDelayMs, steps, targetRef]);
 
   return cursor;
 };
@@ -2215,8 +2236,8 @@ function BadAppleAnsiSurface({
       loadingValue={loadingValue}
       onPlaybackStateChange={setPlayerState}
       displayColorMode="ansi-classic"
-      displayFontScale={1.22}
-      displayRowScale={1.14}
+      displayFontScale={1}
+      displayRowScale={2}
       displayPadding={{ block: 8, inline: 12 }}
       style={{ width: "1010px", height: "642px" }}
     />
@@ -2319,8 +2340,8 @@ function BadAppleAnsiGzipSurface({
       loadingValue={loadingValue}
       onPlaybackStateChange={setPlayerState}
       displayColorMode="ansi-classic"
-      displayFontScale={1.22}
-      displayRowScale={1.14}
+      displayFontScale={1}
+      displayRowScale={2}
       displayPadding={{ block: 8, inline: 12 }}
       style={{ width: "1010px", height: "642px" }}
     />

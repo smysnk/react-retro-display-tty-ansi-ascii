@@ -188,7 +188,10 @@
   visibility: hidden;
   pointer-events: none;
   white-space: pre;
-  font: inherit;
+  font-family: var(--retro-screen-font-family, "IBM Plex Mono"), monospace !important;
+  font-size: inherit;
+  font-weight: inherit;
+  font-style: inherit;
   line-height: inherit;
   letter-spacing: inherit;
 }
@@ -201,6 +204,7 @@
   grid-template-rows: repeat(var(--retro-screen-rows), var(--retro-screen-cell-height));
   width: 100%;
   min-height: 100%;
+  font-family: var(--retro-screen-font-family, "IBM Plex Mono"), monospace !important;
 }
 
 .retro-screen__line {
@@ -209,6 +213,12 @@
   overflow: visible;
   white-space: pre;
   color: inherit;
+  font-family: var(--retro-screen-font-family, "IBM Plex Mono"), monospace !important;
+  font-size: inherit;
+  font-weight: inherit;
+  font-style: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
   transform: scaleY(var(--retro-screen-row-scale, 1));
   transform-origin: top center;
 }
@@ -219,6 +229,12 @@
   height: var(--retro-screen-cell-height);
   color: inherit;
   background: transparent;
+  font-family: var(--retro-screen-font-family, "IBM Plex Mono"), monospace !important;
+  font-size: inherit;
+  font-weight: inherit;
+  font-style: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
 }
 
 .retro-screen__cell--bold {
