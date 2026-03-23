@@ -173,9 +173,9 @@ jobs:
       - name: Set npm package version from build number
         env:
           BUILD_NUMBER: ${{ github.run_number }}
-          VERSION_MAJOR: ${{ vars.NPM_VERSION_MAJOR }}
-          VERSION_MINOR: ${{ vars.NPM_VERSION_MINOR }}
-          PATCH_MODE: ${{ vars.NPM_VERSION_PATCH_MODE }}
+          VERSION_MAJOR: ${{ vars.NPM_VERSION_MAJOR || '0' }}
+          VERSION_MINOR: ${{ vars.NPM_VERSION_MINOR || '1' }}
+          PATCH_MODE: ${{ vars.NPM_VERSION_PATCH_MODE || 'build' }}
           PATCH_FIXED: ${{ vars.NPM_VERSION_PATCH_FIXED }}
         run: bash ./scripts/release/set-version-from-build.sh
 
