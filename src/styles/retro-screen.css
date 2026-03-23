@@ -223,6 +223,11 @@
   transform-origin: top center;
 }
 
+.retro-screen__line--cells {
+  font-size: 0;
+  line-height: 0;
+}
+
 .retro-screen__cell {
   display: inline-block;
   min-width: var(--retro-screen-cell-width);
@@ -230,11 +235,12 @@
   color: inherit;
   background: transparent;
   font-family: var(--retro-screen-font-family, "IBM Plex Mono"), monospace !important;
-  font-size: inherit;
+  font-size: calc(var(--retro-screen-font-size, 24px) * var(--retro-screen-font-scale, 1));
   font-weight: inherit;
   font-style: inherit;
-  line-height: inherit;
+  line-height: var(--retro-screen-cell-height);
   letter-spacing: inherit;
+  vertical-align: top;
 }
 
 .retro-screen__cell--bold {

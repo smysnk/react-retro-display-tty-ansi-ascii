@@ -6,6 +6,7 @@ import { RetroScreen } from "./RetroScreen";
 import { createRetroScreenController } from "../core/terminal/controller";
 import { wrapTextToColumns } from "../core/geometry/wrap";
 import type { RetroScreenTerminalSession, RetroScreenTerminalSessionEvent } from "../core/terminal/session-types";
+import { DEFAULT_CELL_STYLE } from "../core/terminal/sgr";
 
 const getBodyText = (container: HTMLElement) =>
   container.querySelector(".retro-screen__body")?.textContent?.replace(/\u00a0/gu, " ") ?? "";
@@ -110,6 +111,58 @@ describe("RetroScreen", () => {
     render(<RetroScreen mode="value" value="HELLO LCD" />);
 
     expect(screen.getByText("HELLO LCD")).toBeInTheDocument();
+  });
+
+  it("renders styled value-mode cells when provided", () => {
+    const { container } = render(
+      <RetroScreen
+        mode="value"
+        value="A "
+        cells={[
+          [
+            {
+              char: "A",
+              style: {
+                ...DEFAULT_CELL_STYLE,
+                foreground: {
+                  mode: "palette",
+                  value: 1,
+                },
+                background: {
+                  mode: "palette",
+                  value: 4,
+                },
+              },
+            },
+            {
+              char: " ",
+              style: {
+                ...DEFAULT_CELL_STYLE,
+                foreground: {
+                  mode: "palette",
+                  value: 1,
+                },
+                background: {
+                  mode: "palette",
+                  value: 4,
+                },
+              },
+            },
+          ],
+        ]}
+        gridMode="static"
+        rows={1}
+        cols={2}
+        displayColorMode="ansi-classic"
+      />
+    );
+
+    const cells = Array.from(container.querySelectorAll(".retro-screen__cell"));
+
+    expect(cells).toHaveLength(2);
+    expect(window.getComputedStyle(cells[0]!).color).not.toBe("rgba(0, 0, 0, 0)");
+    expect(window.getComputedStyle(cells[0]!).backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    expect(window.getComputedStyle(cells[1]!).backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
   });
 
   it("wraps long value-mode text into measured columns", () => {
@@ -836,6 +889,19 @@ describe("RetroScreen", () => {
     expect(container.querySelector(".retro-screen__cell--inverse")).not.toBeNull();
     expect(container.querySelector(".retro-screen__cell--conceal")).not.toBeNull();
     expect(container.querySelector(".retro-screen__cell--blink")).not.toBeNull();
+  });
+
+  it("top-aligns ANSI cell rows so inline cell baselines do not introduce visual seams", () => {
+    const controller = createRetroScreenController({ rows: 2, cols: 8 });
+    const { container } = render(<RetroScreen mode="terminal" controller={controller} />);
+
+    act(() => {
+      controller.write("\u001b[31;44mAB");
+    });
+
+    const line = container.querySelector(".retro-screen__line") as HTMLElement | null;
+    expect(line).not.toBeNull();
+    expect(line?.classList.contains("retro-screen__line--cells")).toBe(true);
   });
 
   it("projects ANSI semantic colors through the ansi-classic display mode", () => {

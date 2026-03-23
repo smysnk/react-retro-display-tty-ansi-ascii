@@ -115,7 +115,10 @@ export function RetroScreenDisplay({
           <div className="retro-screen__body" aria-live={mode === "terminal" ? "polite" : undefined}>
             {renderModel.cells
               ? renderModel.cells.map((line, rowIndex) => (
-                  <div className="retro-screen__line" key={`cells-${rowIndex}`}>
+                  <div
+                    className={joinClassNames("retro-screen__line", "retro-screen__line--cells")}
+                    key={`cells-${rowIndex}`}
+                  >
                     {line.map((cell, colIndex) => (
                       <span
                         className={getCellClassName(cell)}

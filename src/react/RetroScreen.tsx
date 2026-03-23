@@ -44,6 +44,7 @@ import { useRetroScreenPromptSession } from "./useRetroScreenPromptSession";
 import { useRetroScreenResizablePanel } from "./useRetroScreenResizablePanel";
 import { useRetroScreenTerminalBridge } from "./useRetroScreenTerminalBridge";
 import {
+  buildStaticCellRenderModel,
   buildTextRenderModel,
   getValueDisplayText,
   type RetroScreenRenderModel
@@ -315,6 +316,15 @@ export function RetroScreen(props: RetroScreenProps) {
 
     const nextValueProps = valueProps as RetroScreenValueModeProps;
     const { text, dimmed } = getValueDisplayText(nextValueProps, focused);
+
+    if (nextValueProps.cells && nextValueProps.cells.length > 0 && !nextValueProps.editable) {
+      return buildStaticCellRenderModel({
+        cells: nextValueProps.cells,
+        geometry,
+        dimmed
+      });
+    }
+
     return buildTextRenderModel({
       text,
       geometry,

@@ -3,6 +3,10 @@ import {
   wrapTextToColumns
 } from "../core/geometry/wrap";
 import { normalizeRetroScreenTextSelection, type RetroScreenTextSelection } from "../core/editor/selection";
+import {
+  normalizeRetroScreenAnsiViewportWindow,
+  type RetroScreenAnsiFrameSnapshot
+} from "../core/ansi/snapshot-contract";
 import { RetroScreenScreenBuffer } from "../core/terminal/screen-buffer";
 import type { RetroScreenCell, RetroScreenCellStyle, RetroScreenScreenSnapshot } from "../core/terminal/types";
 import type { CursorMode, RetroScreenGeometry, RetroScreenValueModeProps } from "../core/types";
@@ -74,6 +78,85 @@ const normalizeCellRows = <T,>(rowsValue: T[][], rows: number) => {
   }
 
   return nextRows.slice(0, rows);
+};
+
+export const buildStaticCellRenderModel = ({
+  cells,
+  geometry,
+  dimmed
+}: {
+  cells: RetroScreenCell[][];
+  geometry: RetroScreenGeometry;
+  dimmed?: boolean;
+}): RetroScreenRenderModel => {
+  const normalizedCells = normalizeCellRows(
+    cells.map((row) => row.slice(0, geometry.cols)),
+    geometry.rows
+  ).map((row) =>
+    Array.from({ length: geometry.cols }, (_, colIndex) => {
+      const sourceCell = row[colIndex];
+
+      if (sourceCell) {
+        return createRenderCell(sourceCell.char, {
+          sourceOffset: null,
+          style: sourceCell.style
+        });
+      }
+
+      return createRenderCell(" ", {
+        sourceOffset: null
+      });
+    })
+  );
+
+  return {
+    lines: normalizedCells.map((row) => row.map((cell) => cell.char).join("")),
+    cells: normalizedCells,
+    cursor: null,
+    isDimmed: Boolean(dimmed)
+  };
+};
+
+const padLineToColumns = (line: string, cols: number) =>
+  line.length >= cols ? line : line.padEnd(cols, " ");
+
+const getSnapshotViewportLine = ({
+  snapshot,
+  rowIndex,
+  startCol,
+  endCol
+}: {
+  snapshot: RetroScreenAnsiFrameSnapshot;
+  rowIndex: number;
+  startCol: number;
+  endCol: number;
+}) => {
+  const sliceLength = Math.max(0, endCol - startCol);
+
+  if (snapshot.getLineSlice) {
+    return padLineToColumns(snapshot.getLineSlice(rowIndex, startCol, endCol), sliceLength);
+  }
+
+  if (snapshot.lines.length > 0) {
+    return padLineToColumns(
+      (snapshot.lines[rowIndex] ?? "").slice(startCol, endCol),
+      sliceLength
+    );
+  }
+
+  if (snapshot.cells?.length) {
+    const sourceCellRow = snapshot.cells[rowIndex] ?? [];
+
+    return padLineToColumns(
+      sourceCellRow
+        .slice(startCol, endCol)
+        .map((cell) => cell.char)
+        .join(""),
+      sliceLength
+    );
+  }
+
+  return " ".repeat(sliceLength);
 };
 
 export const buildTextRenderModel = ({
@@ -233,6 +316,87 @@ export const snapshotToRenderModel = (
           mode: snapshot.cursor.mode
         }
       : null,
+    isDimmed: false
+  };
+};
+
+export const ansiSnapshotToRenderModelWindow = (
+  snapshot: RetroScreenAnsiFrameSnapshot,
+  options: {
+    rowOffset?: number;
+    colOffset?: number;
+    rows?: number;
+    cols?: number;
+  } = {}
+): RetroScreenRenderModel => {
+  const viewport = normalizeRetroScreenAnsiViewportWindow({
+    sourceRows: snapshot.sourceRows,
+    sourceCols: snapshot.sourceCols,
+    rowOffset: options.rowOffset,
+    colOffset: options.colOffset,
+    rows: options.rows,
+    cols: options.cols
+  });
+  const viewportLines = Array.from({ length: viewport.rows }, (_, viewportRowIndex) => {
+    const sourceRowIndex = viewport.rowOffset + viewportRowIndex;
+
+    return getSnapshotViewportLine({
+      snapshot,
+      rowIndex: sourceRowIndex,
+      startCol: viewport.colOffset,
+      endCol: viewport.colOffset + viewport.cols
+    });
+  });
+  const viewportCells = snapshot.getCellSlice
+      ? Array.from({ length: viewport.rows }, (_, viewportRowIndex) => {
+          const sourceRowIndex = viewport.rowOffset + viewportRowIndex;
+          const sourceCellRow = snapshot.getCellSlice?.(
+            sourceRowIndex,
+            viewport.colOffset,
+            viewport.colOffset + viewport.cols
+          ) ?? [];
+
+          return Array.from({ length: viewport.cols }, (_, viewportColIndex) => {
+            const sourceCell = sourceCellRow[viewportColIndex];
+
+            if (sourceCell) {
+              return createRenderCell(sourceCell.char, {
+                sourceOffset: null,
+                style: sourceCell.style
+              });
+            }
+
+            return createRenderCell(" ", {
+              sourceOffset: null
+            });
+          });
+        })
+    : snapshot.cells
+      ? Array.from({ length: viewport.rows }, (_, viewportRowIndex) => {
+          const sourceRowIndex = viewport.rowOffset + viewportRowIndex;
+          const sourceCellRow = snapshot.cells?.[sourceRowIndex] ?? [];
+
+          return Array.from({ length: viewport.cols }, (_, viewportColIndex) => {
+            const sourceCell = sourceCellRow[viewport.colOffset + viewportColIndex];
+
+            if (sourceCell) {
+              return createRenderCell(sourceCell.char, {
+                sourceOffset: null,
+                style: sourceCell.style
+              });
+            }
+
+            return createRenderCell(" ", {
+              sourceOffset: null
+            });
+          });
+        })
+    : undefined;
+
+  return {
+    lines: viewportLines,
+    cells: viewportCells,
+    cursor: null,
     isDimmed: false
   };
 };

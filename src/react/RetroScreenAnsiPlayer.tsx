@@ -1,9 +1,9 @@
 import { useEffect, useRef, type ComponentProps } from "react";
 import { RetroScreen } from "./RetroScreen";
 import {
-  useRetroScreenAnsiPlayer,
   type RetroScreenAnsiPlayerState
 } from "./useRetroScreenAnsiPlayer";
+import { useRetroScreenAnsiSnapshotPlayer } from "./useRetroScreenAnsiSnapshotPlayer";
 import type { RetroScreenAnsiByteChunk } from "../core/ansi/player";
 
 export type RetroScreenAnsiPlayerProps = Omit<
@@ -31,10 +31,16 @@ export function RetroScreenAnsiPlayer({
   onPlaybackStateChange,
   ...screenProps
 }: RetroScreenAnsiPlayerProps) {
-  const playbackState = useRetroScreenAnsiPlayer({
+  const playbackState = useRetroScreenAnsiSnapshotPlayer({
     byteStream,
-    rows,
-    cols,
+    metadata: {
+      title: "ANSI Stream",
+      author: "Unknown",
+      group: "Unknown",
+      font: "IBM VGA",
+      width: cols,
+      height: rows
+    },
     frameDelayMs,
     loop,
     complete,
@@ -56,13 +62,27 @@ export function RetroScreenAnsiPlayer({
       return;
     }
 
-    notifiedPlaybackStateRef.current = playbackState;
-    onPlaybackStateChange?.(playbackState);
+    const nextPlaybackState: RetroScreenAnsiPlayerState = {
+      displayValue: playbackState.displayValue,
+      frameIndex: playbackState.frameIndex,
+      frameCount: playbackState.frameCount,
+      isComplete: playbackState.isComplete,
+      isStreaming: playbackState.isStreaming
+    };
+
+    notifiedPlaybackStateRef.current = nextPlaybackState;
+    onPlaybackStateChange?.(nextPlaybackState);
   }, [onPlaybackStateChange, playbackState]);
+
+  const hasFullCellFrame =
+    Boolean(playbackState.frameSnapshot.cells) &&
+    playbackState.frameSnapshot.cells?.length === rows &&
+    playbackState.frameSnapshot.cells?.every((line) => line.length === cols);
 
   return (
     <RetroScreen
       {...screenProps}
+      cells={hasFullCellFrame ? playbackState.frameSnapshot.cells : undefined}
       mode="value"
       value={playbackState.displayValue}
       gridMode="static"

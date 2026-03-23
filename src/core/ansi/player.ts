@@ -1,3 +1,15 @@
+import type {
+  RetroScreenAnsiCellSliceAccessor,
+  RetroScreenAnsiLineSliceAccessor,
+  RetroScreenAnsiSnapshotStorageMode
+} from "./snapshot-contract";
+import type { RetroScreenCell, RetroScreenCellStyle } from "../terminal/types";
+import {
+  applySgrParameters,
+  cloneStyle,
+  DEFAULT_CELL_STYLE
+} from "../terminal/sgr";
+
 export type RetroScreenAnsiByteChunk = Uint8Array | ArrayBuffer | ArrayLike<number>;
 
 export type RetroScreenAnsiMetadata = {
@@ -14,10 +26,35 @@ export type RetroScreenAnsiFrameStreamSnapshot = {
   currentFrame: string;
 };
 
+export type RetroScreenAnsiSnapshotFrame = {
+  lines: readonly string[];
+  text: string;
+  cells?: readonly RetroScreenCell[][];
+  storageMode: RetroScreenAnsiSnapshotStorageMode;
+  getLineSlice: RetroScreenAnsiLineSliceAccessor;
+  getCellSlice: RetroScreenAnsiCellSliceAccessor;
+};
+
+export type RetroScreenAnsiSnapshotStreamSnapshot = {
+  completedFrames: readonly RetroScreenAnsiSnapshotFrame[];
+  currentFrame: RetroScreenAnsiSnapshotFrame;
+  sourceRows: number;
+  sourceCols: number;
+  metadata: RetroScreenAnsiMetadata | null;
+  storageMode: RetroScreenAnsiSnapshotStorageMode;
+};
+
 export type RetroScreenAnsiFrameStream = {
   appendChunk: (chunk: RetroScreenAnsiByteChunk) => RetroScreenAnsiFrameStreamSnapshot;
   appendText: (text: string) => RetroScreenAnsiFrameStreamSnapshot;
   getSnapshot: () => RetroScreenAnsiFrameStreamSnapshot;
+  reset: () => void;
+};
+
+export type RetroScreenAnsiSnapshotStream = {
+  appendChunk: (chunk: RetroScreenAnsiByteChunk) => RetroScreenAnsiSnapshotStreamSnapshot;
+  appendText: (text: string) => RetroScreenAnsiSnapshotStreamSnapshot;
+  getSnapshot: () => RetroScreenAnsiSnapshotStreamSnapshot;
   reset: () => void;
 };
 
@@ -46,7 +83,290 @@ const SAUCE_SIGNATURE = "SAUCE00";
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
-const stringifyGrid = (grid: string[][]) => grid.map((row) => row.join("")).join("\n");
+const stringifyGrid = (grid: readonly RetroScreenCell[][]) =>
+  grid.map((row) => row.map((cell) => cell.char).join("")).join("\n");
+const stringifyGridLines = (grid: readonly RetroScreenCell[][]) =>
+  grid.map((row) => row.map((cell) => cell.char).join(""));
+const EMPTY_CELL_CHARACTER = " ";
+const PREVIEW_ROWS = 25;
+const PREVIEW_COLS = 80;
+
+type RetroScreenAnsiDenseGrid = RetroScreenCell[][];
+type RetroScreenAnsiSparseGrid = Map<number, Map<number, RetroScreenCell>>;
+
+const padSlice = (value: string, length: number) =>
+  value.length >= length ? value.slice(0, length) : value.padEnd(length, EMPTY_CELL_CHARACTER);
+
+const createAnsiCell = (
+  char: string = EMPTY_CELL_CHARACTER,
+  style: RetroScreenCellStyle = DEFAULT_CELL_STYLE
+): RetroScreenCell => ({
+  char,
+  style: cloneStyle(style)
+});
+
+const cloneAnsiCell = (cell: RetroScreenCell): RetroScreenCell => ({
+  char: cell.char,
+  style: cloneStyle(cell.style)
+});
+
+const cloneAnsiCellRow = (row: readonly RetroScreenCell[]) => row.map((cell) => cloneAnsiCell(cell));
+
+const normalizeLineSliceRange = (
+  startCol: number,
+  endCol: number,
+  totalCols: number
+) => {
+  const normalizedStart = clamp(Math.floor(startCol || 0), 0, totalCols);
+  const normalizedEnd = clamp(
+    Math.max(normalizedStart, Math.floor(endCol || normalizedStart)),
+    normalizedStart,
+    totalCols
+  );
+
+  return {
+    startCol: normalizedStart,
+    endCol: normalizedEnd,
+    length: Math.max(0, normalizedEnd - normalizedStart)
+  };
+};
+
+const sliceDenseLine = (
+  line: string,
+  startCol: number,
+  endCol: number,
+  totalCols: number
+) => {
+  const range = normalizeLineSliceRange(startCol, endCol, totalCols);
+
+  return padSlice(line.slice(range.startCol, range.endCol), range.length);
+};
+
+const padCellSlice = (cells: RetroScreenCell[], length: number) =>
+  cells.length >= length
+    ? cells.slice(0, length).map((cell) => cloneAnsiCell(cell))
+    : [
+        ...cells.map((cell) => cloneAnsiCell(cell)),
+        ...Array.from({ length: length - cells.length }, () => createAnsiCell())
+      ];
+
+const sliceDenseCellLine = (
+  line: readonly RetroScreenCell[],
+  startCol: number,
+  endCol: number,
+  totalCols: number
+) => {
+  const range = normalizeLineSliceRange(startCol, endCol, totalCols);
+
+  return padCellSlice(line.slice(range.startCol, range.endCol).map((cell) => cloneAnsiCell(cell)), range.length);
+};
+
+const getSparseRow = (grid: RetroScreenAnsiSparseGrid, rowIndex: number) => grid.get(rowIndex);
+
+const buildSparseLineSlice = ({
+  grid,
+  rowIndex,
+  startCol,
+  endCol,
+  totalCols
+}: {
+  grid: RetroScreenAnsiSparseGrid;
+  rowIndex: number;
+  startCol: number;
+  endCol: number;
+  totalCols: number;
+}) => {
+  const range = normalizeLineSliceRange(startCol, endCol, totalCols);
+
+  if (range.length <= 0) {
+    return "";
+  }
+
+  const row = getSparseRow(grid, rowIndex);
+
+  if (!row || row.size === 0) {
+    return EMPTY_CELL_CHARACTER.repeat(range.length);
+  }
+
+  const slice = Array.from({ length: range.length }, () => EMPTY_CELL_CHARACTER);
+
+  for (const [colIndex, cell] of row) {
+    if (colIndex < range.startCol || colIndex >= range.endCol) {
+      continue;
+    }
+
+    slice[colIndex - range.startCol] = cell.char;
+  }
+
+  return slice.join("");
+};
+
+const buildSparseCellSlice = ({
+  grid,
+  rowIndex,
+  startCol,
+  endCol,
+  totalCols
+}: {
+  grid: RetroScreenAnsiSparseGrid;
+  rowIndex: number;
+  startCol: number;
+  endCol: number;
+  totalCols: number;
+}) => {
+  const range = normalizeLineSliceRange(startCol, endCol, totalCols);
+
+  if (range.length <= 0) {
+    return [];
+  }
+
+  const row = getSparseRow(grid, rowIndex);
+  const slice = Array.from({ length: range.length }, () => createAnsiCell());
+
+  if (!row || row.size === 0) {
+    return slice;
+  }
+
+  for (const [colIndex, cell] of row) {
+    if (colIndex < range.startCol || colIndex >= range.endCol) {
+      continue;
+    }
+
+    slice[colIndex - range.startCol] = cloneAnsiCell(cell);
+  }
+
+  return slice;
+};
+
+const cloneDenseGrid = (grid: readonly RetroScreenCell[][]): RetroScreenAnsiDenseGrid =>
+  grid.map((row) => cloneAnsiCellRow(row));
+
+const cloneSparseGrid = (grid: RetroScreenAnsiSparseGrid): RetroScreenAnsiSparseGrid =>
+  new Map(
+    Array.from(grid, ([rowIndex, row]) => [
+      rowIndex,
+      new Map(Array.from(row, ([colIndex, cell]) => [colIndex, cloneAnsiCell(cell)]))
+    ])
+  );
+
+const buildPreviewLinesFromSliceAccessor = ({
+  rows,
+  cols,
+  getLineSlice
+}: {
+  rows: number;
+  cols: number;
+  getLineSlice: RetroScreenAnsiLineSliceAccessor;
+}) => {
+  const previewRows = Math.min(rows, PREVIEW_ROWS);
+  const previewCols = Math.min(cols, PREVIEW_COLS);
+
+  return Array.from({ length: previewRows }, (_, rowIndex) =>
+    getLineSlice(rowIndex, 0, previewCols)
+  );
+};
+
+const buildPreviewCellsFromSliceAccessor = ({
+  rows,
+  cols,
+  getCellSlice
+}: {
+  rows: number;
+  cols: number;
+  getCellSlice: RetroScreenAnsiCellSliceAccessor;
+}) => {
+  const previewRows = Math.min(rows, PREVIEW_ROWS);
+  const previewCols = Math.min(cols, PREVIEW_COLS);
+
+  return Array.from({ length: previewRows }, (_, rowIndex) =>
+    getCellSlice(rowIndex, 0, previewCols)
+  );
+};
+
+const isDefaultColor = (color: RetroScreenCellStyle["foreground"]) =>
+  color.mode === "default" && color.value === 0;
+
+const isDefaultStyle = (style: RetroScreenCellStyle) =>
+  style.intensity === "normal" &&
+  !style.bold &&
+  !style.faint &&
+  !style.inverse &&
+  !style.conceal &&
+  !style.blink &&
+  isDefaultColor(style.foreground) &&
+  isDefaultColor(style.background);
+
+const shouldPersistSparseCell = (cell: RetroScreenCell) =>
+  cell.char !== EMPTY_CELL_CHARACTER || !isDefaultStyle(cell.style);
+
+const createDenseFrame = ({
+  grid,
+  lines,
+  text,
+  cols
+}: {
+  grid: RetroScreenAnsiDenseGrid;
+  lines?: readonly string[];
+  text?: string;
+  cols: number;
+}): RetroScreenAnsiSnapshotFrame => ({
+  lines: lines ? [...lines] : stringifyGridLines(grid),
+  text: text ?? stringifyGrid(grid),
+  cells: grid,
+  storageMode: "eager",
+  getLineSlice(rowIndex, startCol, endCol) {
+    return sliceDenseLine((grid[rowIndex] ?? []).map((cell) => cell.char).join(""), startCol, endCol, cols);
+  },
+  getCellSlice(rowIndex, startCol, endCol) {
+    return sliceDenseCellLine(grid[rowIndex] ?? [], startCol, endCol, cols);
+  }
+});
+
+const createSparseFrame = ({
+  grid,
+  rows,
+  cols
+}: {
+  grid: RetroScreenAnsiSparseGrid;
+  rows: number;
+  cols: number;
+}): RetroScreenAnsiSnapshotFrame => {
+  const getLineSlice: RetroScreenAnsiLineSliceAccessor = (rowIndex, startCol, endCol) =>
+    buildSparseLineSlice({
+      grid,
+      rowIndex,
+      startCol,
+      endCol,
+      totalCols: cols
+    });
+  const getCellSlice: RetroScreenAnsiCellSliceAccessor = (rowIndex, startCol, endCol) =>
+    buildSparseCellSlice({
+      grid,
+      rowIndex,
+      startCol,
+      endCol,
+      totalCols: cols
+    });
+  const lines = buildPreviewLinesFromSliceAccessor({
+    rows,
+    cols,
+    getLineSlice
+  });
+  const cells = buildPreviewCellsFromSliceAccessor({
+    rows,
+    cols,
+    getCellSlice
+  });
+
+  return {
+    lines,
+    cells,
+    text: lines.join("\n"),
+    storageMode: "sparse",
+    getLineSlice,
+    getCellSlice
+  };
+};
 
 const decodeCp437Byte = (value: number) =>
   String.fromCodePoint(CP437_CODE_POINTS[value] ?? 32);
@@ -149,47 +469,100 @@ export const splitRetroScreenAnsiBytes = (bytes: Uint8Array, chunkSize = 16384) 
   return chunks;
 };
 
-export const createRetroScreenAnsiFrameStream = ({
+export const createRetroScreenAnsiSnapshotStream = ({
   rows,
-  cols
+  cols,
+  metadata = null,
+  storageMode = "eager"
 }: {
   rows: number;
   cols: number;
-}): RetroScreenAnsiFrameStream => {
+  metadata?: RetroScreenAnsiMetadata | null;
+  storageMode?: RetroScreenAnsiSnapshotStorageMode;
+}): RetroScreenAnsiSnapshotStream => {
   const normalizedRows = Math.max(1, Math.floor(rows));
   const normalizedCols = Math.max(1, Math.floor(cols));
-  let grid = Array.from({ length: normalizedRows }, () =>
-    Array.from({ length: normalizedCols }, () => " ")
-  );
-  let completedFrames: string[] = [];
-  let currentFrameCache = stringifyGrid(grid);
+  const normalizedStorageMode = storageMode;
+  const createEmptyDenseGrid = () =>
+    Array.from({ length: normalizedRows }, () =>
+      Array.from({ length: normalizedCols }, () => createAnsiCell())
+    );
+  let grid =
+    normalizedStorageMode === "eager"
+      ? createEmptyDenseGrid()
+      : null;
+  let sparseGrid: RetroScreenAnsiSparseGrid =
+    normalizedStorageMode === "sparse" ? new Map() : new Map();
+  let completedFrames: RetroScreenAnsiSnapshotFrame[] = [];
+  let currentFrameLinesCache =
+    normalizedStorageMode === "eager" && grid ? stringifyGridLines(grid) : [];
+  let currentFrameTextCache = currentFrameLinesCache.join("\n");
   let frameDirty = false;
   let cursorRow = 0;
   let cursorCol = 0;
   let previousAbsoluteRow: number | null = null;
   let previousAbsoluteCol: number | null = null;
   let pendingEscape: string | null = null;
+  let currentStyle = cloneStyle(DEFAULT_CELL_STYLE);
 
   const markFrameDirty = () => {
     frameDirty = true;
   };
 
-  const getCurrentFrame = () => {
-    if (frameDirty) {
-      currentFrameCache = stringifyGrid(grid);
+  const getCurrentFrame = (): RetroScreenAnsiSnapshotFrame => {
+    if (normalizedStorageMode === "sparse") {
+      return createSparseFrame({
+        grid: sparseGrid,
+        rows: normalizedRows,
+        cols: normalizedCols
+      });
+    }
+
+    if (frameDirty && grid) {
+      currentFrameLinesCache = stringifyGridLines(grid);
+      currentFrameTextCache = currentFrameLinesCache.join("\n");
       frameDirty = false;
     }
 
-    return currentFrameCache;
+    return createDenseFrame({
+      grid: grid ?? createEmptyDenseGrid(),
+      lines: currentFrameLinesCache,
+      text: currentFrameTextCache,
+      cols: normalizedCols
+    });
   };
 
-  const getSnapshot = (): RetroScreenAnsiFrameStreamSnapshot => ({
+  const getSnapshot = (): RetroScreenAnsiSnapshotStreamSnapshot => ({
     completedFrames,
-    currentFrame: getCurrentFrame()
+    currentFrame: getCurrentFrame(),
+    sourceRows: normalizedRows,
+    sourceCols: normalizedCols,
+    metadata,
+    storageMode: normalizedStorageMode
   });
 
   const pushCompletedFrame = () => {
-    completedFrames.push(getCurrentFrame());
+    if (normalizedStorageMode === "sparse") {
+      completedFrames.push(
+        createSparseFrame({
+          grid: cloneSparseGrid(sparseGrid),
+          rows: normalizedRows,
+          cols: normalizedCols
+        })
+      );
+      return;
+    }
+
+    const currentFrame = getCurrentFrame();
+
+    completedFrames.push(
+      createDenseFrame({
+        grid: cloneDenseGrid(currentFrame.cells ?? []),
+        lines: currentFrame.lines,
+        text: currentFrame.text,
+        cols: normalizedCols
+      })
+    );
   };
 
   const newLine = () => {
@@ -199,15 +572,22 @@ export const createRetroScreenAnsiFrameStream = ({
 
   const handleCsiSequence = (sequence: string) => {
     const finalByte = sequence.at(-1) ?? "";
-    const params = sequence
-      .slice(2, -1)
-      .split(";")
-      .map((value) => Number.parseInt(value, 10))
-      .filter((value) => Number.isFinite(value) && value > 0);
+    const rawParams = sequence.slice(2, -1);
+    const params =
+      rawParams.length === 0
+        ? []
+        : rawParams
+            .split(";")
+            .map((value) => (value.length === 0 ? 0 : Number.parseInt(value, 10)))
+            .filter((value) => Number.isFinite(value));
+    const getCursorParam = (index: number, fallback: number) => {
+      const value = params[index];
+      return Number.isFinite(value) && value! > 0 ? value! : fallback;
+    };
 
     if (finalByte === "H" || finalByte === "f") {
-      const nextAbsoluteRow = clamp((params[0] ?? 1) - 1, 0, normalizedRows - 1);
-      const nextAbsoluteCol = clamp((params[1] ?? 1) - 1, 0, normalizedCols - 1);
+      const nextAbsoluteRow = clamp(getCursorParam(0, 1) - 1, 0, normalizedRows - 1);
+      const nextAbsoluteCol = clamp(getCursorParam(1, 1) - 1, 0, normalizedCols - 1);
 
       if (
         previousAbsoluteRow !== null &&
@@ -224,12 +604,17 @@ export const createRetroScreenAnsiFrameStream = ({
       return;
     }
 
+    if (finalByte === "m") {
+      currentStyle = applySgrParameters(currentStyle, params);
+      return;
+    }
+
     if (finalByte === "C") {
       if (cursorCol === normalizedCols - 1) {
         newLine();
       }
 
-      cursorCol = clamp(cursorCol + (params[0] ?? 1), 0, normalizedCols - 1);
+      cursorCol = clamp(cursorCol + getCursorParam(0, 1), 0, normalizedCols - 1);
     }
   };
 
@@ -270,7 +655,26 @@ export const createRetroScreenAnsiFrameStream = ({
         continue;
       }
 
-      grid[cursorRow]![cursorCol] = character;
+      const nextCell = createAnsiCell(character, currentStyle);
+
+      if (normalizedStorageMode === "sparse") {
+        const currentRow = sparseGrid.get(cursorRow) ?? new Map<number, RetroScreenCell>();
+
+        if (!shouldPersistSparseCell(nextCell)) {
+          currentRow.delete(cursorCol);
+        } else {
+          currentRow.set(cursorCol, nextCell);
+        }
+
+        if (currentRow.size === 0) {
+          sparseGrid.delete(cursorRow);
+        } else {
+          sparseGrid.set(cursorRow, currentRow);
+        }
+      } else if (grid) {
+        grid[cursorRow]![cursorCol] = nextCell;
+      }
+
       markFrameDirty();
 
       if (cursorCol === normalizedCols - 1) {
@@ -290,17 +694,54 @@ export const createRetroScreenAnsiFrameStream = ({
     appendText,
     getSnapshot,
     reset() {
-      grid = Array.from({ length: normalizedRows }, () =>
-        Array.from({ length: normalizedCols }, () => " ")
-      );
+      grid =
+        normalizedStorageMode === "eager"
+          ? createEmptyDenseGrid()
+          : null;
+      sparseGrid = new Map();
       completedFrames = [];
-      currentFrameCache = stringifyGrid(grid);
+      currentFrameLinesCache =
+        normalizedStorageMode === "eager" && grid ? stringifyGridLines(grid) : [];
+      currentFrameTextCache = currentFrameLinesCache.join("\n");
       frameDirty = false;
       cursorRow = 0;
       cursorCol = 0;
       previousAbsoluteRow = null;
       previousAbsoluteCol = null;
       pendingEscape = null;
+      currentStyle = cloneStyle(DEFAULT_CELL_STYLE);
+    }
+  };
+};
+
+const toRetroScreenAnsiFrameStreamSnapshot = (
+  snapshot: RetroScreenAnsiSnapshotStreamSnapshot
+): RetroScreenAnsiFrameStreamSnapshot => ({
+  completedFrames: snapshot.completedFrames.map((frame) => frame.text),
+  currentFrame: snapshot.currentFrame.text
+});
+
+export const createRetroScreenAnsiFrameStream = ({
+  rows,
+  cols
+}: {
+  rows: number;
+  cols: number;
+}): RetroScreenAnsiFrameStream => {
+  const snapshotStream = createRetroScreenAnsiSnapshotStream({ rows, cols });
+
+  return {
+    appendChunk(chunk) {
+      return toRetroScreenAnsiFrameStreamSnapshot(snapshotStream.appendChunk(chunk));
+    },
+    appendText(text) {
+      return toRetroScreenAnsiFrameStreamSnapshot(snapshotStream.appendText(text));
+    },
+    getSnapshot() {
+      return toRetroScreenAnsiFrameStreamSnapshot(snapshotStream.getSnapshot());
+    },
+    reset() {
+      snapshotStream.reset();
     }
   };
 };
@@ -311,6 +752,19 @@ export const materializeRetroScreenAnsiFrames = (
   cols: number
 ) => {
   const stream = createRetroScreenAnsiFrameStream({ rows, cols });
+  const snapshot =
+    typeof bytesOrText === "string" ? stream.appendText(bytesOrText) : stream.appendChunk(bytesOrText);
+
+  return [...snapshot.completedFrames, snapshot.currentFrame];
+};
+
+export const materializeRetroScreenAnsiSnapshots = (
+  bytesOrText: Uint8Array | string,
+  rows: number,
+  cols: number,
+  metadata: RetroScreenAnsiMetadata | null = null
+) => {
+  const stream = createRetroScreenAnsiSnapshotStream({ rows, cols, metadata });
   const snapshot =
     typeof bytesOrText === "string" ? stream.appendText(bytesOrText) : stream.appendChunk(bytesOrText);
 

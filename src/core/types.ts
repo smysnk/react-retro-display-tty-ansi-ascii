@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import type { RetroScreenTextSelection } from "./editor/selection";
-import type { RetroScreenScreenSnapshot, RetroScreenWriteOptions } from "./terminal/types";
+import type { RetroScreenCell, RetroScreenScreenSnapshot, RetroScreenWriteOptions } from "./terminal/types";
 import type { RetroScreenTerminalHostKeyEvent } from "./terminal/host-adapter";
 import type { RetroScreenTerminalMouseEvent } from "./terminal/mouse-encoder";
 import type {
@@ -83,6 +83,7 @@ export type RetroScreenController = {
 export type RetroScreenValueModeProps = RetroScreenSharedProps & {
   mode: "value";
   value: string;
+  cells?: RetroScreenCell[][];
   editable?: boolean;
   placeholder?: string;
   onChange?: (value: string) => void;

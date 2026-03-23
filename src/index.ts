@@ -2,10 +2,12 @@ export { RetroScreen } from "./react/RetroScreen";
 export { RetroScreenAnsiPlayer } from "./react/RetroScreenAnsiPlayer";
 export { useRetroScreenTerminalBridge } from "./react/useRetroScreenTerminalBridge";
 export { useRetroScreenAnsiPlayer } from "./react/useRetroScreenAnsiPlayer";
+export { useRetroScreenAnsiSnapshotPlayer } from "./react/useRetroScreenAnsiSnapshotPlayer";
 export { useRetroScreenController } from "./react/useRetroScreenController";
 export { useRetroScreenEditorSession } from "./react/useRetroScreenEditorSession";
 export { useRetroScreenGeometry } from "./react/useRetroScreenGeometry";
 export { useRetroScreenPromptSession } from "./react/useRetroScreenPromptSession";
+export { ansiSnapshotToRenderModelWindow } from "./react/retro-screen-render-model";
 export type {
   CursorMode,
   RetroScreenDisplayColorMode,
@@ -26,18 +28,27 @@ export type {
 } from "./core/types";
 export type { RetroScreenAnsiPlayerProps } from "./react/RetroScreenAnsiPlayer";
 export type { RetroScreenAnsiPlayerState } from "./react/useRetroScreenAnsiPlayer";
+export type { RetroScreenAnsiSnapshotPlayerState } from "./react/useRetroScreenAnsiSnapshotPlayer";
+export type { RetroScreenRenderModel } from "./react/retro-screen-render-model";
 export { measureGrid } from "./core/geometry/measure-grid";
 export { wrapTextToColumns } from "./core/geometry/wrap";
 export {
   createRetroScreenAnsiFrameStream,
+  createRetroScreenAnsiSnapshotStream,
   decodeRetroScreenAnsiBytes,
   findRetroScreenAnsiSauceIndex,
   materializeRetroScreenAnsiFrames,
+  materializeRetroScreenAnsiSnapshots,
   normalizeRetroScreenAnsiByteChunk,
   parseRetroScreenAnsiSauce,
   splitRetroScreenAnsiBytes,
   stripRetroScreenAnsiSauce
 } from "./core/ansi/player";
+export {
+  DEFAULT_RETROSCREEN_ANSI_GEOMETRY_POLICY,
+  normalizeRetroScreenAnsiViewportWindow,
+  resolveRetroScreenAnsiSourceGeometry
+} from "./core/ansi/snapshot-contract";
 export {
   collapseRetroScreenTextSelectionToEnd,
   collapseRetroScreenTextSelectionToStart,
@@ -109,8 +120,21 @@ export type {
   RetroScreenAnsiByteChunk,
   RetroScreenAnsiFrameStream,
   RetroScreenAnsiFrameStreamSnapshot,
-  RetroScreenAnsiMetadata
+  RetroScreenAnsiMetadata,
+  RetroScreenAnsiSnapshotFrame,
+  RetroScreenAnsiSnapshotStream,
+  RetroScreenAnsiSnapshotStreamSnapshot
 } from "./core/ansi/player";
+export type {
+  RetroScreenAnsiFrameSnapshot,
+  RetroScreenAnsiCellSliceAccessor,
+  RetroScreenAnsiGeometryPolicy,
+  RetroScreenAnsiGeometrySource,
+  RetroScreenAnsiLineSliceAccessor,
+  RetroScreenAnsiSnapshotStorageMode,
+  RetroScreenAnsiSourceGeometry,
+  RetroScreenAnsiViewportWindow
+} from "./core/ansi/snapshot-contract";
 export type {
   RetroScreenCell,
   RetroScreenCellIntensity,
