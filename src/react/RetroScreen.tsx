@@ -992,6 +992,7 @@ export function RetroScreen(props: RetroScreenProps) {
       data-grid-mode={props.gridMode ?? "auto"}
       data-display-color-mode={displayColorMode}
       data-display-surface-mode={displaySurfaceMode}
+      data-disable-cell-row-scale={props.disableCellRowScale ? "true" : "false"}
       data-focus-glow={focusGlow ? "true" : "false"}
       data-focused={focused ? "true" : "false"}
       data-resizable={resizablePanel.isResizable ? "true" : undefined}

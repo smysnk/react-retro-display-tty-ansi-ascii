@@ -4,7 +4,7 @@ import { getGitHubCookieFromBrowser } from "./github-cookie-browser.mjs";
 
 const rootDir = resolve(new URL("..", import.meta.url).pathname);
 const repositoryId = process.env.GITHUB_REPOSITORY_ID ?? "1183359000";
-const repositorySlug = process.env.GITHUB_REPOSITORY ?? "smysnk/react-retro-display-tty-ansi";
+const repositorySlug = process.env.GITHUB_REPOSITORY ?? "smysnk/react-retro-display-tty-ansi-ascii";
 const readmeAssetBranch = process.env.README_ASSET_BRANCH ?? "main";
 
 const readmeFile = resolve(rootDir, "README.md");
@@ -12,62 +12,62 @@ const readmeFile = resolve(rootDir, "README.md");
 const videoEntries = [
   {
     title: "Feature Tour Demo",
-    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi.mp4")
+    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-ascii.mp4")
   },
   {
     title: "Quiet Output Demo",
-    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-quiet-output.mp4")
+    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-ascii-quiet-output.mp4")
   },
   {
     title: "Editable Drafting Demo",
-    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-editable-drafting.mp4")
+    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-ascii-editable-drafting.mp4")
   },
   {
     title: "Terminal Output Demo",
-    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-terminal-output.mp4")
+    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-ascii-terminal-output.mp4")
   },
   {
     title: "Prompt Interaction Demo",
-    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-prompt-loop.mp4")
+    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-ascii-prompt-loop.mp4")
   },
   {
     title: "White Rabbit Signal Demo",
-    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-white-rabbit-signal.mp4")
+    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-ascii-white-rabbit-signal.mp4")
   },
   {
     title: "Matrix Code Rain Demo",
-    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-matrix-code-rain.mp4")
+    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-ascii-matrix-code-rain.mp4")
   },
   {
     title: "Bad Apple ANSI Demo",
-    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-bad-apple-ansi.mp4")
+    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-ascii-bad-apple-ansi.mp4")
   },
   {
     title: "Display Color Modes Demo",
-    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-display-color-modes.mp4")
+    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-ascii-display-color-modes.mp4")
   },
   {
     title: "Light And Dark Hosts Demo",
-    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-light-dark-hosts.mp4")
+    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-ascii-light-dark-hosts.mp4")
   },
   {
     title: "Control Character Replay Demo",
     file: resolve(
       rootDir,
-      "docs/assets/react-retro-display-tty-ansi-control-character-replay.mp4"
+      "docs/assets/react-retro-display-tty-ansi-ascii-control-character-replay.mp4"
     )
   },
   {
     title: "Auto Resize Probe Demo",
-    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-auto-resize-probe.mp4")
+    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-ascii-auto-resize-probe.mp4")
   },
   {
     title: "Resizable Panel Demo",
-    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-resizable-panel.mp4")
+    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-ascii-resizable-panel.mp4")
   },
   {
     title: "Live Tty Terminal Bridge Demo",
-    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-live-tty-terminal-bridge.mp4")
+    file: resolve(rootDir, "docs/assets/react-retro-display-tty-ansi-ascii-live-tty-terminal-bridge.mp4")
   }
 ];
 

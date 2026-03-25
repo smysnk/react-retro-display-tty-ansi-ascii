@@ -49,6 +49,7 @@ export type RetroScreenSharedProps = {
   displayPadding?: RetroScreenDisplayPadding;
   displayFontScale?: number;
   displayRowScale?: number;
+  disableCellRowScale?: boolean;
   focusGlow?: boolean;
   resizable?: boolean | RetroScreenResizeMode;
   resizableLeadingEdges?: boolean;

@@ -192,8 +192,12 @@
   font-size: inherit;
   font-weight: inherit;
   font-style: inherit;
-  line-height: inherit;
-  letter-spacing: inherit;
+  line-height: 1 !important;
+  letter-spacing: 0;
+  font-feature-settings: "liga" 0;
+  font-kerning: none;
+  font-variant-ligatures: none;
+  text-rendering: optimizeSpeed;
 }
 
 .retro-screen__body {
@@ -226,11 +230,16 @@
 .retro-screen__line--cells {
   font-size: 0;
   line-height: 0;
+  letter-spacing: 0;
+}
+
+.retro-screen[data-disable-cell-row-scale="true"] .retro-screen__line--cells {
+  transform: none;
 }
 
 .retro-screen__cell {
   display: inline-block;
-  min-width: var(--retro-screen-cell-width);
+  width: var(--retro-screen-cell-width);
   height: var(--retro-screen-cell-height);
   color: inherit;
   background: transparent;
@@ -239,7 +248,11 @@
   font-weight: inherit;
   font-style: inherit;
   line-height: var(--retro-screen-cell-height);
-  letter-spacing: inherit;
+  letter-spacing: 0;
+  font-feature-settings: "liga" 0;
+  font-kerning: none;
+  font-variant-ligatures: none;
+  text-rendering: optimizeSpeed;
   vertical-align: top;
 }
 

@@ -117,8 +117,9 @@ export const useRetroScreenGeometry = ({
 
   useEffect(() => {
     const screenNode = screenRef.current;
+    const probeNode = probeRef.current;
 
-    if (!screenNode || typeof ResizeObserver === "undefined") {
+    if (!screenNode || !probeNode || typeof ResizeObserver === "undefined") {
       return;
     }
 
@@ -127,6 +128,7 @@ export const useRetroScreenGeometry = ({
     });
 
     observer.observe(screenNode);
+    observer.observe(probeNode);
     return () => observer.disconnect();
   }, [cols, fontScale, gridMode, probeRef, rows, screenRef]);
 
@@ -146,8 +148,18 @@ export const useRetroScreenGeometry = ({
 
     void document.fonts.ready.then(syncGeometry);
 
+    const fontFaceSet = document.fonts;
+    const handleFontFaceSetChange = () => {
+      syncGeometry();
+    };
+
+    fontFaceSet.addEventListener?.("loadingdone", handleFontFaceSetChange);
+    fontFaceSet.addEventListener?.("loadingerror", handleFontFaceSetChange);
+
     return () => {
       cancelled = true;
+      fontFaceSet.removeEventListener?.("loadingdone", handleFontFaceSetChange);
+      fontFaceSet.removeEventListener?.("loadingerror", handleFontFaceSetChange);
     };
   }, [cols, fontScale, gridMode, probeRef, rows, screenRef]);
 

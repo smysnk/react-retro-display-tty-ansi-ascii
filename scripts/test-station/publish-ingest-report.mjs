@@ -9,7 +9,7 @@ import {
 async function main() {
   const reportPath = process.env.TEST_STATION_INGEST_INPUT || "./.test-results/test-station/report.json";
   const endpoint = process.env.TEST_STATION_INGEST_ENDPOINT || "https://test-station.smysnk.com/api/ingest";
-  const projectKey = process.env.TEST_STATION_INGEST_PROJECT_KEY || "react-retro-display-tty-ansi";
+  const projectKey = process.env.TEST_STATION_INGEST_PROJECT_KEY || "react-retro-display-tty-ansi-ascii";
   const sharedKey = process.env.TEST_STATION_INGEST_SHARED_KEY || "";
   const requireSharedKey = isTruthy(process.env.TEST_STATION_INGEST_REQUIRE_SHARED_KEY || "");
 

@@ -2866,9 +2866,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-retro-display-tty-ansi@workspace:.":
+"react-retro-display-tty-ansi-ascii@workspace:.":
   version: 0.0.0-use.local
-  resolution: "react-retro-display-tty-ansi@workspace:."
+  resolution: "react-retro-display-tty-ansi-ascii@workspace:."
   dependencies:
     "@storybook/addon-docs": "npm:^10.2.19"
     "@storybook/react-vite": "npm:^10.2.19"

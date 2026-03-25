@@ -1,5 +1,5 @@
 {
-  "name": "react-retro-display-tty-ansi",
+  "name": "react-retro-display-tty-ansi-ascii",
   "version": "0.2.0",
   "description": "A reusable React retro display component with value, terminal, and prompt modes.",
   "keywords": [
@@ -22,11 +22,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/smysnk/react-retro-display-tty-ansi"
+    "url": "https://github.com/smysnk/react-retro-display-tty-ansi-ascii"
   },
-  "homepage": "https://github.com/smysnk/react-retro-display-tty-ansi#readme",
+  "homepage": "https://github.com/smysnk/react-retro-display-tty-ansi-ascii#readme",
   "bugs": {
-    "url": "https://github.com/smysnk/react-retro-display-tty-ansi/issues"
+    "url": "https://github.com/smysnk/react-retro-display-tty-ansi-ascii/issues"
   },
   "type": "module",
   "packageManager": "yarn@4.13.0",

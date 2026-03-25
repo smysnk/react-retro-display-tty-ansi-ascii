@@ -904,6 +904,24 @@ describe("RetroScreen", () => {
     expect(line?.classList.contains("retro-screen__line--cells")).toBe(true);
   });
 
+  it("can disable row scale transforms for ANSI cell rows", () => {
+    const controller = createRetroScreenController({ rows: 2, cols: 8 });
+    const { container } = render(
+      <RetroScreen mode="terminal" controller={controller} disableCellRowScale />
+    );
+
+    act(() => {
+      controller.write("\u001b[31;44mAB");
+    });
+
+    const root = container.querySelector(".retro-screen") as HTMLElement | null;
+    const line = container.querySelector(".retro-screen__line--cells") as HTMLElement | null;
+
+    expect(root).not.toBeNull();
+    expect(root).toHaveAttribute("data-disable-cell-row-scale", "true");
+    expect(line).not.toBeNull();
+  });
+
   it("projects ANSI semantic colors through the ansi-classic display mode", () => {
     const controller = createRetroScreenController({ rows: 2, cols: 8 });
     const { container } = render(

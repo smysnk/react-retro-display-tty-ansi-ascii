@@ -3,7 +3,7 @@ const rootDir = import.meta.dirname;
 export default {
   schemaVersion: "1",
   project: {
-    name: "react-retro-display-tty-ansi",
+    name: "react-retro-display-tty-ansi-ascii",
     rootDir,
     outputDir: ".test-results/test-station",
     rawDir: ".test-results/test-station/raw"

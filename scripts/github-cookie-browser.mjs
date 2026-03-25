@@ -23,7 +23,7 @@ const cookieWaitTimeoutMs = Number.parseInt(
 const pollIntervalMs = Number.parseInt(process.env.GITHUB_COOKIE_POLL_INTERVAL_MS ?? "1000", 10);
 const defaultUserDataDir = process.env.GITHUB_COOKIE_USER_DATA_DIR ?? join(
   homedir(),
-  ".react-retro-display-tty-ansi",
+  ".react-retro-display-tty-ansi-ascii",
   "github-cookie-profile"
 );
 

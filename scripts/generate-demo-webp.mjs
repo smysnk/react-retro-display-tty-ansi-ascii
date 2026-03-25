@@ -15,99 +15,99 @@ import { startTtyWebSocketServer } from "./tty-websocket-server.mjs";
 const rootDir = resolve(new URL("..", import.meta.url).pathname);
 const staticDir = resolve(rootDir, "storybook-static");
 const outputDir = resolve(rootDir, "docs/assets");
-const outputWebpFile = resolve(outputDir, "react-retro-display-tty-ansi.webp");
-const outputMp4File = resolve(outputDir, "react-retro-display-tty-ansi.mp4");
-const quietOutputWebpFile = resolve(outputDir, "react-retro-display-tty-ansi-quiet-output.webp");
-const quietOutputMp4File = resolve(outputDir, "react-retro-display-tty-ansi-quiet-output.mp4");
+const outputWebpFile = resolve(outputDir, "react-retro-display-tty-ansi-ascii.webp");
+const outputMp4File = resolve(outputDir, "react-retro-display-tty-ansi-ascii.mp4");
+const quietOutputWebpFile = resolve(outputDir, "react-retro-display-tty-ansi-ascii-quiet-output.webp");
+const quietOutputMp4File = resolve(outputDir, "react-retro-display-tty-ansi-ascii-quiet-output.mp4");
 const editableModeWebpFile = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-editable-drafting.webp"
+  "react-retro-display-tty-ansi-ascii-editable-drafting.webp"
 );
 const editableModeMp4File = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-editable-drafting.mp4"
+  "react-retro-display-tty-ansi-ascii-editable-drafting.mp4"
 );
 const terminalModeWebpFile = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-terminal-output.webp"
+  "react-retro-display-tty-ansi-ascii-terminal-output.webp"
 );
 const terminalModeMp4File = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-terminal-output.mp4"
+  "react-retro-display-tty-ansi-ascii-terminal-output.mp4"
 );
-const promptModeWebpFile = resolve(outputDir, "react-retro-display-tty-ansi-prompt-loop.webp");
-const promptModeMp4File = resolve(outputDir, "react-retro-display-tty-ansi-prompt-loop.mp4");
+const promptModeWebpFile = resolve(outputDir, "react-retro-display-tty-ansi-ascii-prompt-loop.webp");
+const promptModeMp4File = resolve(outputDir, "react-retro-display-tty-ansi-ascii-prompt-loop.mp4");
 const whiteRabbitSignalWebpFile = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-white-rabbit-signal.webp"
+  "react-retro-display-tty-ansi-ascii-white-rabbit-signal.webp"
 );
 const whiteRabbitSignalMp4File = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-white-rabbit-signal.mp4"
+  "react-retro-display-tty-ansi-ascii-white-rabbit-signal.mp4"
 );
 const matrixCodeRainWebpFile = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-matrix-code-rain.webp"
+  "react-retro-display-tty-ansi-ascii-matrix-code-rain.webp"
 );
 const matrixCodeRainMp4File = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-matrix-code-rain.mp4"
+  "react-retro-display-tty-ansi-ascii-matrix-code-rain.mp4"
 );
 const displayColorModesWebpFile = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-display-color-modes.webp"
+  "react-retro-display-tty-ansi-ascii-display-color-modes.webp"
 );
 const displayColorModesMp4File = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-display-color-modes.mp4"
+  "react-retro-display-tty-ansi-ascii-display-color-modes.mp4"
 );
 const controlCharacterReplayWebpFile = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-control-character-replay.webp"
+  "react-retro-display-tty-ansi-ascii-control-character-replay.webp"
 );
 const controlCharacterReplayMp4File = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-control-character-replay.mp4"
+  "react-retro-display-tty-ansi-ascii-control-character-replay.mp4"
 );
 const autoResizeProbeWebpFile = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-auto-resize-probe.webp"
+  "react-retro-display-tty-ansi-ascii-auto-resize-probe.webp"
 );
 const autoResizeProbeMp4File = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-auto-resize-probe.mp4"
+  "react-retro-display-tty-ansi-ascii-auto-resize-probe.mp4"
 );
 const resizablePanelWebpFile = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-resizable-panel.webp"
+  "react-retro-display-tty-ansi-ascii-resizable-panel.webp"
 );
 const resizablePanelMp4File = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-resizable-panel.mp4"
+  "react-retro-display-tty-ansi-ascii-resizable-panel.mp4"
 );
 const badAppleAnsiWebpFile = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-bad-apple-ansi.webp"
+  "react-retro-display-tty-ansi-ascii-bad-apple-ansi.webp"
 );
 const badAppleAnsiMp4File = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-bad-apple-ansi.mp4"
+  "react-retro-display-tty-ansi-ascii-bad-apple-ansi.mp4"
 );
 const liveTtyTerminalBridgeWebpFile = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-live-tty-terminal-bridge.webp"
+  "react-retro-display-tty-ansi-ascii-live-tty-terminal-bridge.webp"
 );
 const liveTtyTerminalBridgeMp4File = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-live-tty-terminal-bridge.mp4"
+  "react-retro-display-tty-ansi-ascii-live-tty-terminal-bridge.mp4"
 );
 const lightDarkHostsWebpFile = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-light-dark-hosts.webp"
+  "react-retro-display-tty-ansi-ascii-light-dark-hosts.webp"
 );
 const lightDarkHostsMp4File = resolve(
   outputDir,
-  "react-retro-display-tty-ansi-light-dark-hosts.mp4"
+  "react-retro-display-tty-ansi-ascii-light-dark-hosts.mp4"
 );
 const chromePath =
   process.env.CHROME_PATH ??

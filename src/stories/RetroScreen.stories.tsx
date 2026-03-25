@@ -1567,7 +1567,7 @@ function TerminalStreamStory() {
 
     const schedule = [
       window.setTimeout(() => {
-        controller.writeln("BOOT   react-retro-display-tty-ansi");
+        controller.writeln("BOOT   react-retro-display-tty-ansi-ascii");
       }, 400),
       window.setTimeout(() => {
         controller.writeln("CHECK  measuring rows and columns");
@@ -1812,7 +1812,7 @@ export function TerminalModeDemoStory() {
 
     const schedule = [
       window.setTimeout(() => {
-        controller.writeln("BOOT   react-retro-display-tty-ansi");
+        controller.writeln("BOOT   react-retro-display-tty-ansi-ascii");
       }, 260),
       window.setTimeout(() => {
         controller.writeln("CHECK  controller attached");
@@ -3396,12 +3396,12 @@ export function FeatureTourStory() {
     };
   } else if (now < 22600) {
     const frames = [
-      "BOOT  react-retro-display-tty-ansi",
-      "BOOT  react-retro-display-tty-ansi\nCHECK geometry measured",
-      "BOOT  react-retro-display-tty-ansi\nCHECK geometry measured\n\u001b[1mREADY\u001b[0m ansi parser online",
-      "BOOT  react-retro-display-tty-ansi\nCHECK geometry measured\n\u001b[1mREADY\u001b[0m ansi parser online\n\u001b[2msoft notes stay readable without stealing focus\u001b[0m",
-      "BOOT  react-retro-display-tty-ansi\nCHECK geometry measured\n\u001b[1mREADY\u001b[0m ansi parser online\n\u001b[2msoft notes stay readable without stealing focus\u001b[0m\n\u001b[7mLIVE\u001b[0m controller-friendly output",
-      "BOOT  react-retro-display-tty-ansi\nCHECK geometry measured\n\u001b[1mREADY\u001b[0m ansi parser online\n\u001b[2msoft notes stay readable without stealing focus\u001b[0m\n\u001b[7mLIVE\u001b[0m controller-friendly output\n\u001b[5mPULSE\u001b[0m waiting for next command"
+      "BOOT  react-retro-display-tty-ansi-ascii",
+      "BOOT  react-retro-display-tty-ansi-ascii\nCHECK geometry measured",
+      "BOOT  react-retro-display-tty-ansi-ascii\nCHECK geometry measured\n\u001b[1mREADY\u001b[0m ansi parser online",
+      "BOOT  react-retro-display-tty-ansi-ascii\nCHECK geometry measured\n\u001b[1mREADY\u001b[0m ansi parser online\n\u001b[2msoft notes stay readable without stealing focus\u001b[0m",
+      "BOOT  react-retro-display-tty-ansi-ascii\nCHECK geometry measured\n\u001b[1mREADY\u001b[0m ansi parser online\n\u001b[2msoft notes stay readable without stealing focus\u001b[0m\n\u001b[7mLIVE\u001b[0m controller-friendly output",
+      "BOOT  react-retro-display-tty-ansi-ascii\nCHECK geometry measured\n\u001b[1mREADY\u001b[0m ansi parser online\n\u001b[2msoft notes stay readable without stealing focus\u001b[0m\n\u001b[7mLIVE\u001b[0m controller-friendly output\n\u001b[5mPULSE\u001b[0m waiting for next command"
     ];
     const progress = clampProgress(14800, 22000);
     const frameIndex = Math.min(frames.length - 1, Math.floor(progress * frames.length));
