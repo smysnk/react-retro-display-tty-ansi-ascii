@@ -121,6 +121,8 @@ type DemoCursorState = {
   dragging: boolean;
 };
 
+type DemoCursorOverlayState = Pick<DemoCursorState, "visible" | "role" | "dragging">;
+
 type ScriptedResizeStep = {
   id: string;
   label: string;
@@ -271,11 +273,36 @@ const resizablePanelLeadingSteps: ScriptedResizeStep[] = [
 ];
 
 const RetroScreen = (props: ComponentProps<typeof RetroScreenBase>) => (
-  <RetroScreenBase
-    {...props}
-    resizable={props.resizable ?? true}
-    resizableLeadingEdges={props.resizableLeadingEdges ?? true}
-  />
+  (() => {
+    const isStaticGrid = props.gridMode === "static" && typeof props.rows === "number" && typeof props.cols === "number";
+    const computedStyle = { ...(props.style ?? {}) } as ComponentProps<typeof RetroScreenBase>["style"];
+
+    if (isStaticGrid) {
+      const estimatedWidth = Math.min(920, Math.max(320, props.cols! * 14 + 120));
+      const estimatedMinHeight = Math.min(520, Math.max(120, props.rows! * 18 + 84));
+
+      if (computedStyle?.width === undefined) {
+        computedStyle.width = `${estimatedWidth}px`;
+      }
+
+      if (computedStyle?.minHeight === undefined) {
+        computedStyle.minHeight = `${estimatedMinHeight}px`;
+      }
+
+      if (computedStyle?.maxWidth === undefined) {
+        computedStyle.maxWidth = "100%";
+      }
+    }
+
+    return (
+      <RetroScreenBase
+        {...props}
+        style={computedStyle}
+        resizable={props.resizable ?? true}
+        resizableLeadingEdges={props.resizableLeadingEdges ?? true}
+      />
+    );
+  })()
 );
 
 const wait = (duration: number) =>
@@ -794,18 +821,22 @@ const renderDemoCursorSvg = (role: DemoCursorRole) => {
   );
 };
 
-function DemoMouseCursor({ state }: { state: DemoCursorState }) {
-  const offset = getDemoCursorOffset(state.role);
-
+function DemoMouseCursor({
+  state,
+  cursorNodeRef
+}: {
+  state: DemoCursorOverlayState;
+  cursorNodeRef: RefObject<HTMLDivElement | null>;
+}) {
   return (
     <div
+      ref={cursorNodeRef}
       className="sb-retro-demo-cursor"
       data-demo-cursor="true"
       data-demo-cursor-role={state.role}
       data-demo-cursor-dragging={state.dragging ? "true" : undefined}
       style={{
-        opacity: state.visible ? 1 : 0,
-        transform: `translate(${Math.round(state.x + offset.x)}px, ${Math.round(state.y + offset.y)}px)`
+        opacity: state.visible ? 1 : 0
       }}
     >
       {renderDemoCursorSvg(state.role)}
@@ -823,14 +854,15 @@ const useScriptedResizePlayback = ({
   onResizeFrame,
   onStepComplete
 }: ScriptedResizePlaybackOptions) => {
-  const [cursor, setCursor] = useState<DemoCursorState>(initialDemoCursorState);
-  const cursorRef = useRef(initialDemoCursorState);
+  const [cursor, setCursor] = useState<DemoCursorOverlayState>({
+    visible: initialDemoCursorState.visible,
+    role: initialDemoCursorState.role,
+    dragging: initialDemoCursorState.dragging
+  });
+  const cursorVisualRef = useRef(initialDemoCursorState);
+  const cursorNodeRef = useRef<HTMLDivElement | null>(null);
   const onResizeFrameRef = useRef(onResizeFrame);
   const onStepCompleteRef = useRef(onStepComplete);
-
-  useEffect(() => {
-    cursorRef.current = cursor;
-  }, [cursor]);
 
   useEffect(() => {
     onResizeFrameRef.current = onResizeFrame;
@@ -842,12 +874,17 @@ const useScriptedResizePlayback = ({
 
   useEffect(() => {
     if (paused) {
-      setCursor((current) => ({
-        ...current,
+      cursorVisualRef.current = {
+        ...cursorVisualRef.current,
         visible: false,
         dragging: false,
         role: "pointer"
-      }));
+      };
+      setCursor({
+        visible: false,
+        dragging: false,
+        role: "pointer"
+      });
       return;
     }
 
@@ -875,19 +912,40 @@ const useScriptedResizePlayback = ({
         dragging
       };
 
-      const previousState = cursorRef.current;
+      const previousState = cursorVisualRef.current;
+      const nextRoundedX = Math.round(nextState.x);
+      const nextRoundedY = Math.round(nextState.y);
+      const previousRoundedX = Math.round(previousState.x);
+      const previousRoundedY = Math.round(previousState.y);
       if (
         previousState.visible === nextState.visible &&
-        Math.abs(previousState.x - nextState.x) < 0.5 &&
-        Math.abs(previousState.y - nextState.y) < 0.5 &&
+        previousRoundedX === nextRoundedX &&
+        previousRoundedY === nextRoundedY &&
         previousState.role === nextState.role &&
         previousState.dragging === nextState.dragging
       ) {
         return;
       }
 
-      cursorRef.current = nextState;
-      setCursor(nextState);
+      cursorVisualRef.current = nextState;
+
+      const cursorNode = cursorNodeRef.current;
+      if (cursorNode) {
+        const offset = getDemoCursorOffset(nextState.role);
+        cursorNode.style.transform = `translate(${nextRoundedX + offset.x}px, ${nextRoundedY + offset.y}px)`;
+      }
+
+      if (
+        previousState.visible !== nextState.visible ||
+        previousState.role !== nextState.role ||
+        previousState.dragging !== nextState.dragging
+      ) {
+        setCursor({
+          visible: nextState.visible,
+          role: nextState.role,
+          dragging: nextState.dragging
+        });
+      }
     };
 
     const animateCursor = (
@@ -1038,7 +1096,10 @@ const useScriptedResizePlayback = ({
     };
   }, [loop, paused, stageRef, startDelayMs, steps, targetRef]);
 
-  return cursor;
+  return {
+    cursor,
+    cursorNodeRef
+  };
 };
 
 const resolveLiveTtyDemoConfig = (): LiveTtyDemoConfig | null => {
@@ -2225,6 +2286,10 @@ function BadAppleAnsiSurface({
     playbackState === "failed"
       ? "Bad Apple ANSI failed to load.\nSee the browser console for details."
       : "Loading Bad Apple ANSI...\nWaiting for CP437 decode.";
+  const playerStyle = {
+    width: "100%",
+    "--retro-screen-font-family": "AnsiIBMVGA"
+  } as const;
   const player = (
     <RetroScreenAnsiPlayer
       rows={asset?.height ?? 25}
@@ -2235,11 +2300,17 @@ function BadAppleAnsiSurface({
       loop
       loadingValue={loadingValue}
       onPlaybackStateChange={setPlayerState}
+      className="sb-retro-bad-apple-screen"
+      displayCharacterSizingMode="font"
       displayColorMode="ansi-classic"
       displayFontScale={1}
-      displayRowScale={2}
-      displayPadding={{ block: 8, inline: 12 }}
-      style={{ width: "1010px", height: "642px" }}
+      displayFontSizingMode="fit-cols"
+      displayRowScale={1}
+      displayLayoutMode="fit-width"
+      displayScanlines={false}
+      disableCellRowScale
+      displayPadding={0}
+      style={playerStyle}
     />
   );
 
@@ -2273,7 +2344,7 @@ function BadAppleAnsiSurface({
         </div>
       }
     >
-      <Stage maxWidth={1100}>
+      <Stage maxWidth={1010}>
         {player}
       </Stage>
     </StoryShell>
@@ -2329,6 +2400,10 @@ function BadAppleAnsiGzipSurface({
     playbackState === "failed"
       ? "Bad Apple ANSI gzip stream failed to load.\nSee the browser console for details."
       : "Streaming Bad Apple ANSI over gzip...\nWaiting for the first decompressed frames.";
+  const playerStyle = {
+    width: "100%",
+    "--retro-screen-font-family": "AnsiIBMVGA"
+  } as const;
   const player = (
     <RetroScreenAnsiPlayer
       rows={asset?.height ?? 25}
@@ -2339,11 +2414,17 @@ function BadAppleAnsiGzipSurface({
       loop
       loadingValue={loadingValue}
       onPlaybackStateChange={setPlayerState}
+      className="sb-retro-bad-apple-screen"
+      displayCharacterSizingMode="font"
       displayColorMode="ansi-classic"
       displayFontScale={1}
-      displayRowScale={2}
-      displayPadding={{ block: 8, inline: 12 }}
-      style={{ width: "1010px", height: "642px" }}
+      displayFontSizingMode="fit-cols"
+      displayRowScale={1}
+      displayLayoutMode="fit-width"
+      displayScanlines={false}
+      disableCellRowScale
+      displayPadding={0}
+      style={playerStyle}
     />
   );
 
@@ -2379,7 +2460,7 @@ function BadAppleAnsiGzipSurface({
         </div>
       }
     >
-      <Stage maxWidth={1100}>{player}</Stage>
+      <Stage maxWidth={1010}>{player}</Stage>
     </StoryShell>
   );
 }
@@ -2741,7 +2822,7 @@ function AutoResizeProbeSurface({
     },
     [onActiveResizeLabelChange]
   );
-  const cursor = useScriptedResizePlayback({
+  const { cursor, cursorNodeRef } = useScriptedResizePlayback({
     stageRef,
     targetRef: panelHostRef,
     paused: resizePaused,
@@ -2859,7 +2940,7 @@ function AutoResizeProbeSurface({
           }}
         />
       </div>
-      <DemoMouseCursor state={cursor} />
+      <DemoMouseCursor state={cursor} cursorNodeRef={cursorNodeRef} />
     </div>
   );
 }
@@ -2900,7 +2981,7 @@ function ResizablePanelLiveSurface({
     },
     [onActiveStepLabelChange]
   );
-  const cursor = useScriptedResizePlayback({
+  const { cursor, cursorNodeRef } = useScriptedResizePlayback({
     stageRef,
     targetRef: panelHostRef,
     paused,
@@ -2968,7 +3049,7 @@ function ResizablePanelLiveSurface({
           }}
         />
       </div>
-      <DemoMouseCursor state={cursor} />
+      <DemoMouseCursor state={cursor} cursorNodeRef={cursorNodeRef} />
     </div>
   );
 }
@@ -3482,6 +3563,36 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const fitWidthLockedFrameFixture = Array.from({ length: 25 }, (_, rowIndex) => {
+  const cells = Array.from({ length: 80 }, (_, colIndex) => {
+    if (rowIndex === 0 || rowIndex === 24 || colIndex === 0 || colIndex === 79) {
+      return "█";
+    }
+
+    if (rowIndex >= 4 && rowIndex <= 20) {
+      const ridgeStart = 8 + rowIndex;
+      const ridgeEnd = 71 - Math.floor(rowIndex / 2);
+
+      if (colIndex >= ridgeStart && colIndex <= ridgeEnd) {
+        const isLeadingEdge = colIndex - ridgeStart < 2;
+        const isTrailingEdge = ridgeEnd - colIndex < 2;
+        const isCrossbar = rowIndex === 12 && colIndex >= 24 && colIndex <= 56;
+        const isWindow = rowIndex >= 8 && rowIndex <= 10 && colIndex >= 46 && colIndex <= 58;
+
+        return isWindow ? " " : isLeadingEdge || isTrailingEdge || isCrossbar ? "▓" : "█";
+      }
+    }
+
+    if (rowIndex >= 16 && rowIndex <= 19 && colIndex >= 18 && colIndex <= 28) {
+      return "▓";
+    }
+
+    return " ";
+  });
+
+  return cells.join("");
+}).join("\n");
+
 export const CalmReadout: Story = {
   args: {
     mode: "value",
@@ -3499,6 +3610,39 @@ export const CalmReadout: Story = {
       <Stage>
         <RetroScreen {...args} />
       </Stage>
+    </StoryShell>
+  )
+};
+
+export const FitWidthLockedFrame: Story = {
+  render: () => (
+    <StoryShell
+      kicker="Layout Stability"
+      title="Hold a fixed ANSI frame without jitter."
+      copy="This story keeps a static 80x25 frame in fit-width mode so browser e2e checks can verify the surface does not jump, resize, or drift after mount."
+      footer={<div className="sb-retro-status">Used by the browser stability checks.</div>}
+    >
+      <div
+        data-fit-width-jitter-stage="true"
+        style={{
+          margin: "0 auto",
+          width: "min(1180px, calc(100vw - 48px))"
+        }}
+      >
+        <RetroScreen
+          mode="value"
+          value={fitWidthLockedFrameFixture}
+          color={STORY_COLOR}
+          gridMode="static"
+          rows={25}
+          cols={80}
+          displayLayoutMode="fit-width"
+          displayLayoutMaxHeight={640}
+          displayPadding={0}
+          displayScanlines={false}
+          disableCellRowScale
+        />
+      </div>
     </StoryShell>
   )
 };

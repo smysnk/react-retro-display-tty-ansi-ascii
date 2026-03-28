@@ -115,7 +115,7 @@ describe("useRetroScreenGeometry", () => {
         observer?.trigger(grid!);
       });
 
-      expect(root!.style.getPropertyValue("--retro-screen-font-size")).toBe("33.333333333333336px");
+      expect(root!.style.getPropertyValue("--retro-screen-font-size")).toBe("33px");
 
       probeWidth = 12;
 
@@ -125,6 +125,101 @@ describe("useRetroScreenGeometry", () => {
       });
 
       expect(root!.style.getPropertyValue("--retro-screen-font-size")).toBe("40px");
+    } finally {
+      ResizeObserverMock.instances = [];
+
+      if (originalResizeObserver) {
+        Object.defineProperty(globalThis, "ResizeObserver", {
+          configurable: true,
+          writable: true,
+          value: originalResizeObserver,
+        });
+      } else {
+        // @ts-expect-error test cleanup for missing browser API
+        delete globalThis.ResizeObserver;
+      }
+
+      if (originalFonts) {
+        Object.defineProperty(document, "fonts", originalFonts);
+      } else {
+        // @ts-expect-error test cleanup for missing browser API
+        delete document.fonts;
+      }
+    }
+  });
+
+  it("does not use the probe's fixed measurement font size for auto-mode display sizing", () => {
+    const originalResizeObserver = globalThis.ResizeObserver;
+    const originalFonts = Object.getOwnPropertyDescriptor(document, "fonts");
+
+    Object.defineProperty(globalThis, "ResizeObserver", {
+      configurable: true,
+      writable: true,
+      value: ResizeObserverMock,
+    });
+
+    Object.defineProperty(document, "fonts", {
+      configurable: true,
+      value: {
+        ready: Promise.resolve(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      },
+    });
+
+    try {
+      const { container } = render(
+        <RetroScreen
+          mode="value"
+          value={"HELLO LCD"}
+          style={{ width: 240, height: 96 }}
+        />
+      );
+
+      const root = container.querySelector(".retro-screen") as HTMLDivElement | null;
+      const grid = container.querySelector(".retro-screen__grid") as HTMLDivElement | null;
+      const probe = container.querySelector(".retro-screen__probe") as HTMLSpanElement | null;
+
+      expect(root).not.toBeNull();
+      expect(grid).not.toBeNull();
+      expect(probe).not.toBeNull();
+
+      vi.spyOn(grid!, "getBoundingClientRect").mockImplementation(
+        () =>
+          ({
+            x: 0,
+            y: 0,
+            left: 0,
+            top: 0,
+            width: 240,
+            height: 96,
+            right: 240,
+            bottom: 96,
+            toJSON: () => ({}),
+          }) as DOMRect
+      );
+
+      vi.spyOn(probe!, "getBoundingClientRect").mockImplementation(
+        () =>
+          ({
+            x: 0,
+            y: 0,
+            left: 0,
+            top: 0,
+            width: 12,
+            height: 24,
+            right: 12,
+            bottom: 24,
+            toJSON: () => ({}),
+          }) as DOMRect
+      );
+
+      act(() => {
+        const observer = ResizeObserverMock.instances[0];
+        observer?.trigger(grid!);
+      });
+
+      expect(root!.style.getPropertyValue("--retro-screen-font-size")).toBe("24px");
     } finally {
       ResizeObserverMock.instances = [];
 

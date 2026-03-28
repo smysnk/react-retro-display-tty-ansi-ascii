@@ -3,9 +3,9 @@
 # react-retro-display-tty-ansi-ascii
 
 [![npm](https://img.shields.io/npm/v/react-retro-display-tty-ansi-ascii?label=npm)](https://www.npmjs.com/package/react-retro-display-tty-ansi-ascii)
-[![tests](https://img.shields.io/endpoint?url=https%3A%2F%2Ftest-station.smysnk.com%2Fapi%2Fbadges%2Ftests.json%3FprojectKey%3Dreact-retro-display-tty-ansi-ascii)](https://test-station.smysnk.com/projects/react-retro-display-tty-ansi-ascii)
-[![coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Ftest-station.smysnk.com%2Fapi%2Fbadges%2Fcoverage.json%3FprojectKey%3Dreact-retro-display-tty-ansi-ascii)](https://test-station.smysnk.com/projects/react-retro-display-tty-ansi-ascii)
-[![health](https://img.shields.io/endpoint?url=https%3A%2F%2Ftest-station.smysnk.com%2Fapi%2Fbadges%2Fhealth.json%3FprojectKey%3Dreact-retro-display-tty-ansi-ascii)](https://test-station.smysnk.com/projects/react-retro-display-tty-ansi-ascii)
+[![tests](https://img.shields.io/endpoint?url=https%3A%2F%2Fsmysnk.github.io%2Freact-retro-display-tty-ansi-ascii%2Fbadges%2Ftests.json)](https://github.com/smysnk/react-retro-display-tty-ansi-ascii/actions/workflows/cicd.yml)
+[![coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fsmysnk.github.io%2Freact-retro-display-tty-ansi-ascii%2Fbadges%2Fcoverage.json)](https://github.com/smysnk/react-retro-display-tty-ansi-ascii/actions/workflows/cicd.yml)
+[![health](https://img.shields.io/endpoint?url=https%3A%2F%2Fsmysnk.github.io%2Freact-retro-display-tty-ansi-ascii%2Fbadges%2Fhealth.json)](https://github.com/smysnk/react-retro-display-tty-ansi-ascii/actions/workflows/cicd.yml)
 
 Storybook: [smysnk.github.io/react-retro-display-tty-ansi-ascii](https://smysnk.github.io/react-retro-display-tty-ansi-ascii/)
 
@@ -16,7 +16,7 @@ semantic display color modes, and an xterm-checked terminal behavior surface for
 character playback. It can also project itself onto either dark or light LCD glass without
 asking the whole app shell to follow.
 
-Latest test report: [test-station.smysnk.com/projects/react-retro-display-tty-ansi-ascii](https://test-station.smysnk.com/projects/react-retro-display-tty-ansi-ascii)
+Latest CI runs: [github.com/smysnk/react-retro-display-tty-ansi-ascii/actions/workflows/cicd.yml](https://github.com/smysnk/react-retro-display-tty-ansi-ascii/actions/workflows/cicd.yml)
 
 ## Getting Started
 
@@ -519,8 +519,8 @@ Storybook now includes a dedicated `Bad Apple ANSI` demo that loads the real ANS
 decodes the original IBM VGA / CP437 bytes outside the display component, and then feeds those
 bytes into the reusable `RetroScreenAnsiPlayer` wrapper. The player incrementally materializes
 stabilized full-screen `80 x 25` snapshots while the parent owns byte loading and streaming. The
-demo uses the full `BADAPPLE.ANS` payload, not a trimmed excerpt, and tightens the glyph scale so
-the character rows visually sit flush instead of leaving air between scanlines.
+demo uses the full `BADAPPLE.ANS` payload, not a trimmed excerpt, and now uses the current
+font-driven, width-led ANSI sizing path.
 
 [![Bad Apple ANSI Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi-ascii/main/docs/assets/react-retro-display-tty-ansi-ascii-bad-apple-ansi.webp)](https://github.com/user-attachments/assets/82d505be-5296-4139-ab64-83aae59804ad)
 
@@ -544,23 +544,77 @@ The key wiring for this kind of ANSI-art playback is:
   frameDelayMs={asset.frameDelayMs}
   complete
   loop
+  displayCharacterSizingMode="font"
   displayColorMode="ansi-classic"
-  displayPadding={{ block: 8, inline: 12 }}
   displayFontScale={1}
-  displayRowScale={2}
-  style={{ width: "1010px", height: "642px" }}
+  displayFontSizingMode="fit-cols"
+  displayLayoutMode="fit-width"
+  displayPadding={0}
+  displayScanlines={false}
+  disableCellRowScale
+  style={{
+    width: "100%",
+    "--retro-screen-font-family": "AnsiIBMVGA"
+  }}
 />
 ```
 
 Use `RetroScreenAnsiPlayer` when a parent is responsible for supplying ANSI bytes or byte chunks,
 including incremental streams. Keep the asset loading outside the display component, pass the
-native `rows` and `cols` so the art is not reflowed, and use `displayFontScale` plus
-`displayRowScale` to tune how the art occupies the grid. `BADAPPLE.ANS` uses lots of upper-half
-and lower-half block characters (`▀` / `▄`), so the demo keeps the font scale neutral and doubles
-the row scale to visually fuse those half-block rows into a continuous image instead of separated
-text lines. For the Bad Apple panel, the demo also uses a container
-size that lands on exact `12x24` cell geometry after padding and bezel chrome, which avoids
-fractional row heights and helps eliminate subpixel seams.
+native `rows` and `cols` so the art is not reflowed. For ANSI art, the most useful display props
+are:
+
+- `displayCharacterSizingMode="font"`: lets browser font rendering own glyph sizing instead of
+  forcing explicit cell dimensions.
+- `displayFontSizingMode="fit-cols"`: chooses the largest integer font size that still fits the
+  requested columns horizontally.
+- `displayLayoutMode="fit-width"`: lets the component fill the available width and derive its
+  height from the resolved grid.
+- `displayScanlines={false}` and `disableCellRowScale`: opt out of CRT-style effects that can
+  create unwanted seams in ANSI art.
+
+`BADAPPLE.ANS` uses lots of upper-half and lower-half block characters (`▀` / `▄`), so the demo
+keeps the font scale neutral, disables scanlines, and uses the IBM VGA font directly.
+
+### Viewported ANSI Playback
+
+`RetroScreenAnsiPlayer` can also render a fixed viewport over a larger ANSI buffer. This is useful
+for gallery viewers, panning surfaces, and giant sparse ANSI files where the parent wants to keep a
+stable `80 x 25` window while the underlying source geometry remains larger.
+
+```tsx
+<RetroScreenAnsiPlayer
+  byteStream={asset.byteStream}
+  rows={asset.height}
+  cols={asset.width}
+  frameDelayMs={asset.frameDelayMs}
+  complete={asset.complete}
+  loop={asset.complete}
+  viewportRows={25}
+  viewportCols={80}
+  viewportRowOffset={rowOffset}
+  viewportColOffset={colOffset}
+  displayCharacterSizingMode="font"
+  displayFontSizingMode="fit-cols"
+  displayLayoutMode="fit-width"
+  displayPadding={0}
+  displayScanlines={false}
+  disableCellRowScale
+/>
+```
+
+The playback callback now reports both the source geometry and the active viewport window, so a
+parent can keep status UI in sync with the rendered window:
+
+```tsx
+<RetroScreenAnsiPlayer
+  // ...
+  onPlaybackStateChange={(state) => {
+    console.log(state.sourceRows, state.sourceCols);
+    console.log(state.viewport?.rowOffset, state.viewport?.colOffset);
+  }}
+/>
+```
 
 ## Control-Character Playback
 

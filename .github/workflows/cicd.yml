@@ -117,7 +117,7 @@ jobs:
         if: always() && hashFiles('.test-results/test-station/report.json') != ''
         env:
           TEST_STATION_INGEST_ENDPOINT: https://test-station.smysnk.com/api/ingest
-          TEST_STATION_INGEST_PROJECT_KEY: react-retro-display-tty-ansi
+          TEST_STATION_INGEST_PROJECT_KEY: react-retro-display-tty-ansi-ascii
           TEST_STATION_INGEST_SHARED_KEY: ${{ secrets.TEST_STATION_INGEST_SHARED_KEY }}
         run: |
           if [ -z "$TEST_STATION_INGEST_SHARED_KEY" ]; then
@@ -150,7 +150,7 @@ jobs:
 
       - name: Build Storybook for GitHub Pages
         env:
-          STORYBOOK_BASE_PATH: /react-retro-display-tty-ansi/
+          STORYBOOK_BASE_PATH: /react-retro-display-tty-ansi-ascii/
         run: yarn storybook:build
 
       - name: Build test-station badge payloads
@@ -218,14 +218,14 @@ jobs:
 
           - Commit: \`${{ github.sha }}\`
           - npm: https://www.npmjs.com/package/${{ steps.package_version.outputs.package_name }}/v/${{ steps.package_version.outputs.package_version }}
-          - Storybook: https://smysnk.github.io/react-retro-display-tty-ansi/
+          - Storybook: https://smysnk.github.io/react-retro-display-tty-ansi-ascii/
           EOF
 
       - name: Create or update GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: v${{ steps.package_version.outputs.package_version }}
-          RELEASE_TITLE: react-retro-display-tty-ansi v${{ steps.package_version.outputs.package_version }}
+          RELEASE_TITLE: react-retro-display-tty-ansi-ascii v${{ steps.package_version.outputs.package_version }}
         run: |
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release edit "$RELEASE_TAG" \

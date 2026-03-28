@@ -51,6 +51,7 @@ body {
 .sb-retro-docs-page {
   min-height: 100vh;
   padding: 48px 24px 64px;
+  overflow-x: clip;
   background:
     radial-gradient(circle at top, rgba(255, 255, 255, 0.07), transparent 34%),
     linear-gradient(180deg, #0b0c10 0%, #121419 42%, #0d0f13 100%);
@@ -142,9 +143,34 @@ body {
 }
 
 .sb-retro-docs-story-preview {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
+  width: calc(100% + 48px);
+  max-width: calc(100vw - 32px);
+  margin-left: -24px;
+  margin-right: -24px;
+}
+
+.sb-retro-docs-story-preview-host {
+  min-height: 320px;
+}
+
+.sb-retro-docs-story-preview-host[data-mounted="false"] {
+  display: grid;
+}
+
+.sb-retro-docs-story-placeholder {
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+  padding: 32px 24px;
+  color: rgba(223, 217, 207, 0.66);
+  font-family: var(--sb-retro-editorial-font);
+  font-size: 16px;
+  letter-spacing: 0.01em;
+  background:
+    linear-gradient(180deg, rgba(22, 24, 30, 0.72), rgba(13, 15, 20, 0.78)),
+    rgba(0, 0, 0, 0.24);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
 }
 
 .sb-retro-docs-story-preview--frame {
@@ -245,16 +271,9 @@ body {
   font-size: 16px !important;
 }
 
-.sb-retro-docs-story .retro-screen {
-  --retro-screen-font-size: 24px !important;
-  --retro-screen-cell-width: 14.765625px !important;
-  --retro-screen-cell-height: 24px !important;
-}
-
 .sb-retro-page .retro-screen__grid,
 .sb-retro-docs-page .retro-screen__grid {
   font-family: var(--retro-screen-font-family, "IBM Plex Mono"), monospace !important;
-  font-size: calc(var(--retro-screen-font-size, 24px) * var(--retro-screen-font-scale, 1)) !important;
 }
 
 .sb-retro-stage {
@@ -299,6 +318,21 @@ body {
 .sb-retro-capture-host {
   width: 100%;
   display: grid;
+}
+
+.sb-retro-bad-apple-screen {
+  border-radius: 6px;
+}
+
+.sb-retro-bad-apple-screen .retro-screen__screen {
+  inset: 4px;
+  border-radius: 4px;
+}
+
+.sb-retro-bad-apple-screen .retro-screen__bezel {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--retro-screen-color), transparent 94%),
+    inset 0 0 0 4px transparent;
 }
 
 .sb-retro-page--capture {

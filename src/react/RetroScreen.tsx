@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -29,7 +30,9 @@ import type {
 } from "../core/types";
 import { RetroScreenDisplay } from "./RetroScreenDisplay";
 import { RetroScreenInputOverlay } from "./RetroScreenInputOverlay";
+import { resolveRetroScreenLayoutStrategy } from "./retro-screen-layout-strategy";
 import { getDisplayModeRootVars } from "./retro-screen-display-color";
+import { resolveRetroScreenFitWidthLayout } from "./retro-screen-fit-layout";
 import { getDisplayPaddingVars } from "./retro-screen-display-padding";
 import { getDisplayTypographyVars } from "./retro-screen-display-typography";
 import {
@@ -56,6 +59,8 @@ const DEFAULT_COLS = 46;
 
 const joinClassNames = (...classNames: Array<string | undefined>) =>
   classNames.filter(Boolean).join(" ");
+
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 const clampSelection = (value: number, text: string) =>
   Math.max(0, Math.min(text.length, Number.isFinite(value) ? Math.floor(value) : text.length));
@@ -97,8 +102,18 @@ const toTerminalHostKeyEvent = (
 });
 
 export function RetroScreen(props: RetroScreenProps) {
+  const resolvedLayoutStrategy = resolveRetroScreenLayoutStrategy({
+    gridMode: props.gridMode,
+    displayLayoutMode: props.displayLayoutMode,
+    displayFontSizingMode: props.displayFontSizingMode
+  });
+  const fitWidthLayoutActive = resolvedLayoutStrategy.fitWidthLayoutActive;
+  const staticGridActive = resolvedLayoutStrategy.gridMode === "static";
   const displayColorMode = props.displayColorMode ?? "phosphor-green";
   const displaySurfaceMode = props.displaySurfaceMode ?? "dark";
+  const displayCharacterSizingMode = props.displayCharacterSizingMode ?? "grid";
+  const displayDebugOverlay = props.displayDebugOverlay ?? false;
+  const displayScanlines = props.displayScanlines ?? true;
   const focusGlow = props.focusGlow ?? true;
   const requestedCursorMode = props.cursorMode;
   const cursorMode = requestedCursorMode ?? "solid";
@@ -116,13 +131,13 @@ export function RetroScreen(props: RetroScreenProps) {
   const editorSelectionDraggingRef = useRef(false);
   const previousEditableValueRef = useRef(valueProps?.value ?? "");
   const internalTerminalController = useRetroScreenController({
-    rows: props.gridMode === "static" ? props.rows : undefined,
-    cols: props.gridMode === "static" ? props.cols : undefined,
+    rows: staticGridActive ? props.rows : undefined,
+    cols: staticGridActive ? props.cols : undefined,
     scrollback: terminalProps?.bufferSize
   });
   const promptSession = useRetroScreenPromptSession({
-    rows: props.gridMode === "static" ? props.rows ?? DEFAULT_ROWS : DEFAULT_ROWS,
-    cols: props.gridMode === "static" ? props.cols ?? DEFAULT_COLS : DEFAULT_COLS,
+    rows: staticGridActive ? props.rows ?? DEFAULT_ROWS : DEFAULT_ROWS,
+    cols: staticGridActive ? props.cols ?? DEFAULT_COLS : DEFAULT_COLS,
     cursorMode,
     scrollback: promptProps?.bufferSize,
     promptChar: promptProps?.promptChar,
@@ -143,17 +158,23 @@ export function RetroScreen(props: RetroScreenProps) {
   const [promptSnapshot, setPromptSnapshot] = useState<RetroScreenScreenSnapshot>(() =>
     promptSession.getSnapshot()
   );
+  const [fitWidthLayoutStyle, setFitWidthLayoutStyle] = useState<CSSProperties | null>(null);
+  const [fitWidthLayoutMetrics, setFitWidthLayoutMetrics] = useState<{
+    chromeWidth: number;
+    chromeHeight: number;
+    contentAspectRatio: number;
+  } | null>(null);
   const resizablePanel = useRetroScreenResizablePanel({
-    resizable: props.resizable,
+    resizable: fitWidthLayoutActive ? false : props.resizable,
     resizableLeadingEdges: props.resizableLeadingEdges
   });
   const { geometry, cssVars } = useRetroScreenGeometry({
     screenRef,
     probeRef,
-    gridMode: props.gridMode,
+    gridMode: resolvedLayoutStrategy.gridMode,
     rows: props.rows,
     cols: props.cols,
-    fontScale: props.displayFontScale,
+    staticFitStrategy: resolvedLayoutStrategy.staticFitStrategy,
     onGeometryChange: props.onGeometryChange
   });
   const { snapshot: terminalSnapshot, terminalController } = useRetroScreenTerminalRenderModel({
@@ -187,6 +208,169 @@ export function RetroScreen(props: RetroScreenProps) {
     enabled: props.mode === "terminal" || props.mode === "prompt",
     defaultAutoFollow: terminalProps?.defaultAutoFollow ?? promptProps?.defaultAutoFollow ?? true
   });
+
+  useIsomorphicLayoutEffect(() => {
+    if (!fitWidthLayoutActive) {
+      setFitWidthLayoutMetrics(null);
+      setFitWidthLayoutStyle(null);
+      return;
+    }
+
+    const rootNode = resizablePanel.rootRef.current;
+    const screenNode = screenRef.current;
+    const probeNode = probeRef.current;
+    const resolvedRows = props.rows ?? 0;
+    const resolvedCols = props.cols ?? 0;
+
+    if (!rootNode || !screenNode || !probeNode || resolvedRows <= 0 || resolvedCols <= 0) {
+      return;
+    }
+
+    const syncFitWidthLayoutMetrics = () => {
+      const rootRect = rootNode.getBoundingClientRect();
+      const screenRect = screenNode.getBoundingClientRect();
+      const probeRect = probeNode.getBoundingClientRect();
+
+      if (rootRect.width <= 0 || rootRect.height <= 0 || screenRect.width <= 0 || screenRect.height <= 0) {
+        return;
+      }
+
+      const nextMetrics = {
+        chromeWidth: Math.max(0, Math.floor(rootRect.width - screenRect.width)),
+        chromeHeight: Math.max(0, Math.floor(rootRect.height - screenRect.height)),
+        contentAspectRatio:
+          probeRect.width > 0 && probeRect.height > 0
+            ? (resolvedCols * probeRect.width) / Math.max(1, resolvedRows * probeRect.height)
+            : screenRect.width / Math.max(1, screenRect.height)
+      };
+
+      setFitWidthLayoutMetrics((currentMetrics) => {
+        if (
+          currentMetrics?.chromeWidth === nextMetrics.chromeWidth &&
+          currentMetrics?.chromeHeight === nextMetrics.chromeHeight &&
+          currentMetrics?.contentAspectRatio === nextMetrics.contentAspectRatio
+        ) {
+          return currentMetrics;
+        }
+
+        return nextMetrics;
+      });
+    };
+
+    syncFitWidthLayoutMetrics();
+
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => {
+            syncFitWidthLayoutMetrics();
+          })
+        : null;
+
+    resizeObserver?.observe(rootNode);
+    resizeObserver?.observe(screenNode);
+    resizeObserver?.observe(probeNode);
+
+    if (typeof document === "undefined" || !("fonts" in document) || !document.fonts) {
+      return () => {
+        resizeObserver?.disconnect();
+      };
+    }
+
+    let cancelled = false;
+    const syncAfterFontLoad = () => {
+      if (!cancelled) {
+        syncFitWidthLayoutMetrics();
+      }
+    };
+
+    void document.fonts.ready.then(syncAfterFontLoad);
+    document.fonts.addEventListener?.("loadingdone", syncAfterFontLoad);
+    document.fonts.addEventListener?.("loadingerror", syncAfterFontLoad);
+
+    return () => {
+      cancelled = true;
+      resizeObserver?.disconnect();
+      document.fonts.removeEventListener?.("loadingdone", syncAfterFontLoad);
+      document.fonts.removeEventListener?.("loadingerror", syncAfterFontLoad);
+    };
+  }, [
+    fitWidthLayoutActive,
+    props.cols,
+    props.rows,
+    props.className,
+    props.displayPadding,
+    props.displayCharacterSizingMode,
+    props.displayFontSizingMode,
+    props.displayLayoutMode,
+    props.displayRowScale,
+    resizablePanel.rootRef,
+    screenRef,
+    probeRef
+  ]);
+
+  useIsomorphicLayoutEffect(() => {
+    if (!fitWidthLayoutActive || !fitWidthLayoutMetrics) {
+      setFitWidthLayoutStyle(null);
+      return;
+    }
+
+    const rootNode = resizablePanel.rootRef.current;
+    const parentNode = rootNode?.parentElement;
+
+    if (!rootNode || !parentNode) {
+      return;
+    }
+
+    const syncFitWidthLayout = () => {
+      const parentRect = parentNode.getBoundingClientRect();
+      const nextLayout = resolveRetroScreenFitWidthLayout({
+        availableOuterWidth: parentRect.width,
+        chromeWidth: fitWidthLayoutMetrics.chromeWidth,
+        chromeHeight: fitWidthLayoutMetrics.chromeHeight,
+        contentAspectRatio: fitWidthLayoutMetrics.contentAspectRatio,
+        maxOuterHeight: props.displayLayoutMaxHeight
+      });
+      const nextStyle = {
+        minHeight: "0px",
+        height: "auto",
+        aspectRatio: `${nextLayout.width} / ${nextLayout.height}`,
+        ...(props.displayLayoutMaxHeight
+          ? { maxHeight: `${Math.max(1, Math.floor(props.displayLayoutMaxHeight))}px` }
+          : {})
+      } as CSSProperties;
+
+      setFitWidthLayoutStyle((currentStyle) => {
+        if (
+          currentStyle?.minHeight === nextStyle.minHeight &&
+          currentStyle?.height === nextStyle.height &&
+          currentStyle?.aspectRatio === nextStyle.aspectRatio &&
+          currentStyle?.maxHeight === nextStyle.maxHeight
+        ) {
+          return currentStyle;
+        }
+
+        return nextStyle;
+      });
+    };
+
+    syncFitWidthLayout();
+
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => {
+      syncFitWidthLayout();
+    });
+
+    observer.observe(parentNode);
+    return () => observer.disconnect();
+  }, [
+    fitWidthLayoutActive,
+    fitWidthLayoutMetrics,
+    props.displayLayoutMaxHeight,
+    resizablePanel.rootRef
+  ]);
 
   useEffect(() => {
     if (promptProps?.value !== undefined) {
@@ -972,12 +1156,15 @@ export function RetroScreen(props: RetroScreenProps) {
   const inlineStyle = {
     "--retro-screen-rows": `${geometry.rows}`,
     "--retro-screen-cols": `${geometry.cols}`,
+    "--retro-screen-content-width": `${geometry.cols * geometry.cellWidth}px`,
+    "--retro-screen-content-height": `${geometry.rows * geometry.cellHeight}px`,
     ...getDisplayModeRootVars(displayColorMode, displaySurfaceMode, props.color),
     ...getDisplayPaddingVars(props.displayPadding),
     ...getDisplayTypographyVars(props.displayFontScale, props.displayRowScale),
     ...cssVars,
+    ...(fitWidthLayoutStyle ?? {}),
     ...props.style,
-    ...resizablePanel.inlineSizeStyle
+    ...(fitWidthLayoutActive ? undefined : resizablePanel.inlineSizeStyle)
   } as CSSProperties;
 
   return (
@@ -989,9 +1176,14 @@ export function RetroScreen(props: RetroScreenProps) {
       data-cursor-mode={renderModel.cursor?.mode ?? cursorMode}
       data-rows={geometry.rows}
       data-cols={geometry.cols}
-      data-grid-mode={props.gridMode ?? "auto"}
+      data-grid-mode={resolvedLayoutStrategy.gridMode}
+      data-layout-strategy={resolvedLayoutStrategy.kind}
       data-display-color-mode={displayColorMode}
+      data-display-character-sizing-mode={displayCharacterSizingMode}
+      data-display-font-sizing-mode={props.displayFontSizingMode ?? "contain"}
+      data-display-layout-mode={props.displayLayoutMode ?? "default"}
       data-display-surface-mode={displaySurfaceMode}
+      data-display-scanlines={displayScanlines ? "true" : "false"}
       data-disable-cell-row-scale={props.disableCellRowScale ? "true" : "false"}
       data-focus-glow={focusGlow ? "true" : "false"}
       data-focused={focused ? "true" : "false"}
@@ -1011,6 +1203,11 @@ export function RetroScreen(props: RetroScreenProps) {
       data-session-state={props.mode === "terminal" ? sessionState : undefined}
       data-session-title={props.mode === "terminal" ? sessionTitle ?? undefined : undefined}
       data-session-bell-count={props.mode === "terminal" ? String(sessionBellCount) : undefined}
+      data-fit-width-chrome-width={fitWidthLayoutMetrics ? String(fitWidthLayoutMetrics.chromeWidth) : undefined}
+      data-fit-width-chrome-height={fitWidthLayoutMetrics ? String(fitWidthLayoutMetrics.chromeHeight) : undefined}
+      data-fit-width-content-aspect-ratio={
+        fitWidthLayoutMetrics ? String(fitWidthLayoutMetrics.contentAspectRatio) : undefined
+      }
     >
       <div className="retro-screen__bezel" aria-hidden="true" />
       <RetroScreenDisplay
@@ -1143,6 +1340,19 @@ export function RetroScreen(props: RetroScreenProps) {
           }
         />
       </RetroScreenDisplay>
+      {displayDebugOverlay ? (
+        <div className="retro-screen__debug-overlay" aria-hidden="true">
+          <span>{`strategy ${resolvedLayoutStrategy.kind}`}</span>
+          <span>{`grid ${geometry.cols}x${geometry.rows}`}</span>
+          <span>{`font ${geometry.fontSize}px`}</span>
+          <span>{`cell ${geometry.cellWidth}x${geometry.cellHeight}`}</span>
+          <span>{`inner ${geometry.innerWidth}x${geometry.innerHeight}`}</span>
+          <span>{`sizing ${displayCharacterSizingMode}`}</span>
+          {fitWidthLayoutMetrics ? (
+            <span>{`chrome ${fitWidthLayoutMetrics.chromeWidth}x${fitWidthLayoutMetrics.chromeHeight}`}</span>
+          ) : null}
+        </div>
+      ) : null}
       {resizablePanel.isResizable ? (
         <>
           {resizablePanel.resizeMode === "width" || resizablePanel.resizeMode === "both" ? (

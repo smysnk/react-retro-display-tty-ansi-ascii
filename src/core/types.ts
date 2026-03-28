@@ -12,6 +12,9 @@ import type {
 export type CursorMode = "solid" | "hollow";
 export type RetroScreenGridMode = "auto" | "static";
 export type RetroScreenDisplaySurfaceMode = "dark" | "light";
+export type RetroScreenDisplayLayoutMode = "default" | "fit-width";
+export type RetroScreenDisplayFontSizingMode = "contain" | "fit-cols";
+export type RetroScreenDisplayCharacterSizingMode = "grid" | "font";
 export type RetroScreenResizeMode = "width" | "height" | "both";
 export type RetroScreenDisplayPaddingValue = number | string;
 export type RetroScreenDisplayPadding =
@@ -46,6 +49,12 @@ export type RetroScreenSharedProps = {
   color?: string;
   displayColorMode?: RetroScreenDisplayColorMode;
   displaySurfaceMode?: RetroScreenDisplaySurfaceMode;
+  displayLayoutMode?: RetroScreenDisplayLayoutMode;
+  displayLayoutMaxHeight?: number;
+  displayFontSizingMode?: RetroScreenDisplayFontSizingMode;
+  displayCharacterSizingMode?: RetroScreenDisplayCharacterSizingMode;
+  displayDebugOverlay?: boolean;
+  displayScanlines?: boolean;
   displayPadding?: RetroScreenDisplayPadding;
   displayFontScale?: number;
   displayRowScale?: number;

@@ -1,22 +1,37 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { createRetroScreenController } from "../core/terminal/controller";
+import type { RetroScreenCell } from "../core/terminal/types";
 import type { RetroScreenDisplayPadding } from "../core/types";
 import { RetroScreen } from "../react/RetroScreen";
 
 const MATRIX_GREEN = "#8efe8e";
 export const MATRIX_FONT_FAMILY = "\"Matrix\"";
-const ANSI_RESET = "\u001b[0m";
-const AMBIENT_CODE = "\u001b[38;2;9;40;14m";
-const SHADE_CODES = [
-  AMBIENT_CODE,
-  "\u001b[38;2;18;104;29m",
-  "\u001b[38;2;34;176;50m",
-  "\u001b[38;2;104;255;131m",
-  "\u001b[38;2;230;255;235m"
+const SHADE_COLORS = [
+  0x09280e,
+  0x12681d,
+  0x22b032,
+  0x68ff83,
+  0xe6ffeb
 ] as const;
 const GLYPH_POOL = Array.from(
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()-_=+[]{}<>?/\\|"
 );
+
+const SHADE_STYLES = SHADE_COLORS.map((value) => ({
+  intensity: "normal" as const,
+  bold: false,
+  faint: false,
+  inverse: false,
+  conceal: false,
+  blink: false,
+  foreground: {
+    mode: "rgb" as const,
+    value
+  },
+  background: {
+    mode: "default" as const,
+    value: 0
+  }
+}));
 
 type MatrixRainColumn = {
   head: number;
@@ -152,51 +167,29 @@ const getCellShade = (engine: MatrixRainEngine, row: number, col: number) => {
   return shimmerValue === 0 ? 1 : 0;
 };
 
-const renderMatrixRainFrame = (engine: MatrixRainEngine) => {
-  const lines = [];
-
-  for (let row = 0; row < engine.rows; row += 1) {
-    const line = [];
-    let shade = -1;
-
-    for (let col = 0; col < engine.cols; col += 1) {
-      const nextShade = getCellShade(engine, row, col);
-
-      if (nextShade !== shade) {
-        line.push(SHADE_CODES[nextShade] ?? AMBIENT_CODE);
-        shade = nextShade;
-      }
-
-      line.push(engine.glyphs[row]![col]);
-    }
-
-    line.push(ANSI_RESET);
-    lines.push(line.join(""));
-  }
-
-  return lines.join("\r\n");
-};
+const renderMatrixRainCells = (engine: MatrixRainEngine): RetroScreenCell[][] =>
+  Array.from({ length: engine.rows }, (_, row) =>
+    Array.from({ length: engine.cols }, (_, col) => ({
+      char: engine.glyphs[row]![col] ?? " ",
+      style: SHADE_STYLES[getCellShade(engine, row, col)] ?? SHADE_STYLES[0]!
+    }))
+  );
 
 export function MatrixCodeRainScreen({
   rows = 24,
   cols = 58,
   tickMs = 62,
-  displayPadding = { block: 12, inline: 14 },
+  displayPadding = { block: 0, inline: 8 },
   displayFontScale = 1.05,
   displayRowScale = 1.08,
   style
 }: MatrixCodeRainScreenProps) {
-  const [controller] = useState(() =>
-    createRetroScreenController({
-      rows,
-      cols,
-      cursorMode: "solid"
-    })
+  const [cells, setCells] = useState<RetroScreenCell[][]>(() =>
+    renderMatrixRainCells(createMatrixRainEngine(rows, cols))
   );
   const inlineStyle = useMemo(
     () =>
       ({
-        minHeight: "660px",
         "--retro-screen-font-family": MATRIX_FONT_FAMILY,
         ...style
       }) as CSSProperties,
@@ -210,14 +203,7 @@ export function MatrixCodeRainScreen({
 
     const paint = () => {
       advanceMatrixRain(engine);
-      const frame = renderMatrixRainFrame(engine);
-
-      controller.batch(() => {
-        controller.reset();
-        controller.resize(rows, cols);
-        controller.setCursorVisible(false);
-        controller.write(frame);
-      });
+      setCells(renderMatrixRainCells(engine));
     };
 
     const scheduleNext = () => {
@@ -238,12 +224,13 @@ export function MatrixCodeRainScreen({
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [cols, controller, rows, tickMs]);
+  }, [cols, rows, tickMs]);
 
   return (
     <RetroScreen
-      mode="terminal"
-      controller={controller}
+      mode="value"
+      value=""
+      cells={cells}
       gridMode="static"
       rows={rows}
       cols={cols}
@@ -252,6 +239,7 @@ export function MatrixCodeRainScreen({
       displayPadding={displayPadding}
       displayFontScale={displayFontScale}
       displayRowScale={displayRowScale}
+      displayLayoutMode="fit-width"
       style={inlineStyle}
     />
   );

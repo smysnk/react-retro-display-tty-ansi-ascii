@@ -15,6 +15,7 @@ export type MeasureStaticGridInput = {
   cols: number;
   fontWidthRatio: number;
   fontHeightRatio: number;
+  fitStrategy?: "contain" | "width";
 };
 
 export const measureGrid = ({
@@ -39,15 +40,26 @@ export const measureStaticGrid = ({
   rows,
   cols,
   fontWidthRatio,
-  fontHeightRatio
+  fontHeightRatio,
+  fitStrategy = "contain"
 }: MeasureStaticGridInput): RetroScreenGeometry => {
   const resolvedRows = Math.max(1, Math.floor(rows));
   const resolvedCols = Math.max(1, Math.floor(cols));
-  const cellWidth = Math.max(1, innerWidth / resolvedCols);
-  const cellHeight = Math.max(1, innerHeight / resolvedRows);
+  const maxCellWidth = Math.max(1, Math.floor(innerWidth / resolvedCols));
+  const maxCellHeight = Math.max(1, Math.floor(innerHeight / resolvedRows));
   const widthRatio = Math.max(0.01, fontWidthRatio);
   const heightRatio = Math.max(0.01, fontHeightRatio);
-  const fontSize = Math.max(1, Math.min(cellWidth / widthRatio, cellHeight / heightRatio));
+  const widthLimitedFontSize = Math.max(1, Math.floor(maxCellWidth / widthRatio));
+  const containLimitedFontSize = Math.max(
+    1,
+    Math.floor(Math.min(maxCellWidth / widthRatio, maxCellHeight / heightRatio))
+  );
+  const fontSize =
+    fitStrategy === "width"
+      ? widthLimitedFontSize
+      : containLimitedFontSize;
+  const cellWidth = Math.max(1, Math.floor(fontSize * widthRatio));
+  const cellHeight = Math.max(1, Math.floor(fontSize * heightRatio));
 
   return {
     rows: resolvedRows,

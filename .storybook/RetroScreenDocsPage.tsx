@@ -1,33 +1,11 @@
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import { Description, Subtitle, Title } from "@storybook/addon-docs/blocks";
-import {
-  CalmReadout,
-  DisplayColorModes,
-  LightDarkHosts,
-  MatrixCodeRain,
-  PromptLoop,
-  TerminalStream,
-  WhiteRabbitSignal
-} from "../src/stories/RetroScreen.stories";
-import {
-  AnsiSurface,
-  BadAppleAnsi,
-  BadAppleAnsiGzipStream,
-  ControlCharacterReplay,
-  DisplayBuffer
-} from "../src/stories/AnsiDisplayBuffer.stories";
-import {
-  EditableNotebook,
-  EditorSelectionLab,
-  EditorSelectionReadOnly,
-  EditorSelectionWrapped,
-  EditorWordSelectionLab
-} from "../src/stories/Editor.stories";
-import {
-  AutoResizeProbe,
-  ResizablePanel,
-  ResizablePanelLeadingEdges,
-  ResponsivePanel
-} from "../src/stories/ResizeResponsive.stories";
+import { composeStories, setProjectAnnotations } from "@storybook/react-vite";
+import * as RetroScreenStories from "../src/stories/RetroScreen.stories";
+import * as AnsiDisplayBufferStories from "../src/stories/AnsiDisplayBuffer.stories";
+import * as EditorStories from "../src/stories/Editor.stories";
+import * as ResizeResponsiveStories from "../src/stories/ResizeResponsive.stories";
+import { projectAnnotations } from "./projectAnnotations";
 
 const GITHUB_REPOSITORY_URL = "https://github.com/smysnk/react-retro-display-tty-ansi";
 const NPM_PACKAGE_URL = "https://www.npmjs.com/package/react-retro-display-tty-ansi";
@@ -71,41 +49,128 @@ const badgeLinks = [
   }
 ];
 
+setProjectAnnotations(projectAnnotations);
+
+const {
+  CalmReadout,
+  DisplayColorModes,
+  LightDarkHosts,
+  MatrixCodeRain,
+  PromptLoop,
+  TerminalStream,
+  WhiteRabbitSignal
+} = composeStories(RetroScreenStories);
+
+const {
+  AnsiSurface,
+  BadAppleAnsi,
+  BadAppleAnsiGzipStream,
+  ControlCharacterReplay,
+  DisplayBuffer
+} = composeStories(AnsiDisplayBufferStories);
+
+const {
+  EditableNotebook,
+  EditorSelectionLab,
+  EditorSelectionReadOnly,
+  EditorSelectionWrapped,
+  EditorWordSelectionLab
+} = composeStories(EditorStories);
+
+const {
+  AutoResizeProbe,
+  ResizablePanel,
+  ResizablePanelLeadingEdges,
+  ResponsivePanel
+} = composeStories(ResizeResponsiveStories);
+
+function LazyStoryPreview({
+  story: Story,
+  eager = false
+}: {
+  story: ComponentType;
+  eager?: boolean;
+}) {
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const [mounted, setMounted] = useState(eager);
+
+  useEffect(() => {
+    if (mounted) {
+      return undefined;
+    }
+
+    const hostNode = hostRef.current;
+
+    if (!hostNode || typeof IntersectionObserver === "undefined") {
+      setMounted(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const isVisible = entries.some((entry) => entry.isIntersecting);
+
+        if (!isVisible) {
+          return;
+        }
+
+        setMounted(true);
+        observer.disconnect();
+      },
+      {
+        rootMargin: "400px 0px"
+      }
+    );
+
+    observer.observe(hostNode);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [mounted]);
+
+  return (
+    <div
+      className="sb-retro-docs-story-preview-host"
+      data-mounted={mounted ? "true" : "false"}
+      ref={hostRef}
+    >
+      {mounted ? (
+        <Story />
+      ) : (
+        <div className="sb-retro-docs-story-placeholder">
+          <span>Loading preview when visible…</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function RetroScreenDocsPage() {
-  const renderStory = (story, key) => {
-    if (typeof story?.render !== "function") {
+  const renderStory = (
+    story: ComponentType | undefined,
+    key: string,
+    options?: {
+      eager?: boolean;
+    }
+  ) => {
+    if (!story) {
       return null;
     }
 
+    const Story = story;
+    const storyTitle = story.storyName ?? story.name ?? key;
+    const eager = options?.eager ?? false;
+
     return (
       <div className="sb-retro-docs-story" data-docs-story={key} key={key}>
-        {story.name ? <h3>{story.name}</h3> : null}
+        {storyTitle ? <h3>{storyTitle}</h3> : null}
         <div className="sb-retro-docs-story-preview">
-          {story.render(story.args ?? {})}
+          <LazyStoryPreview eager={eager} story={Story} />
         </div>
       </div>
     );
   };
-
-  const renderStoryFrame = (
-    title: string,
-    key: string,
-    storyId: string,
-    height: number
-  ) => (
-    <div className="sb-retro-docs-story" data-docs-story={key} key={key}>
-      <h3>{title}</h3>
-      <div className="sb-retro-docs-story-preview sb-retro-docs-story-preview--frame">
-        <iframe
-          className="sb-retro-docs-iframe"
-          loading="lazy"
-          src={`iframe.html?id=${storyId}&viewMode=story`}
-          title={title}
-        />
-      </div>
-      <style>{`.sb-retro-docs-story[data-docs-story="${key}"] .sb-retro-docs-iframe{height:${height}px;}`}</style>
-    </div>
-  );
 
   return (
     <div className="sb-retro-docs-page">
@@ -137,11 +202,11 @@ export function RetroScreenDocsPage() {
         <h2>Core Modes</h2>
         <p>The main readout, terminal, prompt, and cinematic demos live here.</p>
         {[
-          renderStory(CalmReadout, "calm-readout"),
-          renderStory(TerminalStream, "terminal-stream"),
+          renderStory(CalmReadout, "calm-readout", { eager: true }),
+          renderStory(TerminalStream, "terminal-stream", { eager: true }),
           renderStory(PromptLoop, "prompt-loop"),
           renderStory(WhiteRabbitSignal, "white-rabbit-signal"),
-          renderStoryFrame("Matrix Code Rain", "matrix-code-rain", "retroscreen--matrix-code-rain", 960),
+          renderStory(MatrixCodeRain, "matrix-code-rain"),
           renderStory(DisplayColorModes, "display-color-modes"),
           renderStory(LightDarkHosts, "light-dark-hosts")
         ]}
@@ -173,24 +238,9 @@ export function RetroScreenDocsPage() {
         <p>Geometry-aware layouts, auto-resize behavior, and live resize handles.</p>
         {[
           renderStory(ResponsivePanel, "responsive-panel"),
-          renderStoryFrame(
-            "Resizable Panel",
-            "resizable-panel",
-            "retroscreen-responsive--resizable-panel",
-            840
-          ),
-          renderStoryFrame(
-            "Resizable Panel Leading Edges",
-            "resizable-panel-leading-edges",
-            "retroscreen-responsive--resizable-panel-leading-edges",
-            840
-          ),
-          renderStoryFrame(
-            "Auto Resize Probe",
-            "auto-resize-probe",
-            "retroscreen-responsive--auto-resize-probe",
-            980
-          )
+          renderStory(ResizablePanel, "resizable-panel"),
+          renderStory(ResizablePanelLeadingEdges, "resizable-panel-leading-edges"),
+          renderStory(AutoResizeProbe, "auto-resize-probe")
         ]}
       </section>
     </div>

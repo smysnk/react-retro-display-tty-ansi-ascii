@@ -17,14 +17,19 @@ const DEFAULT_GEOMETRY = measureGrid({
   fontSize: 24
 });
 
-const buildStaticFallbackGeometry = (rows?: number, cols?: number) =>
+const buildStaticFallbackGeometry = (
+  rows?: number,
+  cols?: number,
+  staticFitStrategy?: "contain" | "width"
+) =>
   measureStaticGrid({
     innerWidth: DEFAULT_GEOMETRY.innerWidth,
     innerHeight: DEFAULT_GEOMETRY.innerHeight,
     rows: rows ?? 9,
     cols: cols ?? 46,
     fontWidthRatio: DEFAULT_GEOMETRY.cellWidth / DEFAULT_GEOMETRY.fontSize,
-    fontHeightRatio: DEFAULT_GEOMETRY.cellHeight / DEFAULT_GEOMETRY.fontSize
+    fontHeightRatio: DEFAULT_GEOMETRY.cellHeight / DEFAULT_GEOMETRY.fontSize,
+    fitStrategy: staticFitStrategy
   });
 
 type UseRetroScreenGeometryOptions = {
@@ -33,28 +38,38 @@ type UseRetroScreenGeometryOptions = {
   gridMode?: RetroScreenGridMode;
   rows?: number;
   cols?: number;
-  fontScale?: number;
+  staticFitStrategy?: "contain" | "width";
   onGeometryChange?: (geometry: RetroScreenGeometry) => void;
 };
 
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+const areGeometriesEqual = (left: RetroScreenGeometry, right: RetroScreenGeometry) =>
+  left.rows === right.rows &&
+  left.cols === right.cols &&
+  left.cellWidth === right.cellWidth &&
+  left.cellHeight === right.cellHeight &&
+  left.innerWidth === right.innerWidth &&
+  left.innerHeight === right.innerHeight &&
+  left.fontSize === right.fontSize;
 
 const measureCurrentGeometry = ({
   screenRef,
   probeRef,
   gridMode,
   rows,
-  cols
+  cols,
+  staticFitStrategy
 }: Pick<
   UseRetroScreenGeometryOptions,
-  "screenRef" | "probeRef" | "gridMode" | "rows" | "cols" | "fontScale"
+  "screenRef" | "probeRef" | "gridMode" | "rows" | "cols" | "staticFitStrategy"
 >): RetroScreenGeometry => {
   const screenNode = screenRef.current;
   const probeNode = probeRef.current;
 
   if (!screenNode || !probeNode) {
     if (gridMode === "static") {
-      return buildStaticFallbackGeometry(rows, cols);
+      return buildStaticFallbackGeometry(rows, cols, staticFitStrategy);
     }
 
     return DEFAULT_GEOMETRY;
@@ -65,7 +80,7 @@ const measureCurrentGeometry = ({
 
   if (screenRect.width <= 0 || screenRect.height <= 0) {
     if (gridMode === "static") {
-      return buildStaticFallbackGeometry(rows, cols);
+      return buildStaticFallbackGeometry(rows, cols, staticFitStrategy);
     }
 
     return DEFAULT_GEOMETRY;
@@ -73,10 +88,11 @@ const measureCurrentGeometry = ({
 
   const cellWidth = probeRect.width > 0 ? probeRect.width : DEFAULT_GEOMETRY.cellWidth;
   const cellHeight = probeRect.height > 0 ? probeRect.height : DEFAULT_GEOMETRY.cellHeight;
-  const computedFontSize = Number.parseFloat(window.getComputedStyle(probeNode).fontSize);
-  const fontSize = Number.isFinite(computedFontSize) && computedFontSize > 0
-    ? computedFontSize
-    : DEFAULT_GEOMETRY.fontSize;
+  const computedProbeFontSize = Number.parseFloat(window.getComputedStyle(probeNode).fontSize);
+  const measuredFontSize =
+    Number.isFinite(computedProbeFontSize) && computedProbeFontSize > 0
+      ? computedProbeFontSize
+      : DEFAULT_GEOMETRY.fontSize;
 
   if (gridMode === "static") {
     return measureStaticGrid({
@@ -84,8 +100,9 @@ const measureCurrentGeometry = ({
       innerHeight: Math.max(0, screenRect.height),
       rows: rows ?? 9,
       cols: cols ?? 46,
-      fontWidthRatio: cellWidth / fontSize,
-      fontHeightRatio: cellHeight / fontSize
+      fontWidthRatio: cellWidth / measuredFontSize,
+      fontHeightRatio: cellHeight / measuredFontSize,
+      fitStrategy: staticFitStrategy
     });
   }
 
@@ -94,7 +111,7 @@ const measureCurrentGeometry = ({
     innerHeight: Math.max(0, screenRect.height),
     cellWidth,
     cellHeight,
-    fontSize
+    fontSize: cellHeight
   });
 };
 
@@ -104,16 +121,37 @@ export const useRetroScreenGeometry = ({
   gridMode,
   rows,
   cols,
-  fontScale,
+  staticFitStrategy,
   onGeometryChange
 }: UseRetroScreenGeometryOptions) => {
   const [geometry, setGeometry] = useState(() =>
-    measureCurrentGeometry({ screenRef, probeRef, gridMode, rows, cols, fontScale })
+    measureCurrentGeometry({
+      screenRef,
+      probeRef,
+      gridMode,
+      rows,
+      cols,
+      staticFitStrategy
+    })
   );
+  const syncGeometry = () => {
+    setGeometry((currentGeometry) => {
+      const nextGeometry = measureCurrentGeometry({
+        screenRef,
+        probeRef,
+        gridMode,
+        rows,
+        cols,
+        staticFitStrategy
+      });
+
+      return areGeometriesEqual(currentGeometry, nextGeometry) ? currentGeometry : nextGeometry;
+    });
+  };
 
   useIsomorphicLayoutEffect(() => {
-    setGeometry(measureCurrentGeometry({ screenRef, probeRef, gridMode, rows, cols, fontScale }));
-  }, [cols, fontScale, gridMode, probeRef, rows, screenRef]);
+    syncGeometry();
+  }, [cols, gridMode, probeRef, rows, screenRef, staticFitStrategy]);
 
   useEffect(() => {
     const screenNode = screenRef.current;
@@ -124,13 +162,13 @@ export const useRetroScreenGeometry = ({
     }
 
     const observer = new ResizeObserver(() => {
-      setGeometry(measureCurrentGeometry({ screenRef, probeRef, gridMode, rows, cols, fontScale }));
+      syncGeometry();
     });
 
     observer.observe(screenNode);
     observer.observe(probeNode);
     return () => observer.disconnect();
-  }, [cols, fontScale, gridMode, probeRef, rows, screenRef]);
+  }, [cols, gridMode, probeRef, rows, screenRef, staticFitStrategy]);
 
   useEffect(() => {
     if (typeof document === "undefined" || !("fonts" in document) || !document.fonts?.ready) {
@@ -140,9 +178,20 @@ export const useRetroScreenGeometry = ({
     let cancelled = false;
     const syncGeometry = () => {
       if (!cancelled) {
-        setGeometry(
-          measureCurrentGeometry({ screenRef, probeRef, gridMode, rows, cols, fontScale })
-        );
+        setGeometry((currentGeometry) => {
+          const nextGeometry = measureCurrentGeometry({
+            screenRef,
+            probeRef,
+            gridMode,
+            rows,
+            cols,
+            staticFitStrategy
+          });
+
+          return areGeometriesEqual(currentGeometry, nextGeometry)
+            ? currentGeometry
+            : nextGeometry;
+        });
       }
     };
 
@@ -161,7 +210,7 @@ export const useRetroScreenGeometry = ({
       fontFaceSet.removeEventListener?.("loadingdone", handleFontFaceSetChange);
       fontFaceSet.removeEventListener?.("loadingerror", handleFontFaceSetChange);
     };
-  }, [cols, fontScale, gridMode, probeRef, rows, screenRef]);
+  }, [cols, gridMode, probeRef, rows, screenRef, staticFitStrategy]);
 
   useEffect(() => {
     onGeometryChange?.(geometry);

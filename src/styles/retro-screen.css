@@ -1,3 +1,19 @@
+@font-face {
+  font-family: "AnsiIBMVGA";
+  src: url("./fonts/WebPlus_IBM_VGA_8x16.woff") format("woff");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "AnsiMicroKnight";
+  src: url("./fonts/MicroKnight_v1.0.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 .retro-screen {
   --retro-screen-color: #97ff9b;
   --retro-screen-color-soft: color-mix(in srgb, var(--retro-screen-color), black 18%);
@@ -104,6 +120,10 @@
     box-shadow 180ms ease;
 }
 
+.retro-screen[data-display-scanlines="false"] .retro-screen__screen {
+  background: radial-gradient(circle at center, transparent 52%, rgba(0, 0, 0, 0.24) 100%);
+}
+
 .retro-screen[data-display-surface-mode="light"] .retro-screen__screen {
   border-color: color-mix(in srgb, var(--retro-screen-color), transparent 88%);
   background:
@@ -115,6 +135,10 @@
       transparent 4px
     ),
     radial-gradient(circle at center, transparent 56%, rgba(84, 101, 120, 0.08) 100%);
+}
+
+.retro-screen[data-display-surface-mode="light"][data-display-scanlines="false"] .retro-screen__screen {
+  background: radial-gradient(circle at center, transparent 56%, rgba(84, 101, 120, 0.08) 100%);
 }
 
 .retro-screen[data-focus-glow="true"][data-focused="true"] .retro-screen__screen {
@@ -164,6 +188,29 @@
     0 0 22px color-mix(in srgb, var(--retro-screen-color), transparent 92%);
 }
 
+.retro-screen__content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.retro-screen__content--centered {
+  width: var(--retro-screen-content-width);
+  height: var(--retro-screen-content-height);
+  margin: auto;
+}
+
+.retro-screen[data-display-character-sizing-mode="font"] .retro-screen__grid {
+  line-height: 1;
+}
+
+.retro-screen[data-display-character-sizing-mode="font"] .retro-screen__content--centered {
+  width: fit-content;
+  height: fit-content;
+  min-width: calc(var(--retro-screen-cols) * 1ch);
+  min-height: calc(var(--retro-screen-rows) * 1em);
+}
+
 .retro-screen[data-display-surface-mode="light"] .retro-screen__grid {
   text-shadow:
     0 0 4px color-mix(in srgb, var(--retro-screen-color), transparent 94%),
@@ -189,7 +236,7 @@
   pointer-events: none;
   white-space: pre;
   font-family: var(--retro-screen-font-family, "IBM Plex Mono"), monospace !important;
-  font-size: inherit;
+  font-size: var(--retro-screen-probe-font-size, 100px);
   font-weight: inherit;
   font-style: inherit;
   line-height: 1 !important;
@@ -200,6 +247,11 @@
   text-rendering: optimizeSpeed;
 }
 
+.retro-screen[data-grid-mode="auto"] .retro-screen__probe {
+  font-size: calc(var(--retro-screen-font-size, 24px) * var(--retro-screen-font-scale, 1));
+  line-height: var(--retro-screen-cell-height) !important;
+}
+
 .retro-screen__body {
   box-sizing: border-box;
   position: relative;
@@ -207,8 +259,15 @@
   display: grid;
   grid-template-rows: repeat(var(--retro-screen-rows), var(--retro-screen-cell-height));
   width: 100%;
-  min-height: 100%;
+  height: 100%;
+  min-height: 0;
   font-family: var(--retro-screen-font-family, "IBM Plex Mono"), monospace !important;
+}
+
+.retro-screen[data-display-character-sizing-mode="font"] .retro-screen__body {
+  display: block;
+  width: fit-content;
+  height: fit-content;
 }
 
 .retro-screen__line {
@@ -233,6 +292,17 @@
   letter-spacing: 0;
 }
 
+.retro-screen[data-display-character-sizing-mode="font"] .retro-screen__line {
+  height: auto;
+  line-height: 1;
+  transform: none;
+}
+
+.retro-screen[data-display-character-sizing-mode="font"] .retro-screen__line--cells {
+  font-size: inherit;
+  line-height: 1;
+}
+
 .retro-screen[data-disable-cell-row-scale="true"] .retro-screen__line--cells {
   transform: none;
 }
@@ -254,6 +324,34 @@
   font-variant-ligatures: none;
   text-rendering: optimizeSpeed;
   vertical-align: top;
+}
+
+.retro-screen[data-display-character-sizing-mode="font"] .retro-screen__cell {
+  width: 1ch;
+  height: 1em;
+  font-size: inherit;
+  line-height: 1;
+}
+
+.retro-screen__debug-overlay {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 8;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(2, 8, 6, 0.82);
+  border: 1px solid color-mix(in srgb, var(--retro-screen-color), transparent 82%);
+  color: color-mix(in srgb, var(--retro-screen-color), white 10%);
+  font-family: var(--retro-screen-font-family, "IBM Plex Mono"), monospace;
+  font-size: 0.68rem;
+  line-height: 1.2;
+  letter-spacing: 0;
+  pointer-events: none;
+  white-space: nowrap;
 }
 
 .retro-screen__cell--bold {

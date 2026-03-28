@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createRetroScreenAnsiFrameStream,
-  type RetroScreenAnsiByteChunk
+  type RetroScreenAnsiByteChunk,
+  type RetroScreenAnsiMetadata
 } from "../core/ansi/player";
+import type {
+  RetroScreenAnsiSnapshotStorageMode,
+  RetroScreenAnsiViewportWindow
+} from "../core/ansi/snapshot-contract";
 
 export type RetroScreenAnsiPlayerState = {
   displayValue: string;
@@ -10,6 +15,11 @@ export type RetroScreenAnsiPlayerState = {
   frameCount: number;
   isComplete: boolean;
   isStreaming: boolean;
+  sourceRows?: number;
+  sourceCols?: number;
+  viewport?: RetroScreenAnsiViewportWindow;
+  metadata?: RetroScreenAnsiMetadata | null;
+  storageMode?: RetroScreenAnsiSnapshotStorageMode;
 };
 
 type UseRetroScreenAnsiPlayerArgs = {

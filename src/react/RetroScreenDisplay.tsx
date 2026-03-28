@@ -112,45 +112,52 @@ export function RetroScreenDisplay({
           <span ref={probeRef} className="retro-screen__probe" aria-hidden="true">
             M
           </span>
-          <div className="retro-screen__body" aria-live={mode === "terminal" ? "polite" : undefined}>
-            {renderModel.cells
-              ? renderModel.cells.map((line, rowIndex) => (
-                  <div
-                    className={joinClassNames("retro-screen__line", "retro-screen__line--cells")}
-                    key={`cells-${rowIndex}`}
-                  >
-                    {line.map((cell, colIndex) => (
-                      <span
-                        className={getCellClassName(cell)}
-                        key={`${rowIndex}-${colIndex}-${cell.char}`}
-                        data-source-offset={cell.sourceOffset ?? undefined}
-                        style={getCellPresentationStyle(cell, displayColorMode, displaySurfaceMode)}
-                      >
-                        {getCellCharacter(cell)}
-                      </span>
-                    ))}
-                  </div>
-                ))
-              : renderModel.lines.map((line, index) => (
-                  <div className="retro-screen__line" key={`${index}-${line}`}>
-                    {getLineDisplayText(line)}
-                  </div>
-                ))}
+          <div
+            className={joinClassNames(
+              "retro-screen__content",
+              mode === "value" ? "retro-screen__content--centered" : undefined
+            )}
+          >
+            <div className="retro-screen__body" aria-live={mode === "terminal" ? "polite" : undefined}>
+              {renderModel.cells
+                ? renderModel.cells.map((line, rowIndex) => (
+                    <div
+                      className={joinClassNames("retro-screen__line", "retro-screen__line--cells")}
+                      key={`cells-${rowIndex}`}
+                    >
+                      {line.map((cell, colIndex) => (
+                        <span
+                          className={getCellClassName(cell)}
+                          key={`${rowIndex}-${colIndex}-${cell.char}`}
+                          data-source-offset={cell.sourceOffset ?? undefined}
+                          style={getCellPresentationStyle(cell, displayColorMode, displaySurfaceMode)}
+                        >
+                          {getCellCharacter(cell)}
+                        </span>
+                      ))}
+                    </div>
+                  ))
+                : renderModel.lines.map((line, index) => (
+                    <div className="retro-screen__line" key={`${index}-${line}`}>
+                      {getLineDisplayText(line)}
+                    </div>
+                  ))}
+            </div>
+            {renderModel.cursor ? (
+              <div
+                className="retro-screen__cursor"
+                data-cursor-mode={renderModel.cursor.mode}
+                style={
+                  {
+                    "--retro-screen-cursor-row": renderModel.cursor.row,
+                    "--retro-screen-cursor-col": renderModel.cursor.col
+                  } as CSSProperties
+                }
+                aria-hidden="true"
+              />
+            ) : null}
+            {children}
           </div>
-          {renderModel.cursor ? (
-            <div
-              className="retro-screen__cursor"
-              data-cursor-mode={renderModel.cursor.mode}
-              style={
-                {
-                  "--retro-screen-cursor-row": renderModel.cursor.row,
-                  "--retro-screen-cursor-col": renderModel.cursor.col
-                } as CSSProperties
-              }
-              aria-hidden="true"
-            />
-          ) : null}
-          {children}
         </div>
       </div>
     </div>

@@ -67,6 +67,7 @@
     "test:station": "npx --yes @test-station/cli@0.2.40 run --config ./test-station.config.mjs --no-coverage",
     "test:station:coverage": "npx --yes @test-station/cli@0.2.40 run --config ./test-station.config.mjs --coverage",
     "test:unit": "vitest run",
+    "test:e2e:layout": "storybook build && yarn node ./e2e/layout-stability.mjs",
     "test:e2e:tty": "storybook build && node --test ./e2e/tty-bridge.test.mjs",
     "test:e2e": "storybook build && yarn test:e2e:built",
     "test:e2e:built": "yarn node --test ./e2e/*.test.mjs",

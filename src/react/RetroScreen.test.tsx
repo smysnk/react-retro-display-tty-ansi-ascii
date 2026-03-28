@@ -922,6 +922,14 @@ describe("RetroScreen", () => {
     expect(line).not.toBeNull();
   });
 
+  it("can disable scanlines on the display surface", () => {
+    const { container } = render(<RetroScreen mode="value" value="ANSI" displayScanlines={false} />);
+    const root = container.querySelector(".retro-screen") as HTMLElement | null;
+
+    expect(root).not.toBeNull();
+    expect(root).toHaveAttribute("data-display-scanlines", "false");
+  });
+
   it("projects ANSI semantic colors through the ansi-classic display mode", () => {
     const controller = createRetroScreenController({ rows: 2, cols: 8 });
     const { container } = render(
@@ -1125,6 +1133,92 @@ describe("RetroScreen", () => {
         cols: 18
       })
     );
+  });
+
+  it("exposes the configured display layout mode on the root", () => {
+    const { container } = render(
+      <RetroScreen mode="value" value="grid" gridMode="static" rows={4} cols={18} displayLayoutMode="fit-width" />
+    );
+
+    const root = container.querySelector(".retro-screen");
+    expect(root).toHaveAttribute("data-display-layout-mode", "fit-width");
+    expect(root).not.toHaveAttribute("data-resizable");
+    expect(root).toHaveStyle({
+      width: "",
+      maxWidth: ""
+    });
+  });
+
+  it("exposes the configured display font sizing mode on the root", () => {
+    const { container } = render(
+      <RetroScreen
+        mode="value"
+        value="grid"
+        gridMode="static"
+        rows={4}
+        cols={18}
+        displayFontSizingMode="fit-cols"
+      />
+    );
+
+    const root = container.querySelector(".retro-screen");
+    expect(root).toHaveAttribute("data-display-font-sizing-mode", "fit-cols");
+    expect(root).toHaveAttribute("data-layout-strategy", "static-fit-width");
+  });
+
+  it("supports browser font-driven character sizing for static value mode", () => {
+    const { container } = render(
+      <RetroScreen
+        mode="value"
+        value={"X".repeat(18)}
+        gridMode="static"
+        rows={4}
+        cols={18}
+        displayCharacterSizingMode="font"
+      />
+    );
+
+    const root = container.querySelector(".retro-screen");
+    expect(root).toHaveAttribute("data-display-character-sizing-mode", "font");
+  });
+
+  it("can render a lightweight debug overlay for layout diagnostics", () => {
+    const { container } = render(
+      <RetroScreen
+        mode="value"
+        value="debug"
+        gridMode="static"
+        rows={4}
+        cols={18}
+        displayDebugOverlay
+      />
+    );
+
+    const overlay = container.querySelector(".retro-screen__debug-overlay");
+    expect(overlay).not.toBeNull();
+    expect(overlay?.textContent).toContain("grid 18x4");
+  });
+
+  it("centers value-mode content within the larger grid using snapped content dimensions", () => {
+    const { container } = render(
+      <RetroScreen
+        mode="value"
+        value={"X".repeat(18)}
+        gridMode="static"
+        rows={4}
+        cols={18}
+        style={{ width: 420, height: 260 }}
+      />
+    );
+
+    const root = container.querySelector(".retro-screen") as HTMLDivElement | null;
+    const content = container.querySelector(".retro-screen__content") as HTMLDivElement | null;
+
+    expect(root).not.toBeNull();
+    expect(content).not.toBeNull();
+    expect(root!.style.getPropertyValue("--retro-screen-content-width")).not.toBe("");
+    expect(root!.style.getPropertyValue("--retro-screen-content-height")).not.toBe("");
+    expect(content).toHaveClass("retro-screen__content--centered");
   });
 
   it("switches the base palette when a phosphor display color mode is selected", () => {

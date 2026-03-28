@@ -1,24 +1,15 @@
 import type { Preview } from "@storybook/react-vite";
 import { RetroScreenDocsPage } from "./RetroScreenDocsPage";
+import { projectAnnotations } from "./projectAnnotations";
 import "../src/styles/retro-screen.css";
 import "../src/stories/storybook.css";
 
 const preview: Preview = {
+  ...projectAnnotations,
   parameters: {
-    layout: "fullscreen",
-    controls: {
-      expanded: true
-    },
-    backgrounds: {
-      disable: true
-    },
+    ...projectAnnotations.parameters,
     docs: {
       page: RetroScreenDocsPage
-    },
-    options: {
-      storySort: {
-        order: ["RetroScreen"]
-      }
     }
   }
 };

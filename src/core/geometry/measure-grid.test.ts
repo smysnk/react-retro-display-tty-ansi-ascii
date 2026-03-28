@@ -48,4 +48,43 @@ describe("measureGrid", () => {
       fontSize: 40
     });
   });
+
+  it("snaps static grid cell metrics down to whole pixels", () => {
+    expect(
+      measureStaticGrid({
+        innerWidth: 443,
+        innerHeight: 117,
+        rows: 5,
+        cols: 24,
+        fontWidthRatio: 0.5,
+        fontHeightRatio: 1
+      })
+    ).toMatchObject({
+      rows: 5,
+      cols: 24,
+      cellWidth: 11,
+      cellHeight: 23,
+      fontSize: 23
+    });
+  });
+
+  it("can maximize horizontal space in width-fit mode", () => {
+    expect(
+      measureStaticGrid({
+        innerWidth: 443,
+        innerHeight: 117,
+        rows: 5,
+        cols: 24,
+        fontWidthRatio: 0.5,
+        fontHeightRatio: 1,
+        fitStrategy: "width"
+      })
+    ).toMatchObject({
+      rows: 5,
+      cols: 24,
+      cellWidth: 18,
+      cellHeight: 36,
+      fontSize: 36
+    });
+  });
 });

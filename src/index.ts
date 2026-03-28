@@ -8,9 +8,12 @@ export { useRetroScreenEditorSession } from "./react/useRetroScreenEditorSession
 export { useRetroScreenGeometry } from "./react/useRetroScreenGeometry";
 export { useRetroScreenPromptSession } from "./react/useRetroScreenPromptSession";
 export { ansiSnapshotToRenderModelWindow } from "./react/retro-screen-render-model";
+export { resolveRetroScreenFitWidthLayout } from "./react/retro-screen-fit-layout";
 export type {
   CursorMode,
   RetroScreenDisplayColorMode,
+  RetroScreenDisplayCharacterSizingMode,
+  RetroScreenDisplayLayoutMode,
   RetroScreenDisplaySurfaceMode,
   RetroScreenDisplayPadding,
   RetroScreenDisplayPaddingValue,
@@ -30,6 +33,7 @@ export type { RetroScreenAnsiPlayerProps } from "./react/RetroScreenAnsiPlayer";
 export type { RetroScreenAnsiPlayerState } from "./react/useRetroScreenAnsiPlayer";
 export type { RetroScreenAnsiSnapshotPlayerState } from "./react/useRetroScreenAnsiSnapshotPlayer";
 export type { RetroScreenRenderModel } from "./react/retro-screen-render-model";
+export type { RetroScreenFitWidthLayout } from "./react/retro-screen-fit-layout";
 export { measureGrid } from "./core/geometry/measure-grid";
 export { wrapTextToColumns } from "./core/geometry/wrap";
 export {
@@ -49,6 +53,21 @@ export {
   normalizeRetroScreenAnsiViewportWindow,
   resolveRetroScreenAnsiSourceGeometry
 } from "./core/ansi/snapshot-contract";
+export {
+  DEFAULT_RETROSCREEN_ANSI_VIEWPORT_COLS,
+  DEFAULT_RETROSCREEN_ANSI_VIEWPORT_ROWS,
+  DEFAULT_RETROSCREEN_ANSI_VIEWPORT_ROW_STEP,
+  DEFAULT_RETROSCREEN_ANSI_VIEWPORT_COL_STEP,
+  MAX_RETROSCREEN_ANSI_ADAPTIVE_VIEWPORT_COLS,
+  MIN_RETROSCREEN_ANSI_ADAPTIVE_VIEWPORT_COLS,
+  getNextRetroScreenAnsiViewportAxisOffset,
+  getNextRetroScreenAnsiViewportOffsets,
+  getNextRetroScreenAnsiViewportOffsetsForKey,
+  normalizeRetroScreenAnsiWheelPanDeltas,
+  resolveRetroScreenAnsiViewportCols,
+  resolveRetroScreenAnsiViewportRows,
+  getRetroScreenAnsiViewportAspectRatio
+} from "./core/ansi/viewport";
 export {
   collapseRetroScreenTextSelectionToEnd,
   collapseRetroScreenTextSelectionToStart,

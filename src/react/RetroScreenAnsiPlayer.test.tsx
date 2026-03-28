@@ -23,7 +23,7 @@ describe("RetroScreenAnsiPlayer", () => {
       />
     );
 
-    expect(getBodyText(container)).toContain("waiting");
+    expect(getBodyText(container)).toContain("waitin");
 
     rerender(
       <RetroScreenAnsiPlayer
@@ -114,6 +114,50 @@ describe("RetroScreenAnsiPlayer", () => {
 
     await waitFor(() => {
       expect(getByTestId("frame-status").textContent).toBe("0/1");
+    });
+  });
+
+  it("can render a viewport window over a larger ANSI buffer", async () => {
+    const encoder = new TextEncoder();
+    const onPlaybackStateChange = vi.fn();
+    const bytes = encoder.encode(
+      "\u001b[1;1HABCDEFGH\u001b[2;1HIJKLMNOP\u001b[3;1HQRSTUVWX\u001b[4;1HYZ123456"
+    );
+    const { container } = render(
+      <RetroScreenAnsiPlayer
+        rows={4}
+        cols={8}
+        viewportRows={2}
+        viewportCols={4}
+        viewportRowOffset={1}
+        viewportColOffset={2}
+        byteStream={[bytes]}
+        frameDelayMs={10_000}
+        complete
+        onPlaybackStateChange={onPlaybackStateChange}
+      />
+    );
+
+    await waitFor(() => {
+      const bodyText = getBodyText(container);
+      expect(bodyText).toContain("KLMN");
+      expect(bodyText).toContain("STUV");
+      expect(bodyText).not.toContain("ABCD");
+    });
+
+    const lastState = onPlaybackStateChange.mock.calls.at(-1)?.[0] as
+      | RetroScreenAnsiPlayerState
+      | undefined;
+
+    expect(lastState?.sourceRows).toBe(4);
+    expect(lastState?.sourceCols).toBe(8);
+    expect(lastState?.viewport).toEqual({
+      rowOffset: 1,
+      colOffset: 2,
+      rows: 2,
+      cols: 4,
+      maxRowOffset: 2,
+      maxColOffset: 4
     });
   });
 });
