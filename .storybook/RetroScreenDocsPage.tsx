@@ -10,15 +10,18 @@ import { projectAnnotations } from "./projectAnnotations";
 const GITHUB_REPOSITORY_URL = "https://github.com/smysnk/react-retro-display-tty-ansi";
 const NPM_PACKAGE_URL = "https://www.npmjs.com/package/react-retro-display-tty-ansi";
 const STORYBOOK_URL = "https://smysnk.github.io/react-retro-display-tty-ansi/";
-const TEST_REPORT_URL = "https://test-station.smysnk.com/projects/react-retro-display-tty-ansi";
+const CI_WORKFLOW_URL =
+  "https://github.com/smysnk/react-retro-display-tty-ansi-ascii/actions/workflows/cicd.yml";
+const PUBLISHED_BADGE_BASE_URL =
+  "https://smysnk.github.io/react-retro-display-tty-ansi-ascii/badges";
 const GITHUB_BADGE_URL =
   "https://img.shields.io/badge/github-smysnk%2Freact--retro--display--tty--ansi-181717?logo=github&logoColor=white";
 const TESTS_BADGE_URL =
-  "https://img.shields.io/endpoint?url=https%3A%2F%2Ftest-station.smysnk.com%2Fapi%2Fbadges%2Ftests.json%3FprojectKey%3Dreact-retro-display-tty-ansi";
+  `https://img.shields.io/endpoint?url=${encodeURIComponent(`${PUBLISHED_BADGE_BASE_URL}/tests.json`)}`;
 const COVERAGE_BADGE_URL =
-  "https://img.shields.io/endpoint?url=https%3A%2F%2Ftest-station.smysnk.com%2Fapi%2Fbadges%2Fcoverage.json%3FprojectKey%3Dreact-retro-display-tty-ansi";
+  `https://img.shields.io/endpoint?url=${encodeURIComponent(`${PUBLISHED_BADGE_BASE_URL}/coverage.json`)}`;
 const HEALTH_BADGE_URL =
-  "https://img.shields.io/endpoint?url=https%3A%2F%2Ftest-station.smysnk.com%2Fapi%2Fbadges%2Fhealth.json%3FprojectKey%3Dreact-retro-display-tty-ansi";
+  `https://img.shields.io/endpoint?url=${encodeURIComponent(`${PUBLISHED_BADGE_BASE_URL}/health.json`)}`;
 const NPM_BADGE_URL = "https://img.shields.io/npm/v/react-retro-display-tty-ansi?label=npm";
 
 const badgeLinks = [
@@ -33,17 +36,17 @@ const badgeLinks = [
     src: NPM_BADGE_URL
   },
   {
-    href: TEST_REPORT_URL,
+    href: CI_WORKFLOW_URL,
     label: "test status",
     src: TESTS_BADGE_URL
   },
   {
-    href: TEST_REPORT_URL,
+    href: CI_WORKFLOW_URL,
     label: "coverage",
     src: COVERAGE_BADGE_URL
   },
   {
-    href: TEST_REPORT_URL,
+    href: CI_WORKFLOW_URL,
     label: "health",
     src: HEALTH_BADGE_URL
   }
@@ -56,6 +59,7 @@ const {
   DisplayColorModes,
   LightDarkHosts,
   MatrixCodeRain,
+  MidjourneyVortex,
   PromptLoop,
   TerminalStream,
   WhiteRabbitSignal
@@ -190,8 +194,8 @@ export function RetroScreenDocsPage() {
             Published Storybook
           </a>
           <span aria-hidden="true">·</span>
-          <a href={TEST_REPORT_URL} target="_blank" rel="noreferrer">
-            Latest Test Report
+          <a href={CI_WORKFLOW_URL} target="_blank" rel="noreferrer">
+            Latest CI Runs
           </a>
         </div>
         <div className="sb-retro-docs-description">
@@ -207,6 +211,7 @@ export function RetroScreenDocsPage() {
           renderStory(PromptLoop, "prompt-loop"),
           renderStory(WhiteRabbitSignal, "white-rabbit-signal"),
           renderStory(MatrixCodeRain, "matrix-code-rain"),
+          renderStory(MidjourneyVortex, "midjourney-vortex"),
           renderStory(DisplayColorModes, "display-color-modes"),
           renderStory(LightDarkHosts, "light-dark-hosts")
         ]}

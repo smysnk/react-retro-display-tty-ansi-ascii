@@ -811,6 +811,7 @@ export function RetroScreen(props: RetroScreenProps) {
 
       if (encodedInput !== null) {
         event.preventDefault();
+        event.stopPropagation();
         emitTerminalData(encodedInput);
         return;
       }
@@ -818,12 +819,17 @@ export function RetroScreen(props: RetroScreenProps) {
 
     if (handleBufferNavigationKey(event.key)) {
       event.preventDefault();
+      event.stopPropagation();
     }
   };
 
   const handleViewportKeyUp = (event: KeyboardEvent<HTMLDivElement>) => {
     if (props.mode !== "terminal") {
       return;
+    }
+
+    if (captureTerminalKeyboard) {
+      event.stopPropagation();
     }
 
     terminalProps?.onTerminalKeyUp?.(toTerminalHostKeyEvent(event));
@@ -1240,6 +1246,7 @@ export function RetroScreen(props: RetroScreenProps) {
         onViewportPaste={props.mode === "terminal" ? handleViewportPaste : undefined}
         onViewportKeyDown={handleViewportKeyDown}
         onViewportKeyUp={handleViewportKeyUp}
+        onViewportMouseDownCapture={props.onMouseDownCapture}
         onViewportMouseDown={
           props.mode === "terminal" || props.mode === "editor" ? handleViewportMouseDown : undefined
         }
@@ -1249,6 +1256,7 @@ export function RetroScreen(props: RetroScreenProps) {
         onViewportMouseUp={
           props.mode === "terminal" || props.mode === "editor" ? handleViewportMouseUp : undefined
         }
+        onViewportTouchStartCapture={props.onTouchStartCapture}
         onViewportDoubleClick={props.mode === "editor" ? handleViewportDoubleClick : undefined}
         onViewportContextMenu={props.mode === "terminal" ? handleViewportContextMenu : undefined}
         onViewportWheel={handleViewportWheel}

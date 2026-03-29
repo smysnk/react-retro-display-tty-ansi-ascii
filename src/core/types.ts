@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, MouseEventHandler, TouchEventHandler } from "react";
 import type { RetroScreenTextSelection } from "./editor/selection";
 import type { RetroScreenCell, RetroScreenScreenSnapshot, RetroScreenWriteOptions } from "./terminal/types";
 import type { RetroScreenTerminalHostKeyEvent } from "./terminal/host-adapter";
@@ -69,6 +69,8 @@ export type RetroScreenSharedProps = {
   className?: string;
   style?: CSSProperties;
   autoFocus?: boolean;
+  onMouseDownCapture?: MouseEventHandler<HTMLDivElement>;
+  onTouchStartCapture?: TouchEventHandler<HTMLDivElement>;
   onFocusChange?: (focused: boolean) => void;
   onGeometryChange?: (geometry: RetroScreenGeometry) => void;
 };

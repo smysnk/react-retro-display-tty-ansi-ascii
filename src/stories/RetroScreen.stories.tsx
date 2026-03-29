@@ -25,6 +25,7 @@ import {
 } from "./bad-apple-gzip-ansi";
 import { AnsiGalleryViewer } from "./ansi-gallery";
 import { MatrixCodeRainScreen } from "./matrix-code-rain";
+import { MidjourneyVortexScreen } from "./midjourney-vortex";
 
 const STORY_COLOR = "#97ff9b";
 
@@ -1857,6 +1858,32 @@ export function MatrixCodeRainDemoStory() {
   return <MatrixCodeRainSurface capture />;
 }
 
+function MidjourneyVortexSurface() {
+  return (
+    <StoryShell
+      kicker="Cinematic Morph"
+      title="Let the screen widen into a text-born Milky Way."
+      copy="This fullscreen desktop demo keeps the original field of language alive as a chaotic substrate, then lets brighter fluid spirals emerge through it so order feels discovered inside the noise rather than imposed over it."
+      footer={
+        <ul className="sb-retro-note-list">
+          <li>Built as a responsive wide static grid so it can occupy most of a desktop viewport without losing its composition.</li>
+          <li>The same glyph field first reads like text, then develops flowing spiral bands that bring order to the surrounding entropy.</li>
+        </ul>
+      }
+    >
+      <Stage maxWidth={1560}>
+        <div className="sb-retro-midjourney-vortex-frame">
+          <MidjourneyVortexScreen />
+        </div>
+      </Stage>
+    </StoryShell>
+  );
+}
+
+function MidjourneyVortexStory() {
+  return <MidjourneyVortexSurface />;
+}
+
 export function TerminalModeDemoStory() {
   const [controller] = useState(() =>
     createRetroScreenController({
@@ -3657,6 +3684,10 @@ export const WhiteRabbitSignal: Story = {
 
 export const MatrixCodeRain: Story = {
   render: () => <MatrixCodeRainStory />
+};
+
+export const MidjourneyVortex: Story = {
+  render: () => <MidjourneyVortexStory />
 };
 
 export function AnsiSurfaceStory() {

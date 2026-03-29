@@ -611,6 +611,40 @@ describe("RetroScreen", () => {
     expect(onTerminalData).toHaveBeenCalledWith("\r");
   });
 
+  it("stops propagation for captured printable terminal keys", () => {
+    const onTerminalData = vi.fn();
+    const parentKeyDown = vi.fn();
+    const parentKeyUp = vi.fn();
+    const { container } = render(
+      <div onKeyDown={parentKeyDown} onKeyUp={parentKeyUp}>
+        <RetroScreen
+          mode="terminal"
+          captureKeyboard
+          onTerminalData={onTerminalData}
+          gridMode="static"
+          rows={3}
+          cols={12}
+        />
+      </div>
+    );
+
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
+    expect(viewport).not.toBeNull();
+
+    fireEvent.keyDown(viewport!, {
+      key: "0",
+      code: "Digit0"
+    });
+    fireEvent.keyUp(viewport!, {
+      key: "0",
+      code: "Digit0"
+    });
+
+    expect(onTerminalData).toHaveBeenCalledWith("0");
+    expect(parentKeyDown).not.toHaveBeenCalled();
+    expect(parentKeyUp).not.toHaveBeenCalled();
+  });
+
   it("wraps pasted terminal text when the host enables bracketed paste mode", () => {
     const session = createMockTerminalSession();
     const controller = createRetroScreenController({ rows: 3, cols: 12 });
@@ -885,6 +919,26 @@ describe("RetroScreen", () => {
     const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
     expect(viewport).not.toBeNull();
     expect(document.activeElement).toBe(viewport);
+  });
+
+  it("forwards capture-phase pointer hooks to the terminal viewport", () => {
+    const onMouseDownCapture = vi.fn();
+    const { container } = render(
+      <RetroScreen
+        mode="terminal"
+        gridMode="static"
+        rows={3}
+        cols={12}
+        onMouseDownCapture={onMouseDownCapture}
+      />
+    );
+
+    const viewport = container.querySelector(".retro-screen__viewport") as HTMLDivElement | null;
+    expect(viewport).not.toBeNull();
+
+    fireEvent.mouseDown(viewport!);
+
+    expect(onMouseDownCapture).toHaveBeenCalledTimes(1);
   });
 
   it("renders ansi cell styles from terminal snapshots", () => {

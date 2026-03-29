@@ -118,7 +118,7 @@ body {
   width: min(1120px, 100%);
   margin: 0 auto;
   display: grid;
-  gap: 18px;
+  gap: 14px;
 }
 
 .sb-retro-docs-section + .sb-retro-docs-section {
@@ -139,7 +139,7 @@ body {
 
 .sb-retro-docs-story {
   display: grid;
-  gap: 14px;
+  gap: 10px;
 }
 
 .sb-retro-docs-story-preview {
@@ -309,6 +309,20 @@ body {
   justify-items: center;
 }
 
+.sb-retro-midjourney-vortex-frame {
+  width: min(100%, 1540px);
+  min-height: min(84vh, 980px);
+  display: grid;
+  align-items: center;
+  justify-items: center;
+}
+
+.sb-retro-midjourney-vortex-frame .retro-screen {
+  width: 100%;
+  min-height: min(84vh, 980px);
+}
+
+
 .sb-retro-capture-root {
   width: 100%;
   display: grid;
@@ -335,10 +349,68 @@ body {
     inset 0 0 0 4px transparent;
 }
 
+.sb-apple2-screen .retro-screen__cursor {
+  background: color-mix(in srgb, var(--retro-screen-color), transparent 24%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--retro-screen-color), transparent 28%),
+    0 0 7px color-mix(in srgb, var(--retro-screen-color), transparent 76%);
+}
+
+.sb-apple2-dos33-screen {
+  border-radius: 8px;
+  border-color: rgba(53, 246, 224, 0.14);
+  background:
+    radial-gradient(circle at 50% 16%, rgba(53, 246, 224, 0.025), transparent 32%),
+    linear-gradient(180deg, #030605 0%, #010201 100%);
+  box-shadow:
+    0 0 0 1px rgba(6, 12, 10, 0.96),
+    0 18px 40px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 1px rgba(53, 246, 224, 0.04);
+}
+
+.sb-apple2-dos33-screen .retro-screen__screen {
+  inset: 10px;
+  border-radius: 4px;
+  border-color: rgba(53, 246, 224, 0.08);
+  background-color: #020302;
+}
+
+.sb-apple2-dos33-screen[data-display-scanlines="true"] .retro-screen__screen {
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--retro-screen-color), transparent 90%) 0,
+      color-mix(in srgb, var(--retro-screen-color), transparent 90%) 1px,
+      transparent 1px,
+      transparent 4px
+    ),
+    radial-gradient(circle at center, transparent 52%, rgba(0, 0, 0, 0.24) 100%);
+}
+
+.sb-apple2-dos33-screen .retro-screen__bezel {
+  box-shadow:
+    inset 0 0 0 1px rgba(53, 246, 224, 0.06),
+    inset 0 0 0 10px transparent;
+}
+
+.sb-apple2-dos33-screen .retro-screen__grid {
+  letter-spacing: 0;
+  text-shadow:
+    0 0 7px rgba(53, 246, 224, 0.16),
+    0 0 14px rgba(53, 246, 224, 0.08);
+}
+
+.sb-apple2-dos33-screen .retro-screen__cursor {
+  box-shadow:
+    0 0 0 1px rgba(53, 246, 224, 0.22),
+    0 0 6px rgba(53, 246, 224, 0.14);
+}
+
 .sb-retro-page--capture {
   min-height: auto;
   padding: 32px 24px;
 }
+
 
 .sb-retro-status {
   display: inline-flex;

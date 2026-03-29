@@ -19,7 +19,14 @@ const resolveStorybookBasePath = () => {
 const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 const config: StorybookConfig = {
-  stories: ["../src/**/*.stories.@(ts|tsx)"],
+  stories: [
+    "../src/stories/RetroScreen.stories.tsx",
+    "../src/stories/Apple2Basic.stories.tsx",
+    "../src/stories/AnsiDisplayBuffer.stories.tsx",
+    "../src/stories/Editor.stories.tsx",
+    "../src/stories/ResizeResponsive.stories.tsx",
+    "../src/stories/RetroScreenCapture.stories.tsx"
+  ],
   addons: [getAbsolutePath("@storybook/addon-docs")],
   framework: {
     name: "@storybook/react-vite",

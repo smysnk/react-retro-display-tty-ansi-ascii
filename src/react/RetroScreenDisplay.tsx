@@ -6,6 +6,7 @@ import type {
   MouseEventHandler,
   ReactNode,
   RefObject,
+  TouchEventHandler,
   WheelEventHandler
 } from "react";
 import type { RetroScreenCell } from "../core/terminal/types";
@@ -49,9 +50,11 @@ type RetroScreenDisplayProps = {
   onViewportPaste?: ClipboardEventHandler<HTMLDivElement>;
   onViewportKeyDown?: KeyboardEventHandler<HTMLDivElement>;
   onViewportKeyUp?: KeyboardEventHandler<HTMLDivElement>;
+  onViewportMouseDownCapture?: MouseEventHandler<HTMLDivElement>;
   onViewportMouseDown?: MouseEventHandler<HTMLDivElement>;
   onViewportMouseMove?: MouseEventHandler<HTMLDivElement>;
   onViewportMouseUp?: MouseEventHandler<HTMLDivElement>;
+  onViewportTouchStartCapture?: TouchEventHandler<HTMLDivElement>;
   onViewportDoubleClick?: MouseEventHandler<HTMLDivElement>;
   onViewportContextMenu?: MouseEventHandler<HTMLDivElement>;
   onViewportWheel?: WheelEventHandler<HTMLDivElement>;
@@ -73,9 +76,11 @@ export function RetroScreenDisplay({
   onViewportPaste,
   onViewportKeyDown,
   onViewportKeyUp,
+  onViewportMouseDownCapture,
   onViewportMouseDown,
   onViewportMouseMove,
   onViewportMouseUp,
+  onViewportTouchStartCapture,
   onViewportDoubleClick,
   onViewportContextMenu,
   onViewportWheel,
@@ -93,9 +98,11 @@ export function RetroScreenDisplay({
         onPaste={onViewportPaste}
         onKeyDown={onViewportKeyDown}
         onKeyUp={onViewportKeyUp}
+        onMouseDownCapture={onViewportMouseDownCapture}
         onMouseDown={onViewportMouseDown}
         onMouseMove={onViewportMouseMove}
         onMouseUp={onViewportMouseUp}
+        onTouchStartCapture={onViewportTouchStartCapture}
         onDoubleClick={onViewportDoubleClick}
         onContextMenu={onViewportContextMenu}
         onWheel={onViewportWheel}
