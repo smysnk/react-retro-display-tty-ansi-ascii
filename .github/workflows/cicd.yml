@@ -72,8 +72,6 @@ jobs:
         run: yarn test:conformance
 
       - name: Build Storybook for ANSI browser fidelity
-        env:
-          STORYBOOK_BASE_PATH: /react-retro-display-tty-ansi-ascii/
         run: yarn storybook:build
 
       - name: Run ANSI browser fidelity suite
