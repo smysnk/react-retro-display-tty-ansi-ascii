@@ -1,5 +1,6 @@
 import { gunzipSync } from "node:zlib";
 import { readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { RetroScreenByteParityFixture } from "../types";
@@ -34,8 +35,10 @@ type RetroScreenAnsiGalleryManifest = {
 const conformanceDir =
   typeof import.meta.dirname === "string" ? import.meta.dirname : dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(conformanceDir, "../../../../..");
-const galleryRoot = resolve(projectRoot, "references/ansi-gallery");
+const galleryRoot = resolve(projectRoot, "public/ansi-gallery");
 const manifestPath = resolve(galleryRoot, "manifest.json");
+
+export const isAnsiGalleryCorpusAvailable = () => existsSync(manifestPath);
 
 export type RetroScreenAnsiGalleryFixtureLoadOptions = {
   maxBytes?: number;

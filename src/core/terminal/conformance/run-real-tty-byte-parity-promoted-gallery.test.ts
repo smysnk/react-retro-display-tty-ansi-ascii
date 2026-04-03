@@ -4,14 +4,17 @@ import { createRetroByteParityAdapter } from "./retro-byte-parity-adapter";
 import { formatByteParityReport } from "./format-byte-parity-diff";
 import {
   formatAnsiGalleryFailureContext,
+  isAnsiGalleryCorpusAvailable,
   loadAnsiGalleryFixture,
   selectAnsiGalleryItemsByIds
 } from "./fixtures/ansi-gallery-corpus";
 import { promotedAnsiGalleryCorpus } from "./fixtures/ansi-parity-corpus";
 import { runSampledByteParity } from "./run-sampled-byte-parity";
 
+const promotedGalleryIt = isAnsiGalleryCorpusAvailable() ? it : it.skip;
+
 describe("real tty byte parity promoted ansi gallery corpus", () => {
-  it("keeps promoted real ansi art fixtures green in the always-on sampled suite", async () => {
+  promotedGalleryIt("keeps promoted real ansi art fixtures green in the always-on sampled suite", async () => {
     for (const entry of promotedAnsiGalleryCorpus) {
       if (!("galleryAssetId" in entry)) {
         continue;

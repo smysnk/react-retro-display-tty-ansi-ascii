@@ -1,8 +1,8 @@
 import { gunzipSync } from "node:zlib";
 import { readFile } from "node:fs/promises";
 
-const manifestUrl = new URL("../../references/ansi-gallery/manifest.json", import.meta.url);
-const galleryRootUrl = new URL("../../references/ansi-gallery/", import.meta.url);
+const manifestUrl = new URL("../../public/ansi-gallery/manifest.json", import.meta.url);
+const galleryRootUrl = new URL("../../public/ansi-gallery/", import.meta.url);
 
 export const loadAnsiGalleryManifest = async () =>
   JSON.parse(await readFile(manifestUrl, "utf8"));
