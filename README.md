@@ -63,6 +63,8 @@ That makes it a good fit for grid-driven interfaces such as soft terminals, retr
 touch menus, and keypad-like overlays where the host wants to interpret one deliberate press
 at a time.
 
+See it in action in the live [m68k-interpreter touch demo](https://smysnk.github.io/m68k-interpreter/).
+
 ```tsx
 import { useState } from "react";
 import { RetroScreen } from "react-retro-display-tty-ansi-ascii";
