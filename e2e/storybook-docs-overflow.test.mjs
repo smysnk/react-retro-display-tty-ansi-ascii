@@ -11,8 +11,15 @@ const harness = createStorybookBrowserHarness({
 
 const page = () => harness.page;
 
+const docsUrl = (baseUrl) => {
+  const url = new URL("/iframe.html", baseUrl);
+  url.searchParams.set("id", "retroscreen--docs");
+  url.searchParams.set("viewMode", "docs");
+  return url;
+};
+
 test("docs previews keep RetroScreen stories inside the narrow docs viewport", async () => {
-  await page().goto("http://127.0.0.1:6006/iframe.html?id=retroscreen--docs&viewMode=docs", {
+  await page().goto(String(docsUrl(harness.baseUrl)), {
     waitUntil: "networkidle"
   });
 
