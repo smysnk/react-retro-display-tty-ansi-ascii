@@ -26,10 +26,10 @@ describe("RetroScreen ANSI player helpers", () => {
     expect(materializeRetroScreenAnsiFrames(payload, 2, 6)).toEqual(["     A\nB     "]);
   });
 
-  it("treats cursor-forward from the last column as a wrapped move", () => {
+  it("clamps cursor-forward from the last column to the active row", () => {
     const payload = "\u001b[1;6H\u001b[2CX";
 
-    expect(materializeRetroScreenAnsiFrames(payload, 3, 6)).toEqual(["      \n  X   \n      "]);
+    expect(materializeRetroScreenAnsiFrames(payload, 3, 6)).toEqual(["     X\n      \n      "]);
   });
 
   it("continues decoding when a CSI sequence is split across byte chunks", () => {
