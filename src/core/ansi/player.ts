@@ -1030,6 +1030,11 @@ export const createRetroScreenAnsiSnapshotStream = ({
         continue;
       }
 
+      if (character === "\v") {
+        lineFeed();
+        continue;
+      }
+
       if (character === "\b") {
         backspace();
         continue;

@@ -277,6 +277,29 @@ describe("ANSI snapshot stream", () => {
     terminal.dispose();
   });
 
+  it("treats vertical tab as a vertical line feed the same way xterm does", async () => {
+    const payload = "ABCD\u001b[D\u000bXY";
+    const terminal = new Terminal({
+      allowProposedApi: true,
+      rows: 2,
+      cols: 6,
+      scrollback: 16,
+    });
+
+    await new Promise<void>((resolveWrite) => {
+      terminal.write(payload, () => resolveWrite());
+    });
+
+    const referenceSnapshot = normalizeXtermSnapshot(terminal);
+    const snapshot = createRetroScreenAnsiSnapshotStream({
+      rows: 2,
+      cols: 6,
+    }).appendText(payload);
+
+    expect(snapshot.currentFrame.lines).toEqual(referenceSnapshot.rawLines);
+    terminal.dispose();
+  });
+
   it("scrolls the visible viewport upward when line feed lands on the bottom row", () => {
     const stream = createRetroScreenAnsiSnapshotStream({
       rows: 2,
