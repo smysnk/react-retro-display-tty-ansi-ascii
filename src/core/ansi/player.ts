@@ -20,6 +20,8 @@ export type RetroScreenAnsiMetadata = {
   font: string;
   width: number;
   height: number;
+  hasSauce?: boolean;
+  geometrySource?: "sauce" | "fallback";
 };
 
 export type RetroScreenAnsiFrameStreamSnapshot = {
@@ -463,7 +465,9 @@ export const parseRetroScreenAnsiSauce = (bytes: Uint8Array): RetroScreenAnsiMet
       group: "Unknown",
       font: "IBM VGA",
       width: 80,
-      height: 25
+      height: 25,
+      hasSauce: false,
+      geometrySource: "fallback"
     };
   }
 
@@ -475,7 +479,9 @@ export const parseRetroScreenAnsiSauce = (bytes: Uint8Array): RetroScreenAnsiMet
     group: readSauceText(bytes, sauceIndex + 62, 20) || "Unknown",
     width: view.getUint16(96, true) || 80,
     height: view.getUint16(98, true) || 25,
-    font: readSauceText(bytes, sauceIndex + 106, 22) || "IBM VGA"
+    font: readSauceText(bytes, sauceIndex + 106, 22) || "IBM VGA",
+    hasSauce: true,
+    geometrySource: "sauce"
   };
 };
 

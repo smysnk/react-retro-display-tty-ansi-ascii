@@ -6,6 +6,8 @@ import {
 } from "../core/ansi/player";
 
 const ANSI_STREAM_SAUCE_HOLDBACK_BYTES = 129;
+const DEFAULT_ANSI_STREAM_COLS = 80;
+const DEFAULT_ANSI_STREAM_ROWS = 25;
 
 export type GzipAnsiStreamAsset = {
   byteStream: readonly RetroScreenAnsiByteChunk[];
@@ -50,8 +52,47 @@ export const takeAnsiPayloadChunkWithSauceHoldback = (
   };
 };
 
-export const finalizeAnsiPayloadFromSauceTail = (pendingTail: Uint8Array) => ({
-  metadata: parseRetroScreenAnsiSauce(pendingTail),
+const normalizeMetadataDimension = (value: number | null | undefined, fallback: number) => {
+  const parsed = Math.floor(Number(value ?? Number.NaN));
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return fallback;
+  }
+
+  return parsed;
+};
+
+const resolveFinalMetadata = (
+  pendingTail: Uint8Array,
+  fallbackMetadata: RetroScreenAnsiMetadata | null = null
+): RetroScreenAnsiMetadata => {
+  const parsedMetadata = parseRetroScreenAnsiSauce(pendingTail);
+
+  if (parsedMetadata.hasSauce) {
+    return parsedMetadata;
+  }
+
+  return {
+    title: fallbackMetadata?.title ?? parsedMetadata.title,
+    author: fallbackMetadata?.author ?? parsedMetadata.author,
+    group: fallbackMetadata?.group ?? parsedMetadata.group,
+    font: fallbackMetadata?.font ?? parsedMetadata.font,
+    width: normalizeMetadataDimension(fallbackMetadata?.width, DEFAULT_ANSI_STREAM_COLS),
+    height: normalizeMetadataDimension(fallbackMetadata?.height, DEFAULT_ANSI_STREAM_ROWS),
+    hasSauce: false,
+    geometrySource: "fallback"
+  };
+};
+
+export const finalizeAnsiPayloadFromSauceTail = (
+  pendingTail: Uint8Array,
+  {
+    fallbackMetadata = null
+  }: {
+    fallbackMetadata?: RetroScreenAnsiMetadata | null;
+  } = {}
+) => ({
+  metadata: resolveFinalMetadata(pendingTail, fallbackMetadata),
   payloadBytes: stripRetroScreenAnsiSauce(pendingTail)
 });
 
@@ -183,7 +224,9 @@ export const streamGzipAnsiAsset = async ({
     );
   }
 
-  const { metadata, payloadBytes } = finalizeAnsiPayloadFromSauceTail(pendingTail);
+  const { metadata, payloadBytes } = finalizeAnsiPayloadFromSauceTail(pendingTail, {
+    fallbackMetadata
+  });
 
   if (payloadBytes.length > 0) {
     emittedChunks.push(payloadBytes);

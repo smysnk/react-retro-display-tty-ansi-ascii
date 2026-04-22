@@ -48,6 +48,28 @@ describe("ANSI snapshot contract", () => {
     });
   });
 
+  it("preserves explicit fallback geometry provenance even when fallback metadata carries positive dimensions", () => {
+    const geometry = resolveRetroScreenAnsiSourceGeometry({
+      metadata: {
+        title: "inferred",
+        author: "artist",
+        group: "crew",
+        font: "IBM VGA",
+        width: 80,
+        height: 30,
+        hasSauce: false,
+        geometrySource: "fallback",
+      },
+    });
+
+    expect(geometry).toMatchObject({
+      rows: 30,
+      cols: 80,
+      geometrySource: "fallback",
+      storageMode: "eager",
+    });
+  });
+
   it("marks pathological large geometries for sparse storage", () => {
     const geometry = resolveRetroScreenAnsiSourceGeometry({
       metadata: {

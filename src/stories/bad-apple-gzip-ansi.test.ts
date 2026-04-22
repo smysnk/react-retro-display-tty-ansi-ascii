@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { gzipSync } from "node:zlib";
 import {
   finalizeAnsiPayloadFromSauceTail,
   takeAnsiPayloadChunkWithSauceHoldback
 } from "./bad-apple-gzip-ansi";
+import { streamGzipAnsiAsset } from "./gzip-ansi-stream";
 import { decodeRetroScreenAnsiBytes } from "../core/ansi/player";
 
 const writeSauceText = (target: Uint8Array, offset: number, length: number, value: string) => {
@@ -78,7 +80,83 @@ describe("Bad Apple gzip ANSI helpers", () => {
       group: "Mistigris",
       font: "IBM VGA",
       width: 80,
-      height: 25
+      height: 25,
+      hasSauce: true,
+      geometrySource: "sauce"
+    });
+  });
+
+  it("preserves fallback metadata when no sauce record is present", () => {
+    const payload = new TextEncoder().encode("AB");
+
+    const { metadata, payloadBytes } = finalizeAnsiPayloadFromSauceTail(payload, {
+      fallbackMetadata: {
+        title: "Fallback ANSI",
+        author: "Fixture",
+        group: "RetroScreen",
+        font: "IBM VGA",
+        width: 80,
+        height: 30
+      }
+    });
+
+    expect(decodeRetroScreenAnsiBytes(payloadBytes)).toBe("AB");
+    expect(metadata).toMatchObject({
+      title: "Fallback ANSI",
+      author: "Fixture",
+      group: "RetroScreen",
+      font: "IBM VGA",
+      width: 80,
+      height: 30,
+      hasSauce: false,
+      geometrySource: "fallback"
+    });
+  });
+
+  it("keeps inferred fallback geometry through the final streaming snapshot when the asset has no sauce record", async () => {
+    const payload = new TextEncoder().encode("NO SAUCE ANSI");
+    const compressedBody = gzipSync(payload);
+    const snapshots: Array<{ width: number; height: number; hasSauce?: boolean; geometrySource?: string }> = [];
+    const originalFetch = globalThis.fetch;
+
+    globalThis.fetch = async () =>
+      new Response(compressedBody, {
+        headers: {
+          "content-type": "application/gzip"
+        },
+        status: 200
+      });
+
+    try {
+      await streamGzipAnsiAsset({
+        url: "/assets/test/no-sauce.ans.gz",
+        fallbackMetadata: {
+          title: "Fallback ANSI",
+          author: "Fixture",
+          group: "RetroScreen",
+          font: "IBM VGA",
+          width: 80,
+          height: 30
+        },
+        onUpdate(asset) {
+          snapshots.push({
+            width: asset.width,
+            height: asset.height,
+            hasSauce: asset.hasSauce,
+            geometrySource: asset.geometrySource
+          });
+        }
+      });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+
+    expect(snapshots.length).toBeGreaterThanOrEqual(2);
+    expect(snapshots.at(-1)).toMatchObject({
+      width: 80,
+      height: 30,
+      hasSauce: false,
+      geometrySource: "fallback"
     });
   });
 });

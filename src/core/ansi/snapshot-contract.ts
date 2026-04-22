@@ -103,10 +103,15 @@ export const resolveRetroScreenAnsiSourceGeometry = ({
   const rows = normalizePositiveInteger(metadata?.height, policy.fallbackRows, policy.maxDimension);
   const cols = normalizePositiveInteger(metadata?.width, policy.fallbackCols, policy.maxDimension);
   const totalCells = rows * cols;
+  const explicitGeometrySource =
+    metadata?.geometrySource === "sauce" || metadata?.geometrySource === "fallback"
+      ? metadata.geometrySource
+      : null;
   const geometrySource =
-    hasFinitePositiveGeometry(metadata?.height) || hasFinitePositiveGeometry(metadata?.width)
+    explicitGeometrySource ??
+    (hasFinitePositiveGeometry(metadata?.height) || hasFinitePositiveGeometry(metadata?.width)
       ? "sauce"
-      : "fallback";
+      : "fallback");
 
   return {
     rows,
