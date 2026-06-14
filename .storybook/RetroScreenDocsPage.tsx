@@ -8,9 +8,9 @@ import * as ResizeResponsiveStories from "../src/stories/ResizeResponsive.storie
 import { RetroDocsStoryPreview } from "../src/stories/retro-docs-story-preview";
 import { projectAnnotations } from "./projectAnnotations";
 
-const GITHUB_REPOSITORY_URL = "https://github.com/smysnk/react-retro-display-tty-ansi";
-const NPM_PACKAGE_URL = "https://www.npmjs.com/package/react-retro-display-tty-ansi";
-const STORYBOOK_URL = "https://smysnk.github.io/react-retro-display-tty-ansi/";
+const GITHUB_REPOSITORY_URL = "https://github.com/smysnk/react-retro-display-tty-ansi-ascii";
+const NPM_PACKAGE_URL = "https://www.npmjs.com/package/react-retro-display-tty-ansi-ascii";
+const STORYBOOK_URL = "https://smysnk.github.io/react-retro-display-tty-ansi-ascii/";
 const CI_WORKFLOW_URL =
   "https://github.com/smysnk/react-retro-display-tty-ansi-ascii/actions/workflows/cicd.yml";
 const ANSI_DISPLAY_SUPPORT_REPORT_URL =
@@ -18,14 +18,14 @@ const ANSI_DISPLAY_SUPPORT_REPORT_URL =
 const PUBLISHED_BADGE_BASE_URL =
   "https://smysnk.github.io/react-retro-display-tty-ansi-ascii/badges";
 const GITHUB_BADGE_URL =
-  "https://img.shields.io/badge/github-smysnk%2Freact--retro--display--tty--ansi-181717?logo=github&logoColor=white";
+  "https://img.shields.io/badge/github-smysnk%2Freact--retro--display--tty--ansi--ascii-181717?logo=github&logoColor=white";
 const TESTS_BADGE_URL =
   `https://img.shields.io/endpoint?url=${encodeURIComponent(`${PUBLISHED_BADGE_BASE_URL}/tests.json`)}`;
 const COVERAGE_BADGE_URL =
   `https://img.shields.io/endpoint?url=${encodeURIComponent(`${PUBLISHED_BADGE_BASE_URL}/coverage.json`)}`;
 const HEALTH_BADGE_URL =
   `https://img.shields.io/endpoint?url=${encodeURIComponent(`${PUBLISHED_BADGE_BASE_URL}/health.json`)}`;
-const NPM_BADGE_URL = "https://img.shields.io/npm/v/react-retro-display-tty-ansi?label=npm";
+const NPM_BADGE_URL = "https://img.shields.io/npm/v/react-retro-display-tty-ansi-ascii?label=npm";
 
 const badgeLinks = [
   {
