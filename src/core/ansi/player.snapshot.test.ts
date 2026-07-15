@@ -250,6 +250,27 @@ describe("ANSI snapshot stream", () => {
     ]);
   });
 
+  it("advances across NUL bytes as blank cells in DOS ANSI artwork", () => {
+    expect(decodeRetroScreenAnsiBytes(Uint8Array.of(0x41, 0x00, 0x42))).toBe("A\u0000B");
+    expect(
+      decodeRetroScreenAnsiBytes(Uint8Array.of(0x41, 0x00, 0x42), "dos-cp437")
+    ).toBe("A B");
+
+    const ansiStream = createRetroScreenAnsiSnapshotStream({
+      rows: 1,
+      cols: 4,
+    });
+    const dosArtworkStream = createRetroScreenAnsiSnapshotStream({
+      rows: 1,
+      cols: 4,
+      controlCharacterMode: "dos-cp437",
+    });
+    const payload = Uint8Array.of(0x41, 0x00, 0x42);
+
+    expect(ansiStream.appendChunk(payload).currentFrame.lines).toEqual(["AB  "]);
+    expect(dosArtworkStream.appendChunk(payload).currentFrame.lines).toEqual(["A B "]);
+  });
+
   it("applies DOS immediate wrapping before SGR sequences without crossing chunk boundaries early", () => {
     const stream = createRetroScreenAnsiSnapshotStream({
       rows: 3,

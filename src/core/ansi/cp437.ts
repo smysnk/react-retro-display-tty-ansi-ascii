@@ -23,10 +23,10 @@ export const CP437_GLYPH_CODE_POINTS = [
   183, 8730, 8319, 178, 9632, 160
 ] as const;
 
-// Ansilove treats only these bytes as structural while decoding ANSI artwork.
-// Other C0 values, including BS, are CP437 glyph cells rather than terminal input.
+// Ansilove treats NUL as a blank, cursor-advancing cell in DOS ANSI artwork.
+// These remaining bytes are structural while decoding the artwork. Other C0
+// values, including BS, are CP437 glyph cells rather than terminal input.
 const DOS_ANSI_CONTROL_BYTES = new Set([
-  0x00,
   0x09,
   0x0a,
   0x0d,
@@ -43,6 +43,11 @@ export const decodeCp437Byte = (
   controlCharacterMode: RetroScreenAnsiControlCharacterMode = "ansi"
 ) => {
   const normalizedValue = value & 0xff;
+
+  if (controlCharacterMode === "dos-cp437" && normalizedValue === 0x00) {
+    return " ";
+  }
+
   const useGraphicControl =
     controlCharacterMode === "dos-cp437" &&
     (normalizedValue === 0x7f ||
