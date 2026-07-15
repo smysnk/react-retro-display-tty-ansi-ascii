@@ -11,6 +11,8 @@ import {
   IBM_VGA_GLYPH_HEIGHT,
   IBM_VGA_GLYPH_WIDTH
 } from "./ibm-vga-8x16-font";
+import { AMIGA_MICROKNIGHT_8X16_GLYPHS } from "./amiga-microknight-8x16-font";
+import type { RetroScreenDisplayGlyphMode } from "../core/types";
 
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
@@ -20,16 +22,24 @@ const readCssColor = (value: unknown, fallback: string) =>
 export function RetroScreenBitmapCanvas({
   renderModel,
   displayColorMode,
-  displaySurfaceMode
+  displaySurfaceMode,
+  displayGlyphMode,
+  displayIceColors
 }: {
   renderModel: RetroScreenRenderModel;
   displayColorMode: RetroScreenDisplayColorMode;
   displaySurfaceMode: RetroScreenDisplaySurfaceMode;
+  displayGlyphMode: Exclude<RetroScreenDisplayGlyphMode, "font">;
+  displayIceColors: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rows = renderModel.cells.length;
   const cols = renderModel.cells.reduce((maximum, row) => Math.max(maximum, row.length), 0);
-  const width = Math.max(1, cols * IBM_VGA_GLYPH_WIDTH);
+  const glyphWidth = displayGlyphMode === "ibm-vga-9x16" ? 9 : IBM_VGA_GLYPH_WIDTH;
+  const glyphs = displayGlyphMode === "amiga-microknight-8x16"
+    ? AMIGA_MICROKNIGHT_8X16_GLYPHS
+    : IBM_VGA_8X16_GLYPHS;
+  const width = Math.max(1, cols * glyphWidth);
   const height = Math.max(1, rows * IBM_VGA_GLYPH_HEIGHT);
 
   useIsomorphicLayoutEffect(() => {
@@ -61,16 +71,17 @@ export function RetroScreenBitmapCanvas({
         const presentation = getCellPresentationStyle(
           cell,
           displayColorMode,
-          displaySurfaceMode
+          displaySurfaceMode,
+          displayIceColors
         );
         const foreground = readCssColor(presentation?.color, "#aaaaaa");
         const background = readCssColor(presentation?.backgroundColor, "transparent");
-        const cellX = colIndex * IBM_VGA_GLYPH_WIDTH;
+        const cellX = colIndex * glyphWidth;
         const cellY = rowIndex * IBM_VGA_GLYPH_HEIGHT;
 
         if (background !== "transparent") {
           context.fillStyle = background;
-          context.fillRect(cellX, cellY, IBM_VGA_GLYPH_WIDTH, IBM_VGA_GLYPH_HEIGHT);
+          context.fillRect(cellX, cellY, glyphWidth, IBM_VGA_GLYPH_HEIGHT);
         }
 
         if (foreground === "transparent") {
@@ -82,17 +93,26 @@ export function RetroScreenBitmapCanvas({
         context.fillStyle = foreground;
 
         for (let glyphRow = 0; glyphRow < IBM_VGA_GLYPH_HEIGHT; glyphRow += 1) {
-          const glyphBits = IBM_VGA_8X16_GLYPHS[glyphOffset + glyphRow] ?? 0;
+          const glyphBits = glyphs[glyphOffset + glyphRow] ?? 0;
 
           for (let glyphCol = 0; glyphCol < IBM_VGA_GLYPH_WIDTH; glyphCol += 1) {
             if ((glyphBits & (0x80 >> glyphCol)) !== 0) {
               context.fillRect(cellX + glyphCol, cellY + glyphRow, 1, 1);
+
+              if (
+                displayGlyphMode === "ibm-vga-9x16" &&
+                glyphCol === 7 &&
+                glyphIndex >= 192 &&
+                glyphIndex <= 223
+              ) {
+                context.fillRect(cellX + 8, cellY + glyphRow, 1, 1);
+              }
             }
           }
         }
       }
     }
-  }, [cols, displayColorMode, displaySurfaceMode, height, renderModel, rows, width]);
+  }, [cols, displayColorMode, displayGlyphMode, displayIceColors, displaySurfaceMode, glyphWidth, glyphs, height, renderModel, rows, width]);
 
   return (
     <canvas

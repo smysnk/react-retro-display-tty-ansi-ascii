@@ -1250,6 +1250,28 @@ describe("RetroScreen", () => {
     expect(window.getComputedStyle(cells[2]!).color).toBe("rgb(255, 255, 255)");
   });
 
+  it("projects ANSI blink as a bright DOS/VGA background when iCE colors are enabled", () => {
+    const controller = createRetroScreenController({ rows: 1, cols: 2 });
+    const { container } = render(
+      <RetroScreen
+        mode="terminal"
+        controller={controller}
+        displayColorMode="ansi-vga"
+        displayIceColors
+      />
+    );
+
+    act(() => {
+      controller.write("\u001b[5;44mA");
+    });
+
+    const cell = container.querySelector(".retro-screen__cell") as HTMLElement | null;
+
+    expect(cell).not.toBeNull();
+    expect(window.getComputedStyle(cell!).backgroundColor).toBe("rgb(85, 85, 255)");
+    expect(cell).not.toHaveClass("retro-screen__cell--blink");
+  });
+
   it("projects indexed and truecolor cells through the ansi-extended display mode", () => {
     const controller = createRetroScreenController({ rows: 2, cols: 8 });
     const { container } = render(

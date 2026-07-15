@@ -40,6 +40,30 @@ class ResizeObserverMock {
 }
 
 describe("useRetroScreenGeometry", () => {
+  it("uses native 9x16 cell geometry for the VGA 9-dot bitmap mode", () => {
+    const getContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+
+    try {
+      const { container } = render(
+        <RetroScreen
+          mode="value"
+          value="grid"
+          gridMode="static"
+          rows={4}
+          cols={18}
+          displayGlyphMode="ibm-vga-9x16"
+        />
+      );
+      const root = container.querySelector(".retro-screen") as HTMLDivElement | null;
+
+      expect(root?.style.getPropertyValue("--retro-screen-cell-width")).toBe("9px");
+      expect(root?.style.getPropertyValue("--retro-screen-cell-height")).toBe("16px");
+      expect(root?.style.getPropertyValue("--retro-screen-content-width")).toBe("162px");
+      expect(root?.style.getPropertyValue("--retro-screen-content-height")).toBe("64px");
+    } finally {
+      getContext.mockRestore();
+    }
+  });
   it("remeasures static geometry when the probe font metrics change", () => {
     const originalResizeObserver = globalThis.ResizeObserver;
     const originalFonts = Object.getOwnPropertyDescriptor(document, "fonts");

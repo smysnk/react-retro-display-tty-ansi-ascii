@@ -123,6 +123,13 @@ export function RetroScreen(props: RetroScreenProps) {
   const displaySurfaceMode = props.displaySurfaceMode ?? "dark";
   const displayCharacterSizingMode = props.displayCharacterSizingMode ?? "grid";
   const displayGlyphMode = props.displayGlyphMode ?? "font";
+  const displayIceColors = props.displayIceColors ?? false;
+  const bitmapCellWidth = displayGlyphMode === "ibm-vga-9x16"
+    ? 9
+    : displayGlyphMode === "font"
+      ? undefined
+      : 8;
+  const bitmapCellHeight = displayGlyphMode === "font" ? undefined : 16;
   const displayDebugOverlay = props.displayDebugOverlay ?? false;
   const displayScanlines = props.displayScanlines ?? true;
   const focusGlow = props.focusGlow ?? true;
@@ -187,6 +194,8 @@ export function RetroScreen(props: RetroScreenProps) {
     gridMode: resolvedLayoutStrategy.gridMode,
     rows: props.rows,
     cols: props.cols,
+    staticCellWidth: bitmapCellWidth,
+    staticCellHeight: bitmapCellHeight,
     staticFitStrategy: resolvedLayoutStrategy.staticFitStrategy,
     onGeometryChange: props.onGeometryChange
   });
@@ -252,7 +261,9 @@ export function RetroScreen(props: RetroScreenProps) {
         chromeWidth: Math.max(0, Math.floor(rootRect.width - screenRect.width)),
         chromeHeight: Math.max(0, Math.floor(rootRect.height - screenRect.height)),
         contentAspectRatio:
-          probeRect.width > 0 && probeRect.height > 0
+          bitmapCellWidth && bitmapCellHeight
+            ? (resolvedCols * bitmapCellWidth) / Math.max(1, resolvedRows * bitmapCellHeight)
+            : probeRect.width > 0 && probeRect.height > 0
             ? (resolvedCols * probeRect.width) / Math.max(1, resolvedRows * probeRect.height)
             : screenRect.width / Math.max(1, screenRect.height)
       };
@@ -308,6 +319,8 @@ export function RetroScreen(props: RetroScreenProps) {
     };
   }, [
     fitWidthLayoutActive,
+    bitmapCellHeight,
+    bitmapCellWidth,
     props.cols,
     props.rows,
     props.className,
@@ -1268,6 +1281,7 @@ export function RetroScreen(props: RetroScreenProps) {
       data-display-frame={displayFrame ? "true" : "false"}
       data-display-character-sizing-mode={displayCharacterSizingMode}
       data-display-glyph-mode={displayGlyphMode}
+      data-display-ice-colors={displayIceColors ? "true" : "false"}
       data-display-font-sizing-mode={props.displayFontSizingMode ?? "contain"}
       data-display-layout-mode={props.displayLayoutMode ?? "default"}
       data-display-surface-mode={displaySurfaceMode}
@@ -1325,6 +1339,7 @@ export function RetroScreen(props: RetroScreenProps) {
         renderModel={renderModel}
         displayColorMode={displayColorMode}
         displayGlyphMode={displayGlyphMode}
+        displayIceColors={displayIceColors}
         displaySurfaceMode={displaySurfaceMode}
         displayFrame={displayFrame}
         screenRef={screenRef}

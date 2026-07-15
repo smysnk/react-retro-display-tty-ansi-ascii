@@ -136,7 +136,6 @@ const parseHexColor = (value: string): RgbColor => {
     blue: Number.parseInt(expanded.slice(4, 6), 16)
   };
 };
-
 const toHexColor = ({ red, green, blue }: RgbColor) =>
   `#${clampByte(red).toString(16).padStart(2, "0")}${clampByte(green)
     .toString(16)
@@ -419,7 +418,8 @@ export const getDisplayModeRootVars = (
 export const getCellPresentationStyle = (
   cell: RetroScreenCell,
   displayColorMode: RetroScreenDisplayColorMode,
-  displaySurfaceMode: RetroScreenDisplaySurfaceMode
+  displaySurfaceMode: RetroScreenDisplaySurfaceMode,
+  displayIceColors = false
 ): CSSProperties | undefined => {
   const normalizedDisplayColorMode = normalizeDisplayColorMode(displayColorMode);
 
@@ -465,8 +465,33 @@ export const getCellPresentationStyle = (
     normalizedDisplayColorMode,
     displaySurfaceMode
   );
+  const background = (() => {
+    if (normalizedDisplayColorMode !== "ansi-vga" || !displayIceColors || !cell.style.blink) {
+      return cell.style.background;
+    }
+
+    if (cell.style.background.mode === "default") {
+      return {
+        mode: "palette" as const,
+        value: 8
+      };
+    }
+
+    if (
+      cell.style.background.mode === "palette" &&
+      cell.style.background.value >= 0 &&
+      cell.style.background.value < 8
+    ) {
+      return {
+        ...cell.style.background,
+        value: cell.style.background.value + 8
+      };
+    }
+
+    return cell.style.background;
+  })();
   const resolvedBackground = resolveAnsiColor(
-    cell.style.background,
+    background,
     "background",
     palette,
     normalizedDisplayColorMode,
@@ -475,7 +500,7 @@ export const getCellPresentationStyle = (
   let [color, backgroundColor] = cell.style.inverse
     ? [resolvedBackground, resolvedForeground]
     : [resolvedForeground, resolvedBackground];
-  const showBackground = cell.style.inverse || cell.style.background.mode !== "default";
+  const showBackground = cell.style.inverse || background.mode !== "default";
   const surfaceBackground = getSurfaceBackground(normalizedDisplayColorMode, displaySurfaceMode).bottom;
 
   if (displaySurfaceMode === "light" && showBackground) {

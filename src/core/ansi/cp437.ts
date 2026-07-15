@@ -23,16 +23,13 @@ export const CP437_GLYPH_CODE_POINTS = [
   183, 8730, 8319, 178, 9632, 160
 ] as const;
 
-const ANSI_CONTROL_BYTES = new Set([
+// Ansilove treats only these bytes as structural while decoding ANSI artwork.
+// Other C0 values, including BS, are CP437 glyph cells rather than terminal input.
+const DOS_ANSI_CONTROL_BYTES = new Set([
   0x00,
-  0x07,
-  0x08,
   0x09,
   0x0a,
-  0x0b,
-  0x0c,
   0x0d,
-  0x18,
   0x1a,
   0x1b
 ]);
@@ -49,7 +46,7 @@ export const decodeCp437Byte = (
   const useGraphicControl =
     controlCharacterMode === "dos-cp437" &&
     (normalizedValue === 0x7f ||
-      (normalizedValue < 0x20 && !ANSI_CONTROL_BYTES.has(normalizedValue)));
+      (normalizedValue < 0x20 && !DOS_ANSI_CONTROL_BYTES.has(normalizedValue)));
   const codePoint = useGraphicControl
     ? CP437_GLYPH_CODE_POINTS[normalizedValue]
     : normalizedValue < 0x80

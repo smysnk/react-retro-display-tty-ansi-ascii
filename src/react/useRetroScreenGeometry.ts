@@ -38,6 +38,8 @@ type UseRetroScreenGeometryOptions = {
   gridMode?: RetroScreenGridMode;
   rows?: number;
   cols?: number;
+  staticCellWidth?: number;
+  staticCellHeight?: number;
   staticFitStrategy?: "contain" | "width";
   onGeometryChange?: (geometry: RetroScreenGeometry) => void;
 };
@@ -62,11 +64,38 @@ const measureCurrentGeometry = ({
   gridMode,
   rows,
   cols,
+  staticCellWidth,
+  staticCellHeight,
   staticFitStrategy
 }: Pick<
   UseRetroScreenGeometryOptions,
-  "screenRef" | "probeRef" | "gridMode" | "rows" | "cols" | "staticFitStrategy"
+  | "screenRef"
+  | "probeRef"
+  | "gridMode"
+  | "rows"
+  | "cols"
+  | "staticCellWidth"
+  | "staticCellHeight"
+  | "staticFitStrategy"
 >): RetroScreenGeometry => {
+  if (
+    gridMode === "static" &&
+    rows &&
+    cols &&
+    staticCellWidth &&
+    staticCellHeight
+  ) {
+    return {
+      rows,
+      cols,
+      cellWidth: staticCellWidth,
+      cellHeight: staticCellHeight,
+      innerWidth: cols * staticCellWidth,
+      innerHeight: rows * staticCellHeight,
+      fontSize: staticCellHeight
+    };
+  }
+
   const screenNode = screenRef.current;
   const probeNode = probeRef.current;
 
@@ -124,6 +153,8 @@ export const useRetroScreenGeometry = ({
   gridMode,
   rows,
   cols,
+  staticCellWidth,
+  staticCellHeight,
   staticFitStrategy,
   onGeometryChange
 }: UseRetroScreenGeometryOptions) => {
@@ -134,6 +165,8 @@ export const useRetroScreenGeometry = ({
       gridMode,
       rows,
       cols,
+      staticCellWidth,
+      staticCellHeight,
       staticFitStrategy
     })
   );
@@ -145,6 +178,8 @@ export const useRetroScreenGeometry = ({
         gridMode,
         rows,
         cols,
+        staticCellWidth,
+        staticCellHeight,
         staticFitStrategy
       });
 
@@ -154,7 +189,7 @@ export const useRetroScreenGeometry = ({
 
   useIsomorphicLayoutEffect(() => {
     syncGeometry();
-  }, [cols, gridMode, probeRef, rows, screenRef, staticFitStrategy]);
+  }, [cols, gridMode, probeRef, rows, screenRef, staticCellHeight, staticCellWidth, staticFitStrategy]);
 
   useEffect(() => {
     const screenNode = screenRef.current;
@@ -171,7 +206,7 @@ export const useRetroScreenGeometry = ({
     observer.observe(screenNode);
     observer.observe(probeNode);
     return () => observer.disconnect();
-  }, [cols, gridMode, probeRef, rows, screenRef, staticFitStrategy]);
+  }, [cols, gridMode, probeRef, rows, screenRef, staticCellHeight, staticCellWidth, staticFitStrategy]);
 
   useEffect(() => {
     if (typeof document === "undefined" || !("fonts" in document) || !document.fonts?.ready) {
@@ -188,6 +223,8 @@ export const useRetroScreenGeometry = ({
             gridMode,
             rows,
             cols,
+            staticCellWidth,
+            staticCellHeight,
             staticFitStrategy
           });
 
@@ -213,7 +250,7 @@ export const useRetroScreenGeometry = ({
       fontFaceSet.removeEventListener?.("loadingdone", handleFontFaceSetChange);
       fontFaceSet.removeEventListener?.("loadingerror", handleFontFaceSetChange);
     };
-  }, [cols, gridMode, probeRef, rows, screenRef, staticFitStrategy]);
+  }, [cols, gridMode, probeRef, rows, screenRef, staticCellHeight, staticCellWidth, staticFitStrategy]);
 
   useEffect(() => {
     onGeometryChange?.(geometry);

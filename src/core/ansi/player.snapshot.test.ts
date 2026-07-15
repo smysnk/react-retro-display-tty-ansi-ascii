@@ -235,7 +235,7 @@ describe("ANSI snapshot stream", () => {
 
   it("renders non-structural C0 bytes as DOS CP437 glyphs for ANSI artwork", () => {
     expect(decodeRetroScreenAnsiBytes(Uint8Array.of(0x10))).toBe("\u0010");
-    expect(decodeRetroScreenAnsiBytes(Uint8Array.of(0x10), "dos-cp437")).toBe("►");
+    expect(decodeRetroScreenAnsiBytes(Uint8Array.of(0x08, 0x10), "dos-cp437")).toBe("◘►");
 
     const stream = createRetroScreenAnsiSnapshotStream({
       rows: 2,

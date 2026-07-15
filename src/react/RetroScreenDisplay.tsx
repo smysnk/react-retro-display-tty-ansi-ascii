@@ -27,14 +27,14 @@ import { RetroScreenBitmapCanvas } from "./RetroScreenBitmapCanvas";
 const joinClassNames = (...classNames: Array<string | undefined>) =>
   classNames.filter(Boolean).join(" ");
 
-const getCellClassName = (cell: RetroScreenRenderCell) =>
+const getCellClassName = (cell: RetroScreenRenderCell, displayIceColors: boolean) =>
   joinClassNames(
     "retro-screen__cell",
     cell.style.bold ? "retro-screen__cell--bold" : undefined,
     cell.style.faint ? "retro-screen__cell--faint" : undefined,
     cell.style.inverse ? "retro-screen__cell--inverse" : undefined,
     cell.style.conceal ? "retro-screen__cell--conceal" : undefined,
-    cell.style.blink ? "retro-screen__cell--blink" : undefined,
+    cell.style.blink && !displayIceColors ? "retro-screen__cell--blink" : undefined,
     cell.isSelected ? "retro-screen__cell--selected" : undefined
   );
 
@@ -43,6 +43,7 @@ type RetroScreenDisplayProps = {
   renderModel: RetroScreenRenderModel;
   displayColorMode: RetroScreenDisplayColorMode;
   displayGlyphMode: RetroScreenDisplayGlyphMode;
+  displayIceColors: boolean;
   displaySurfaceMode: RetroScreenDisplaySurfaceMode;
   displayFrame: boolean;
   screenRef: RefObject<HTMLDivElement | null>;
@@ -71,6 +72,7 @@ export function RetroScreenDisplay({
   renderModel,
   displayColorMode,
   displayGlyphMode,
+  displayIceColors,
   displaySurfaceMode,
   displayFrame,
   screenRef,
@@ -127,13 +129,14 @@ export function RetroScreenDisplay({
           <div
             className={joinClassNames(
               "retro-screen__content",
-              mode === "value" ? "retro-screen__content--centered" : undefined
+              mode === "value" ? "retro-screen__content--centered" : undefined,
+              displayGlyphMode !== "font" ? "retro-screen__content--bitmap" : undefined
             )}
           >
             <div
               className={joinClassNames(
                 "retro-screen__body",
-                displayGlyphMode === "ibm-vga-8x16" ? "retro-screen__body--bitmap" : undefined
+                displayGlyphMode !== "font" ? "retro-screen__body--bitmap" : undefined
               )}
               aria-live={mode === "terminal" ? "polite" : undefined}
             >
@@ -144,19 +147,26 @@ export function RetroScreenDisplay({
                 >
                   {line.map((cell, colIndex) => (
                     <span
-                      className={getCellClassName(cell)}
+                      className={getCellClassName(cell, displayIceColors)}
                       key={`${rowIndex}-${colIndex}-${cell.char}`}
                       data-source-offset={cell.sourceOffset ?? undefined}
-                      style={getCellPresentationStyle(cell, displayColorMode, displaySurfaceMode)}
+                      style={getCellPresentationStyle(
+                        cell,
+                        displayColorMode,
+                        displaySurfaceMode,
+                        displayIceColors
+                      )}
                     >
                       {getCellCharacter(cell)}
                     </span>
                   ))}
                 </div>
               ))}
-              {displayGlyphMode === "ibm-vga-8x16" ? (
+              {displayGlyphMode !== "font" ? (
                 <RetroScreenBitmapCanvas
                   displayColorMode={displayColorMode}
+                  displayGlyphMode={displayGlyphMode}
+                  displayIceColors={displayIceColors}
                   displaySurfaceMode={displaySurfaceMode}
                   renderModel={renderModel}
                 />

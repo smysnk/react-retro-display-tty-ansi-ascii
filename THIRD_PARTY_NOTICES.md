@@ -1,9 +1,11 @@
 # Third-party notices
 
-## libansilove IBM VGA 8x16 font bitmap
+## libansilove IBM VGA and Amiga MicroKnight 8x16 font bitmaps
 
-The IBM VGA 8x16 glyph bitmap in `src/react/ibm-vga-8x16-font.ts` is derived from
-libansilove's `font_pc_80x25` data.
+The IBM VGA and Amiga MicroKnight 8x16 glyph bitmaps in
+`src/react/ibm-vga-8x16-font.ts` and `src/react/amiga-microknight-8x16-font.ts`
+are derived from libansilove's `font_pc_80x25` and `font_amiga_microknight`
+data.
 
 Copyright (c) 2011-2026, Stefan Vogt, Brian Cassidy, and Frederic Cambus
 All rights reserved.
