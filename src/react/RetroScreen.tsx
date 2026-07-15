@@ -1248,6 +1248,30 @@ export function RetroScreen(props: RetroScreenProps) {
     }
   };
 
+  const handleOverlayPointer = (
+    event: PointerEvent<HTMLDivElement>,
+    phase: "down" | "move" | "up"
+  ) => {
+    if (event.pointerType !== "mouse") {
+      void handleTouchOverlayPointer(event, phase);
+      return;
+    }
+
+    if (phase === "down") {
+      props.onMouseDownCapture?.(event);
+      focusInput();
+      handleViewportMouseDown(event);
+      return;
+    }
+
+    if (phase === "move") {
+      handleViewportMouseMove(event);
+      return;
+    }
+
+    handleViewportMouseUp(event);
+  };
+
   const inlineStyle = {
     "--retro-screen-rows": `${geometry.rows}`,
     "--retro-screen-cols": `${geometry.cols}`,
@@ -1321,16 +1345,16 @@ export function RetroScreen(props: RetroScreenProps) {
           data-testid={touchInput.overlayTestId}
           aria-hidden="true"
           onPointerCancel={(event) => {
-            void handleTouchOverlayPointer(event, "up");
+            handleOverlayPointer(event, "up");
           }}
           onPointerDown={(event) => {
-            void handleTouchOverlayPointer(event, "down");
+            handleOverlayPointer(event, "down");
           }}
           onPointerMove={(event) => {
-            void handleTouchOverlayPointer(event, "move");
+            handleOverlayPointer(event, "move");
           }}
           onPointerUp={(event) => {
-            void handleTouchOverlayPointer(event, "up");
+            handleOverlayPointer(event, "up");
           }}
         />
       ) : null}

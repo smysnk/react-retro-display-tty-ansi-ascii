@@ -816,6 +816,8 @@ npm install
 npm run storybook
 ```
 
+Releases from `main` publish through GitHub OIDC without a persistent npm token. Maintainers can find the one-time npm package configuration and migration checklist in [npm trusted publishing](https://github.com/smysnk/react-retro-display-tty-ansi-ascii/blob/main/docs/npm-trusted-publishing.md).
+
 ## Development
 
 ```bash

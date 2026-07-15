@@ -60,6 +60,7 @@ const dispatchPointerEvent = (
     clientY: number;
     pointerType: string;
     buttons: number;
+    button?: number;
   }
 ) => {
   const event = new Event(type, { bubbles: true, cancelable: true });
@@ -68,7 +69,8 @@ const dispatchPointerEvent = (
     clientX: { value: init.clientX, configurable: true },
     clientY: { value: init.clientY, configurable: true },
     pointerType: { value: init.pointerType, configurable: true },
-    buttons: { value: init.buttons, configurable: true }
+    buttons: { value: init.buttons, configurable: true },
+    button: { value: init.button ?? 0, configurable: true }
   });
   fireEvent(element, event);
 };
@@ -776,6 +778,105 @@ describe("RetroScreen", () => {
       pointerType: "touch",
       buttons: 1
     });
+  });
+
+  it("routes desktop mouse input through the enabled touch overlay", () => {
+    const session = createMockTerminalSession();
+    const controller = createRetroScreenController({ rows: 3, cols: 4 });
+    const onMouseDownCapture = vi.fn();
+    const onTerminalMouse = vi.fn();
+    const onTouchCell = vi.fn();
+    const { container } = render(
+      <RetroScreen
+        mode="terminal"
+        session={session}
+        controller={controller}
+        onMouseDownCapture={onMouseDownCapture}
+        onTerminalMouse={onTerminalMouse}
+        gridMode="static"
+        rows={3}
+        cols={4}
+        touchInput={{
+          enabled: true,
+          overlayTestId: "touch-overlay",
+          onTouchCell,
+        }}
+      />
+    );
+
+    mockScreenRect(container, {
+      x: 0,
+      y: 0,
+      width: 40,
+      height: 30,
+    });
+
+    act(() => {
+      controller.write("\u001b[?1002h\u001b[?1006h");
+    });
+
+    const overlay = screen.getByTestId("touch-overlay") as HTMLDivElement;
+    const setPointerCapture = vi.fn();
+    Object.defineProperty(overlay, "setPointerCapture", {
+      value: setPointerCapture,
+      configurable: true,
+    });
+
+    dispatchPointerEvent(overlay, "pointerdown", {
+      pointerId: 1,
+      button: 0,
+      buttons: 1,
+      clientX: 15,
+      clientY: 6,
+      pointerType: "mouse",
+    });
+    dispatchPointerEvent(overlay, "pointermove", {
+      pointerId: 1,
+      button: 0,
+      buttons: 1,
+      clientX: 25,
+      clientY: 16,
+      pointerType: "mouse",
+    });
+    dispatchPointerEvent(overlay, "pointerup", {
+      pointerId: 1,
+      button: 0,
+      buttons: 0,
+      clientX: 25,
+      clientY: 16,
+      pointerType: "mouse",
+    });
+
+    expect(onMouseDownCapture).toHaveBeenCalledTimes(1);
+    expect(onTouchCell).not.toHaveBeenCalled();
+    expect(setPointerCapture).not.toHaveBeenCalled();
+    expect(onTerminalMouse).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        action: "press",
+        button: "left",
+        row: 1,
+        col: 2,
+      })
+    );
+    expect(onTerminalMouse).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        action: "move",
+        button: "left",
+        row: 2,
+        col: 3,
+      })
+    );
+    expect(onTerminalMouse).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        action: "release",
+        button: "left",
+        row: 2,
+        col: 3,
+      })
+    );
   });
 
   it("stops propagation for captured printable terminal keys", () => {

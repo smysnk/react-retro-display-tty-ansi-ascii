@@ -11,19 +11,14 @@ run_npm_no_workspace() {
     npm "$@"
 }
 
-configure_npm_auth_token() {
-  local token="$1"
-  if [[ -z "$token" ]]; then
-    echo "Missing NPM token" >&2
+verify_npm_oidc_environment() {
+  if [[ -n "${NPM_TOKEN:-}" || -n "${NODE_AUTH_TOKEN:-}" ]]; then
+    echo "Refusing to publish with a persistent npm token; trusted publishing must use GitHub OIDC." >&2
     exit 1
   fi
 
-  run_npm_no_workspace config set //registry.npmjs.org/:_authToken="${token}"
-}
-
-verify_npm_auth() {
-  if ! run_npm_no_workspace whoami >/dev/null 2>&1; then
-    echo "npm auth preflight failed (whoami). Check NPM_TOKEN scope/validity." >&2
+  if [[ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" || -z "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ]]; then
+    echo "GitHub OIDC is unavailable. Ensure the workflow uses a GitHub-hosted runner with id-token: write." >&2
     exit 1
   fi
 }

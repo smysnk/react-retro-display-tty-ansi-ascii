@@ -35,11 +35,12 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
 
-      - name: Upgrade npm
-        run: npm install --global npm@11
+      - name: Install an OIDC-capable npm CLI
+        run: npm install --global "npm@^11.5.1"
 
       - name: Enable Corepack
         run: corepack enable
@@ -219,9 +220,7 @@ jobs:
       - name: Publish npm package
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.package_version.outputs.should_publish == 'true' && (github.event_name == 'push' || inputs.publish_npm)
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_PUBLISH: "1"
-          NPM_PROVENANCE: "1"
         run: bash ./scripts/release/release-npm-package.sh
 
       - name: Build GitHub release notes
@@ -263,10 +262,11 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "24"
+          package-manager-cache: false
 
-      - name: Upgrade npm
-        run: npm install --global npm@11
+      - name: Install npm
+        run: npm install --global "npm@^11.5.1"
 
       - name: Enable Corepack
         run: corepack enable

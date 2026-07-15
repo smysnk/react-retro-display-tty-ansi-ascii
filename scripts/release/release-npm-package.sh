@@ -8,7 +8,6 @@ source "${THIS_DIR}/npm-helpers.sh"
 
 NPM_CACHE_DIR="${NPM_CONFIG_CACHE:-$ROOT_DIR/.test-results/npm-cache}"
 NPM_RELEASE_MODE="${NPM_PUBLISH:-0}"
-NPM_PROVENANCE_MODE="${NPM_PROVENANCE:-0}"
 
 step() {
   echo "[npm-release] $1"
@@ -46,10 +45,10 @@ if [[ -z "$pkg_repository_url" ]]; then
   exit 1
 fi
 
-if [[ "$NPM_PROVENANCE_MODE" == "1" && -n "${GITHUB_REPOSITORY:-}" ]]; then
+if [[ "$NPM_RELEASE_MODE" == "1" && -n "${GITHUB_REPOSITORY:-}" ]]; then
   expected_repository_url="${GITHUB_SERVER_URL:-https://github.com}/${GITHUB_REPOSITORY}"
   if [[ "$pkg_repository_url" != "$expected_repository_url" ]]; then
-    echo "package.json repository.url must match ${expected_repository_url} when provenance is enabled; got: ${pkg_repository_url}" >&2
+    echo "package.json repository.url must match ${expected_repository_url} for npm trusted publishing; got: ${pkg_repository_url}" >&2
     exit 1
   fi
 fi
@@ -66,16 +65,12 @@ fi
 )
 
 if [[ "$NPM_RELEASE_MODE" == "1" ]]; then
-  step "5/6 Authenticate and preflight npm registry checks"
-  configure_npm_auth_token "${NPM_TOKEN:-}"
-  verify_npm_auth
+  step "5/6 Verify trusted-publishing environment"
+  verify_npm_oidc_environment
   check_npm_package_visibility "$pkg_name"
 
-  step "6/6 Publish npm package"
+  step "6/6 Publish npm package with trusted publishing"
   publish_args=(publish --ignore-scripts --access public)
-  if [[ "$NPM_PROVENANCE_MODE" == "1" ]]; then
-    publish_args+=(--provenance)
-  fi
 
   (
     cd "$ROOT_DIR"
