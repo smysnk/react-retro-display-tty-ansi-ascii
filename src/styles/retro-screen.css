@@ -409,6 +409,10 @@
   filter: brightness(1.12);
 }
 
+.retro-screen[data-display-color-mode="ansi-vga"] .retro-screen__cell--bold {
+  filter: none;
+}
+
 .retro-screen__cell--faint {
   color: var(--retro-screen-color-dim);
   text-shadow:

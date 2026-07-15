@@ -102,6 +102,8 @@ test("render smoke stories stay stable in the browser", async (t) => {
               firstCell instanceof HTMLElement
                 ? getComputedStyle(firstCell).backgroundColor
                 : "missing",
+            firstCellFilter:
+              firstCell instanceof HTMLElement ? getComputedStyle(firstCell).filter : "missing",
             lineCount: lines.filter(Boolean).length
           };
         })
@@ -109,7 +111,7 @@ test("render smoke stories stay stable in the browser", async (t) => {
 
       assert.deepEqual(
         modes.map((entry) => entry.mode),
-        ["phosphor-green", "phosphor-amber", "phosphor-ice", "ansi-classic", "ansi-extended"]
+        ["phosphor-green", "phosphor-amber", "phosphor-ice", "ansi-vga", "ansi-classic", "ansi-extended"]
       );
       assert.ok(
         modes.every((entry) => entry.mode === entry.dataMode),
@@ -117,7 +119,7 @@ test("render smoke stories stay stable in the browser", async (t) => {
       );
       assert.deepEqual(
         modes.map((entry) => entry.accent),
-        ["#97ff9b", "#ffc96b", "#b8f1ff", "#d7dde8", "#d7dde8"]
+        ["#97ff9b", "#ffc96b", "#b8f1ff", "#aaaaaa", "#d7dde8", "#d7dde8"]
       );
       assert.ok(
         modes.every((entry) => entry.lineCount > 0),
@@ -127,6 +129,11 @@ test("render smoke stories stay stable in the browser", async (t) => {
       const ansiClassic = modes.find((entry) => entry.mode === "ansi-classic");
       assert.equal(ansiClassic?.firstCellColor, "rgb(209, 109, 104)");
       assert.equal(ansiClassic?.firstCellBackground, "rgb(120, 165, 245)");
+
+      const ansiVga = modes.find((entry) => entry.mode === "ansi-vga");
+      assert.equal(ansiVga?.firstCellColor, "rgb(255, 85, 85)");
+      assert.equal(ansiVga?.firstCellBackground, "rgb(0, 0, 170)");
+      assert.equal(ansiVga?.firstCellFilter, "none");
 
       const ansiExtendedMetrics = await page()
         .locator('[data-display-mode-card="ansi-extended"] .retro-screen')

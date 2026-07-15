@@ -598,6 +598,7 @@ Available modes:
 - `phosphor-green`
 - `phosphor-amber`
 - `phosphor-ice`
+- `ansi-vga`
 - `ansi-classic`
 - `ansi-extended`
 
@@ -613,7 +614,8 @@ Available modes:
 />
 ```
 
-Reach for `ansi-classic` when you want the familiar 16-color terminal profile, or
+Reach for `ansi-vga` when you need the exact IBM PC/DOS 16-color palette used by ANSI art,
+`ansi-classic` when you want the softened 16-color terminal profile, or
 `ansi-extended` when 256-color and truecolor cells should survive all the way to the display.
 
 ## ANSI Art Playback

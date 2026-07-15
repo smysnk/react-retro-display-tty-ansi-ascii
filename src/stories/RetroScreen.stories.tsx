@@ -312,6 +312,7 @@ const probeDisplayColorModes: RetroScreenDisplayColorMode[] = [
   "phosphor-green",
   "phosphor-amber",
   "phosphor-ice",
+  "ansi-vga",
   "ansi-classic",
   "ansi-extended"
 ];
@@ -490,6 +491,14 @@ const displayColorModeDemoSteps: {
     ].join("\r\n")
   },
   {
+    displayColorMode: "ansi-vga",
+    value: [
+      "MODE  ansi-vga",
+      "\u001b[31mRED\u001b[0m \u001b[33mYELLOW\u001b[0m \u001b[34mBLUE\u001b[0m",
+      "\u001b[92mBRIGHT\u001b[0m \u001b[7mINVERSE\u001b[0m \u001b[44;37mFRAME\u001b[0m"
+    ].join("\r\n")
+  },
+  {
     displayColorMode: "ansi-classic",
     value: [
       "MODE  ansi-classic",
@@ -658,6 +667,7 @@ const colorizeSequence = (text: string, palette: string[]) => {
 
 const buildProbeTheme = (displayColorMode: RetroScreenDisplayColorMode) => {
   switch (displayColorMode) {
+    case "ansi-vga":
     case "ansi-classic":
       return {
         label: ["\u001b[97m", "\u001b[96m", "\u001b[95m"],
@@ -2836,7 +2846,9 @@ function AutoResizeProbeSurface({
       (visualVariant + Math.floor(sizeVariant / 2)) % probeMonochromeGlyphStyles.length
     ] ?? probeMonochromeGlyphStyles[0];
   const glyphStyle =
-    displayColorMode === "ansi-classic" || displayColorMode === "ansi-extended"
+    displayColorMode === "ansi-vga" ||
+    displayColorMode === "ansi-classic" ||
+    displayColorMode === "ansi-extended"
       ? graffitiProbeGlyphStyle
       : monochromeGlyphStyle;
 
@@ -3228,6 +3240,21 @@ function DisplayColorModesStory() {
             value={[
               "\u001b[1mREADY\u001b[0m cool lane online",
               "\u001b[35mstatus\u001b[0m collapses into the ice palette"
+            ].join("\r\n")}
+          />
+        </DisplayColorModeCard>
+        <DisplayColorModeCard
+          displayColorMode="ansi-vga"
+          title="ANSI DOS/VGA"
+          copy="Uses the exact IBM PC 16-color palette with a pure black surface and no phosphor glow."
+        >
+          <RetroScreen
+            mode="terminal"
+            displayColorMode="ansi-vga"
+            cursorMode="hollow"
+            value={[
+              "\u001b[1;31;44mALERT\u001b[0m \u001b[32mclear path\u001b[0m",
+              "\u001b[93mbright yellow\u001b[0m on DOS/VGA black"
             ].join("\r\n")}
           />
         </DisplayColorModeCard>

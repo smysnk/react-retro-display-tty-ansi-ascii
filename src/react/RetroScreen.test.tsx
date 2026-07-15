@@ -1178,6 +1178,76 @@ describe("RetroScreen", () => {
     expect(window.getComputedStyle(cell!).backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
   });
 
+  it("projects the exact DOS/VGA palette without glow through ansi-vga mode", () => {
+    const controller = createRetroScreenController({ rows: 2, cols: 20 });
+    const { container } = render(
+      <RetroScreen mode="terminal" controller={controller} displayColorMode="ansi-vga" />
+    );
+
+    act(() => {
+      controller.write(
+        [
+          "\u001b[30mA",
+          "\u001b[31mB",
+          "\u001b[32mC",
+          "\u001b[33mD",
+          "\u001b[34mE",
+          "\u001b[35mF",
+          "\u001b[36mG",
+          "\u001b[37mH",
+          "\u001b[90mI",
+          "\u001b[91mJ",
+          "\u001b[92mK",
+          "\u001b[93mL",
+          "\u001b[94mM",
+          "\u001b[95mN",
+          "\u001b[96mO",
+          "\u001b[97mP"
+        ].join("")
+      );
+    });
+
+    const root = container.querySelector(".retro-screen") as HTMLElement | null;
+    const cells = Array.from(container.querySelectorAll(".retro-screen__cell")) as HTMLElement[];
+
+    expect(root?.style.getPropertyValue("--retro-screen-bg-bottom")).toBe("#000000");
+    expect(cells.slice(0, 16).map((cell) => window.getComputedStyle(cell).color)).toEqual([
+      "rgb(0, 0, 0)",
+      "rgb(170, 0, 0)",
+      "rgb(0, 170, 0)",
+      "rgb(170, 85, 0)",
+      "rgb(0, 0, 170)",
+      "rgb(170, 0, 170)",
+      "rgb(0, 170, 170)",
+      "rgb(170, 170, 170)",
+      "rgb(85, 85, 85)",
+      "rgb(255, 85, 85)",
+      "rgb(85, 255, 85)",
+      "rgb(255, 255, 85)",
+      "rgb(85, 85, 255)",
+      "rgb(255, 85, 255)",
+      "rgb(85, 255, 255)",
+      "rgb(255, 255, 255)"
+    ]);
+    expect(cells.slice(0, 16).every((cell) => cell.style.textShadow === "none")).toBe(true);
+  });
+
+  it("projects bold base foregrounds as DOS/VGA bright colors without a brightness filter", () => {
+    const controller = createRetroScreenController({ rows: 1, cols: 4 });
+    const { container } = render(
+      <RetroScreen mode="terminal" controller={controller} displayColorMode="ansi-vga" />
+    );
+
+    act(() => {
+      controller.write("\u001b[1;32mA");
+    });
+
+    const cell = container.querySelector(".retro-screen__cell") as HTMLElement | null;
+
+    expect(cell).not.toBeNull();
+    expect(window.getComputedStyle(cell!).color).toBe("rgb(85, 255, 85)");
+  });
+
   it("projects indexed and truecolor cells through the ansi-extended display mode", () => {
     const controller = createRetroScreenController({ rows: 2, cols: 8 });
     const { container } = render(

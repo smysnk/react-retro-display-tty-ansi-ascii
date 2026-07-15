@@ -8,6 +8,7 @@ const DISPLAY_MODE_ACCENTS: Record<RetroScreenDisplayColorMode, string> = {
   "phosphor-green": "#97ff9b",
   "phosphor-amber": "#ffc96b",
   "phosphor-ice": "#b8f1ff",
+  "ansi-vga": "#aaaaaa",
   "ansi-classic": "#d7dde8",
   "ansi-extended": "#d7dde8"
 };
@@ -31,6 +32,10 @@ const LIGHT_SURFACE_BACKGROUNDS: Record<
     top: "#f7fcff",
     bottom: "#e8f3f8"
   },
+  "ansi-vga": {
+    top: "#f8f9fd",
+    bottom: "#e8edf5"
+  },
   "ansi-classic": {
     top: "#f8f9fd",
     bottom: "#e8edf5"
@@ -43,6 +48,8 @@ const LIGHT_SURFACE_BACKGROUNDS: Record<
 
 const ANSI_CLASSIC_DEFAULT_FOREGROUND = "#d7dde8";
 const ANSI_CLASSIC_DEFAULT_BACKGROUND = "#090d12";
+const ANSI_VGA_DEFAULT_FOREGROUND = "#aaaaaa";
+const ANSI_VGA_DEFAULT_BACKGROUND = "#000000";
 const ANSI_CLASSIC_PALETTE = [
   "#1d232c",
   "#d16d68",
@@ -78,6 +85,26 @@ const XTERM_BASE_PALETTE = [
   "#5c5cff",
   "#ff00ff",
   "#00ffff",
+  "#ffffff"
+];
+
+// IBM PC/DOS text-mode colors used by Ansilove/C's standard ANSI renderer.
+const ANSI_VGA_PALETTE = [
+  "#000000",
+  "#aa0000",
+  "#00aa00",
+  "#aa5500",
+  "#0000aa",
+  "#aa00aa",
+  "#00aaaa",
+  "#aaaaaa",
+  "#555555",
+  "#ff5555",
+  "#55ff55",
+  "#ffff55",
+  "#5555ff",
+  "#ff55ff",
+  "#55ffff",
   "#ffffff"
 ];
 
@@ -216,8 +243,8 @@ const buildTextGlow = (color: string, displaySurfaceMode: RetroScreenDisplaySurf
   return `0 0 8px ${toRgbaColor(rgbColor, 0.18)}, 0 0 18px ${toRgbaColor(rgbColor, 0.08)}`;
 };
 
-const buildXtermPalette = () => {
-  const palette = [...XTERM_BASE_PALETTE];
+const buildExtendedPalette = (basePalette: string[]) => {
+  const palette = [...basePalette];
 
   for (let red = 0; red < 6; red += 1) {
     for (let green = 0; green < 6; green += 1) {
@@ -241,7 +268,13 @@ const buildXtermPalette = () => {
   return palette;
 };
 
-const XTERM_256_PALETTE = buildXtermPalette();
+const XTERM_256_PALETTE = buildExtendedPalette(XTERM_BASE_PALETTE);
+const ANSI_VGA_256_PALETTE = buildExtendedPalette(ANSI_VGA_PALETTE);
+
+const isAnsiDisplayColorMode = (displayColorMode: RetroScreenDisplayColorMode) =>
+  displayColorMode === "ansi-vga" ||
+  displayColorMode === "ansi-classic" ||
+  displayColorMode === "ansi-extended";
 
 export const normalizeDisplayColorMode = (
   displayColorMode: RetroScreenDisplayColorMode | string | null | undefined
@@ -250,6 +283,7 @@ export const normalizeDisplayColorMode = (
     displayColorMode === "phosphor-green" ||
     displayColorMode === "phosphor-amber" ||
     displayColorMode === "phosphor-ice" ||
+    displayColorMode === "ansi-vga" ||
     displayColorMode === "ansi-classic" ||
     displayColorMode === "ansi-extended"
   ) {
@@ -265,15 +299,22 @@ const getSurfaceBackground = (
 ) => {
   const normalizedDisplayColorMode = normalizeDisplayColorMode(displayColorMode);
 
+  if (displaySurfaceMode === "dark" && normalizedDisplayColorMode === "ansi-vga") {
+    return {
+      top: ANSI_VGA_DEFAULT_BACKGROUND,
+      bottom: ANSI_VGA_DEFAULT_BACKGROUND
+    };
+  }
+
   return displaySurfaceMode === "light"
     ? LIGHT_SURFACE_BACKGROUNDS[normalizedDisplayColorMode]
     : {
         top:
-          normalizedDisplayColorMode === "ansi-classic" || normalizedDisplayColorMode === "ansi-extended"
+          isAnsiDisplayColorMode(normalizedDisplayColorMode)
             ? "#141a24"
             : "#071008",
         bottom:
-          normalizedDisplayColorMode === "ansi-classic" || normalizedDisplayColorMode === "ansi-extended"
+          isAnsiDisplayColorMode(normalizedDisplayColorMode)
             ? ANSI_CLASSIC_DEFAULT_BACKGROUND
             : "#071008"
       };
@@ -283,12 +324,18 @@ const getDefaultAnsiForeground = (
   displayColorMode: RetroScreenDisplayColorMode,
   displaySurfaceMode: RetroScreenDisplaySurfaceMode
 ) => {
+  const normalizedDisplayColorMode = normalizeDisplayColorMode(displayColorMode);
+  const defaultForeground =
+    normalizedDisplayColorMode === "ansi-vga"
+      ? ANSI_VGA_DEFAULT_FOREGROUND
+      : ANSI_CLASSIC_DEFAULT_FOREGROUND;
+
   if (displaySurfaceMode === "dark") {
-    return ANSI_CLASSIC_DEFAULT_FOREGROUND;
+    return defaultForeground;
   }
 
   return ensureContrast(
-    ANSI_CLASSIC_DEFAULT_FOREGROUND,
+    defaultForeground,
     getSurfaceBackground(displayColorMode, displaySurfaceMode).bottom,
     7
   );
@@ -303,19 +350,23 @@ const resolveAnsiColor = (
 ) => {
   const surfaceBackground = getSurfaceBackground(displayColorMode, displaySurfaceMode).bottom;
   const defaultForeground = getDefaultAnsiForeground(displayColorMode, displaySurfaceMode);
+  const defaultBackground =
+    displayColorMode === "ansi-vga"
+      ? ANSI_VGA_DEFAULT_BACKGROUND
+      : ANSI_CLASSIC_DEFAULT_BACKGROUND;
   const baseColor =
     color.mode === "rgb"
       ? normalizeRgbColor(color.value)
       : color.mode === "palette"
-        ? palette[color.value] ?? ANSI_CLASSIC_DEFAULT_FOREGROUND
+        ? palette[color.value] ?? defaultForeground
         : role === "foreground"
-          ? ANSI_CLASSIC_DEFAULT_FOREGROUND
-          : ANSI_CLASSIC_DEFAULT_BACKGROUND;
+          ? defaultForeground
+          : defaultBackground;
 
   if (displaySurfaceMode === "dark") {
     return role === "foreground" || color.mode !== "default"
       ? baseColor
-      : ANSI_CLASSIC_DEFAULT_BACKGROUND;
+      : defaultBackground;
   }
 
   if (role === "foreground") {
@@ -355,7 +406,12 @@ export const getDisplayModeRootVars = (
     ),
     "--retro-screen-bg-top": surface.top,
     "--retro-screen-bg-bottom": surface.bottom,
-    "--retro-screen-inverse-foreground": displaySurfaceMode === "light" ? surface.bottom : "#071008",
+    "--retro-screen-inverse-foreground":
+      displaySurfaceMode === "light"
+        ? surface.bottom
+        : normalizedDisplayColorMode === "ansi-vga"
+          ? ANSI_VGA_DEFAULT_BACKGROUND
+          : "#071008",
     "--retro-screen-inverse-background": nextColor
   } as CSSProperties;
 };
@@ -367,14 +423,29 @@ export const getCellPresentationStyle = (
 ): CSSProperties | undefined => {
   const normalizedDisplayColorMode = normalizeDisplayColorMode(displayColorMode);
 
-  if (normalizedDisplayColorMode !== "ansi-classic" && normalizedDisplayColorMode !== "ansi-extended") {
+  if (!isAnsiDisplayColorMode(normalizedDisplayColorMode)) {
     return undefined;
   }
 
   const palette =
-    normalizedDisplayColorMode === "ansi-extended" ? XTERM_256_PALETTE : ANSI_CLASSIC_PALETTE;
+    normalizedDisplayColorMode === "ansi-vga"
+      ? ANSI_VGA_256_PALETTE
+      : normalizedDisplayColorMode === "ansi-extended"
+        ? XTERM_256_PALETTE
+        : ANSI_CLASSIC_PALETTE;
+  const foreground =
+    normalizedDisplayColorMode === "ansi-vga" &&
+    cell.style.bold &&
+    cell.style.foreground.mode === "palette" &&
+    cell.style.foreground.value >= 0 &&
+    cell.style.foreground.value < 8
+      ? {
+          ...cell.style.foreground,
+          value: cell.style.foreground.value + 8
+        }
+      : cell.style.foreground;
   const resolvedForeground = resolveAnsiColor(
-    cell.style.foreground,
+    foreground,
     "foreground",
     palette,
     normalizedDisplayColorMode,
@@ -401,6 +472,9 @@ export const getCellPresentationStyle = (
   return {
     color: cell.style.conceal ? "transparent" : color,
     backgroundColor: showBackground ? backgroundColor : "transparent",
-    textShadow: cell.style.conceal ? "none" : buildTextGlow(color, displaySurfaceMode)
+    textShadow:
+      cell.style.conceal || normalizedDisplayColorMode === "ansi-vga"
+        ? "none"
+        : buildTextGlow(color, displaySurfaceMode)
   };
 };

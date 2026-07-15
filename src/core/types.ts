@@ -32,6 +32,7 @@ export type RetroScreenDisplayColorMode =
   | "phosphor-green"
   | "phosphor-amber"
   | "phosphor-ice"
+  | "ansi-vga"
   | "ansi-classic"
   | "ansi-extended";
 
