@@ -218,6 +218,53 @@ describe("ANSI snapshot stream", () => {
     ]);
   });
 
+  it("supports DOS immediate wrapping before carriage return and line feed", () => {
+    const stream = createRetroScreenAnsiSnapshotStream({
+      rows: 3,
+      cols: 4,
+      wrapMode: "dos-immediate",
+    });
+    const snapshot = stream.appendText("ABCD\r\nEF");
+
+    expect(snapshot.currentFrame.lines).toEqual([
+      "ABCD",
+      "    ",
+      "EF  ",
+    ]);
+  });
+
+  it("applies DOS immediate wrapping before SGR sequences without crossing chunk boundaries early", () => {
+    const stream = createRetroScreenAnsiSnapshotStream({
+      rows: 3,
+      cols: 4,
+      wrapMode: "dos-immediate",
+    });
+
+    expect(stream.appendText("ABCD").currentFrame.lines).toEqual([
+      "ABCD",
+      "    ",
+      "    ",
+    ]);
+
+    const snapshot = stream.appendText("\u001b[31m\r\nEF");
+    const redCell = snapshot.currentFrame.getCellSlice(2, 0, 1)[0];
+
+    expect(snapshot.currentFrame.lines).toEqual([
+      "ABCD",
+      "    ",
+      "EF  ",
+    ]);
+    expect(redCell).toMatchObject({
+      char: "E",
+      style: {
+        foreground: {
+          mode: "palette",
+          value: 1,
+        },
+      },
+    });
+  });
+
   it("normalizes pending wrap before CSI cursor movement commands", () => {
     const stream = createRetroScreenAnsiSnapshotStream({
       rows: 2,

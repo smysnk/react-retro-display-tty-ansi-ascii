@@ -51,6 +51,7 @@ export {
   splitRetroScreenAnsiBytes,
   stripRetroScreenAnsiSauce
 } from "./core/ansi/player";
+export type { RetroScreenAnsiWrapMode } from "./core/ansi/player";
 export {
   DEFAULT_RETROSCREEN_ANSI_GEOMETRY_POLICY,
   normalizeRetroScreenAnsiViewportWindow,

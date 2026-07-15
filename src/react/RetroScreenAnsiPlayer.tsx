@@ -6,6 +6,7 @@ import {
 } from "./useRetroScreenAnsiPlayer";
 import { useRetroScreenAnsiSnapshotPlayer } from "./useRetroScreenAnsiSnapshotPlayer";
 import type { RetroScreenAnsiByteChunk } from "../core/ansi/player";
+import type { RetroScreenAnsiWrapMode } from "../core/ansi/player";
 import { normalizeRetroScreenAnsiViewportWindow } from "../core/ansi/snapshot-contract";
 
 export type RetroScreenAnsiPlayerProps = Omit<
@@ -23,6 +24,7 @@ export type RetroScreenAnsiPlayerProps = Omit<
   viewportCols?: number;
   viewportRowOffset?: number;
   viewportColOffset?: number;
+  wrapMode?: RetroScreenAnsiWrapMode;
   onPlaybackStateChange?: (state: RetroScreenAnsiPlayerState) => void;
 };
 
@@ -38,6 +40,7 @@ export function RetroScreenAnsiPlayer({
   viewportCols,
   viewportRowOffset = 0,
   viewportColOffset = 0,
+  wrapMode = "xterm-delayed",
   onPlaybackStateChange,
   ...screenProps
 }: RetroScreenAnsiPlayerProps) {
@@ -54,7 +57,8 @@ export function RetroScreenAnsiPlayer({
     frameDelayMs,
     loop,
     complete,
-    loadingValue
+    loadingValue,
+    wrapMode
   });
   const viewport = useMemo(
     () =>

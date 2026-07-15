@@ -4,7 +4,8 @@ import {
   type RetroScreenAnsiByteChunk,
   type RetroScreenAnsiMetadata,
   type RetroScreenAnsiSnapshotFrame,
-  type RetroScreenAnsiSnapshotStreamSnapshot
+  type RetroScreenAnsiSnapshotStreamSnapshot,
+  type RetroScreenAnsiWrapMode
 } from "../core/ansi/player";
 import {
   resolveRetroScreenAnsiSourceGeometry,
@@ -35,6 +36,7 @@ type UseRetroScreenAnsiSnapshotPlayerArgs = {
   loop?: boolean;
   complete?: boolean;
   loadingValue?: string;
+  wrapMode?: RetroScreenAnsiWrapMode;
 };
 
 const PREVIEW_ROWS = 25;
@@ -210,7 +212,8 @@ export const useRetroScreenAnsiSnapshotPlayer = ({
   frameDelayMs = 72,
   loop = false,
   complete = false,
-  loadingValue = "Loading ANSI stream..."
+  loadingValue = "Loading ANSI stream...",
+  wrapMode = "xterm-delayed"
 }: UseRetroScreenAnsiSnapshotPlayerArgs): RetroScreenAnsiSnapshotPlayerState => {
   const normalizedMetadata = useMemo(
     () =>
@@ -242,7 +245,8 @@ export const useRetroScreenAnsiSnapshotPlayer = ({
       rows: sourceGeometry.rows,
       cols: sourceGeometry.cols,
       metadata: normalizedMetadata,
-      storageMode: sourceGeometry.storageMode
+      storageMode: sourceGeometry.storageMode,
+      wrapMode
     })
   );
   const processedChunkCountRef = useRef(0);
@@ -264,7 +268,8 @@ export const useRetroScreenAnsiSnapshotPlayer = ({
       rows: sourceGeometry.rows,
       cols: sourceGeometry.cols,
       metadata: normalizedMetadata,
-      storageMode: sourceGeometry.storageMode
+      storageMode: sourceGeometry.storageMode,
+      wrapMode
     });
     processedChunkCountRef.current = 0;
     playbackStartedAtRef.current = performance.now();
@@ -281,7 +286,8 @@ export const useRetroScreenAnsiSnapshotPlayer = ({
     normalizedMetadata,
     sourceGeometry.cols,
     sourceGeometry.rows,
-    sourceGeometry.storageMode
+    sourceGeometry.storageMode,
+    wrapMode
   ]);
 
   useEffect(() => {
@@ -321,7 +327,8 @@ export const useRetroScreenAnsiSnapshotPlayer = ({
     normalizedMetadata,
     sourceGeometry.cols,
     sourceGeometry.rows,
-    sourceGeometry.storageMode
+    sourceGeometry.storageMode,
+    wrapMode
   ]);
 
   useEffect(() => {
