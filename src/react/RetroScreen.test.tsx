@@ -1239,13 +1239,15 @@ describe("RetroScreen", () => {
     );
 
     act(() => {
-      controller.write("\u001b[1;32mA");
+      controller.write("\u001b[1;32mA\u001b[0m \u001b[1mB");
     });
 
-    const cell = container.querySelector(".retro-screen__cell") as HTMLElement | null;
+    const cells = Array.from(container.querySelectorAll(".retro-screen__cell")) as HTMLElement[];
+    const cell = cells[0] ?? null;
 
     expect(cell).not.toBeNull();
     expect(window.getComputedStyle(cell!).color).toBe("rgb(85, 255, 85)");
+    expect(window.getComputedStyle(cells[2]!).color).toBe("rgb(255, 255, 255)");
   });
 
   it("projects indexed and truecolor cells through the ansi-extended display mode", () => {

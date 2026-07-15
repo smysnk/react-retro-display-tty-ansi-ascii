@@ -13,6 +13,7 @@ export type {
   CursorMode,
   RetroScreenDisplayColorMode,
   RetroScreenDisplayCharacterSizingMode,
+  RetroScreenDisplayGlyphMode,
   RetroScreenDisplayLayoutMode,
   RetroScreenDisplaySurfaceMode,
   RetroScreenDisplayPadding,
@@ -51,7 +52,11 @@ export {
   splitRetroScreenAnsiBytes,
   stripRetroScreenAnsiSauce
 } from "./core/ansi/player";
-export type { RetroScreenAnsiScrollMode, RetroScreenAnsiWrapMode } from "./core/ansi/player";
+export type {
+  RetroScreenAnsiControlCharacterMode,
+  RetroScreenAnsiScrollMode,
+  RetroScreenAnsiWrapMode
+} from "./core/ansi/player";
 export {
   DEFAULT_RETROSCREEN_ANSI_GEOMETRY_POLICY,
   normalizeRetroScreenAnsiViewportWindow,

@@ -433,17 +433,31 @@ export const getCellPresentationStyle = (
       : normalizedDisplayColorMode === "ansi-extended"
         ? XTERM_256_PALETTE
         : ANSI_CLASSIC_PALETTE;
-  const foreground =
-    normalizedDisplayColorMode === "ansi-vga" &&
-    cell.style.bold &&
-    cell.style.foreground.mode === "palette" &&
-    cell.style.foreground.value >= 0 &&
-    cell.style.foreground.value < 8
-      ? {
-          ...cell.style.foreground,
-          value: cell.style.foreground.value + 8
-        }
-      : cell.style.foreground;
+  const foreground = (() => {
+    if (normalizedDisplayColorMode !== "ansi-vga" || !cell.style.bold) {
+      return cell.style.foreground;
+    }
+
+    if (cell.style.foreground.mode === "default") {
+      return {
+        mode: "palette" as const,
+        value: 15
+      };
+    }
+
+    if (
+      cell.style.foreground.mode === "palette" &&
+      cell.style.foreground.value >= 0 &&
+      cell.style.foreground.value < 8
+    ) {
+      return {
+        ...cell.style.foreground,
+        value: cell.style.foreground.value + 8
+      };
+    }
+
+    return cell.style.foreground;
+  })();
   const resolvedForeground = resolveAnsiColor(
     foreground,
     "foreground",

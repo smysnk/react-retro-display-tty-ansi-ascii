@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createRetroScreenAnsiSnapshotStream,
   type RetroScreenAnsiByteChunk,
+  type RetroScreenAnsiControlCharacterMode,
   type RetroScreenAnsiMetadata,
   type RetroScreenAnsiScrollMode,
   type RetroScreenAnsiSnapshotFrame,
@@ -37,6 +38,7 @@ type UseRetroScreenAnsiSnapshotPlayerArgs = {
   loop?: boolean;
   complete?: boolean;
   loadingValue?: string;
+  controlCharacterMode?: RetroScreenAnsiControlCharacterMode;
   scrollMode?: RetroScreenAnsiScrollMode;
   wrapMode?: RetroScreenAnsiWrapMode;
 };
@@ -215,6 +217,7 @@ export const useRetroScreenAnsiSnapshotPlayer = ({
   loop = false,
   complete = false,
   loadingValue = "Loading ANSI stream...",
+  controlCharacterMode = "ansi",
   scrollMode = "terminal",
   wrapMode = "xterm-delayed"
 }: UseRetroScreenAnsiSnapshotPlayerArgs): RetroScreenAnsiSnapshotPlayerState => {
@@ -247,6 +250,7 @@ export const useRetroScreenAnsiSnapshotPlayer = ({
     createRetroScreenAnsiSnapshotStream({
       rows: sourceGeometry.rows,
       cols: sourceGeometry.cols,
+      controlCharacterMode,
       metadata: normalizedMetadata,
       storageMode: sourceGeometry.storageMode,
       scrollMode,
@@ -271,6 +275,7 @@ export const useRetroScreenAnsiSnapshotPlayer = ({
     decoderRef.current = createRetroScreenAnsiSnapshotStream({
       rows: sourceGeometry.rows,
       cols: sourceGeometry.cols,
+      controlCharacterMode,
       metadata: normalizedMetadata,
       storageMode: sourceGeometry.storageMode,
       scrollMode,
@@ -289,6 +294,7 @@ export const useRetroScreenAnsiSnapshotPlayer = ({
     setResetVersion((current) => current + 1);
   }, [
     normalizedMetadata,
+    controlCharacterMode,
     sourceGeometry.cols,
     sourceGeometry.rows,
     sourceGeometry.storageMode,
@@ -331,6 +337,7 @@ export const useRetroScreenAnsiSnapshotPlayer = ({
   }, [
     byteStream,
     normalizedMetadata,
+    controlCharacterMode,
     sourceGeometry.cols,
     sourceGeometry.rows,
     sourceGeometry.storageMode,

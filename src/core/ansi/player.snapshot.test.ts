@@ -233,6 +233,23 @@ describe("ANSI snapshot stream", () => {
     ]);
   });
 
+  it("renders non-structural C0 bytes as DOS CP437 glyphs for ANSI artwork", () => {
+    expect(decodeRetroScreenAnsiBytes(Uint8Array.of(0x10))).toBe("\u0010");
+    expect(decodeRetroScreenAnsiBytes(Uint8Array.of(0x10), "dos-cp437")).toBe("►");
+
+    const stream = createRetroScreenAnsiSnapshotStream({
+      rows: 2,
+      cols: 4,
+      controlCharacterMode: "dos-cp437",
+    });
+    const snapshot = stream.appendChunk(Uint8Array.of(0x10, 0x41, 0x0d, 0x0a, 0x42));
+
+    expect(snapshot.currentFrame.lines).toEqual([
+      "►A  ",
+      "B   ",
+    ]);
+  });
+
   it("applies DOS immediate wrapping before SGR sequences without crossing chunk boundaries early", () => {
     const stream = createRetroScreenAnsiSnapshotStream({
       rows: 3,
@@ -278,6 +295,21 @@ describe("ANSI snapshot stream", () => {
       "ABCD",
       "    ",
       "EFGH",
+    ]);
+  });
+
+  it("allows a canvas cursor to move below the final row and return without clamping early", () => {
+    const stream = createRetroScreenAnsiSnapshotStream({
+      rows: 3,
+      cols: 4,
+      scrollMode: "canvas",
+    });
+    const snapshot = stream.appendText("A\r\nB\r\nC\r\n\u001b[AZ");
+
+    expect(snapshot.currentFrame.lines).toEqual([
+      "A   ",
+      "B   ",
+      "Z   ",
     ]);
   });
 

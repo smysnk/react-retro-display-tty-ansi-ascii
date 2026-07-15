@@ -15,6 +15,7 @@ export type RetroScreenDisplaySurfaceMode = "dark" | "light";
 export type RetroScreenDisplayLayoutMode = "default" | "fit-width";
 export type RetroScreenDisplayFontSizingMode = "contain" | "fit-cols";
 export type RetroScreenDisplayCharacterSizingMode = "grid" | "font";
+export type RetroScreenDisplayGlyphMode = "font" | "ibm-vga-8x16";
 export type RetroScreenResizeMode = "width" | "height" | "both";
 export type RetroScreenDisplayPaddingValue = number | string;
 export type RetroScreenDisplayPadding =
@@ -73,6 +74,7 @@ export type RetroScreenSharedProps = {
   displayLayoutMaxHeight?: number;
   displayFontSizingMode?: RetroScreenDisplayFontSizingMode;
   displayCharacterSizingMode?: RetroScreenDisplayCharacterSizingMode;
+  displayGlyphMode?: RetroScreenDisplayGlyphMode;
   displayDebugOverlay?: boolean;
   displayScanlines?: boolean;
   displayPadding?: RetroScreenDisplayPadding;

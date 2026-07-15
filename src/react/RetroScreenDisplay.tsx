@@ -12,6 +12,7 @@ import type {
 import type { RetroScreenCell } from "../core/terminal/types";
 import type {
   RetroScreenDisplayColorMode,
+  RetroScreenDisplayGlyphMode,
   RetroScreenDisplaySurfaceMode,
   RetroScreenProps
 } from "../core/types";
@@ -21,6 +22,7 @@ import {
   type RetroScreenRenderModel
 } from "./retro-screen-render-model";
 import { getCellPresentationStyle } from "./retro-screen-display-color";
+import { RetroScreenBitmapCanvas } from "./RetroScreenBitmapCanvas";
 
 const joinClassNames = (...classNames: Array<string | undefined>) =>
   classNames.filter(Boolean).join(" ");
@@ -40,6 +42,7 @@ type RetroScreenDisplayProps = {
   mode: RetroScreenProps["mode"];
   renderModel: RetroScreenRenderModel;
   displayColorMode: RetroScreenDisplayColorMode;
+  displayGlyphMode: RetroScreenDisplayGlyphMode;
   displaySurfaceMode: RetroScreenDisplaySurfaceMode;
   displayFrame: boolean;
   screenRef: RefObject<HTMLDivElement | null>;
@@ -67,6 +70,7 @@ export function RetroScreenDisplay({
   mode,
   renderModel,
   displayColorMode,
+  displayGlyphMode,
   displaySurfaceMode,
   displayFrame,
   screenRef,
@@ -126,7 +130,13 @@ export function RetroScreenDisplay({
               mode === "value" ? "retro-screen__content--centered" : undefined
             )}
           >
-            <div className="retro-screen__body" aria-live={mode === "terminal" ? "polite" : undefined}>
+            <div
+              className={joinClassNames(
+                "retro-screen__body",
+                displayGlyphMode === "ibm-vga-8x16" ? "retro-screen__body--bitmap" : undefined
+              )}
+              aria-live={mode === "terminal" ? "polite" : undefined}
+            >
               {renderModel.cells.map((line, rowIndex) => (
                 <div
                   className={joinClassNames("retro-screen__line", "retro-screen__line--cells")}
@@ -144,6 +154,13 @@ export function RetroScreenDisplay({
                   ))}
                 </div>
               ))}
+              {displayGlyphMode === "ibm-vga-8x16" ? (
+                <RetroScreenBitmapCanvas
+                  displayColorMode={displayColorMode}
+                  displaySurfaceMode={displaySurfaceMode}
+                  renderModel={renderModel}
+                />
+              ) : null}
             </div>
             {renderModel.cursor ? (
               <div

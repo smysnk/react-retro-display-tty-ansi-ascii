@@ -122,6 +122,7 @@ export function RetroScreen(props: RetroScreenProps) {
   const displayFrame = props.displayFrame ?? true;
   const displaySurfaceMode = props.displaySurfaceMode ?? "dark";
   const displayCharacterSizingMode = props.displayCharacterSizingMode ?? "grid";
+  const displayGlyphMode = props.displayGlyphMode ?? "font";
   const displayDebugOverlay = props.displayDebugOverlay ?? false;
   const displayScanlines = props.displayScanlines ?? true;
   const focusGlow = props.focusGlow ?? true;
@@ -1266,6 +1267,7 @@ export function RetroScreen(props: RetroScreenProps) {
       data-display-color-mode={displayColorMode}
       data-display-frame={displayFrame ? "true" : "false"}
       data-display-character-sizing-mode={displayCharacterSizingMode}
+      data-display-glyph-mode={displayGlyphMode}
       data-display-font-sizing-mode={props.displayFontSizingMode ?? "contain"}
       data-display-layout-mode={props.displayLayoutMode ?? "default"}
       data-display-surface-mode={displaySurfaceMode}
@@ -1322,6 +1324,7 @@ export function RetroScreen(props: RetroScreenProps) {
         mode={props.mode}
         renderModel={renderModel}
         displayColorMode={displayColorMode}
+        displayGlyphMode={displayGlyphMode}
         displaySurfaceMode={displaySurfaceMode}
         displayFrame={displayFrame}
         screenRef={screenRef}
