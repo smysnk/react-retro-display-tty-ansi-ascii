@@ -265,6 +265,22 @@ describe("ANSI snapshot stream", () => {
     });
   });
 
+  it("preserves the final artwork row in canvas mode when trailing controls move past it", () => {
+    const stream = createRetroScreenAnsiSnapshotStream({
+      rows: 3,
+      cols: 4,
+      scrollMode: "canvas",
+      wrapMode: "dos-immediate",
+    });
+    const snapshot = stream.appendText("ABCD\r\nEFGH\r\n");
+
+    expect(snapshot.currentFrame.lines).toEqual([
+      "ABCD",
+      "    ",
+      "EFGH",
+    ]);
+  });
+
   it("normalizes pending wrap before CSI cursor movement commands", () => {
     const stream = createRetroScreenAnsiSnapshotStream({
       rows: 2,

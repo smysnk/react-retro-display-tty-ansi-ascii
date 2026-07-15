@@ -13,6 +13,7 @@ import {
 
 export type RetroScreenAnsiByteChunk = Uint8Array | ArrayBuffer | ArrayLike<number>;
 export type RetroScreenAnsiWrapMode = "xterm-delayed" | "dos-immediate";
+export type RetroScreenAnsiScrollMode = "terminal" | "canvas";
 
 export type RetroScreenAnsiMetadata = {
   title: string;
@@ -502,12 +503,14 @@ export const createRetroScreenAnsiSnapshotStream = ({
   cols,
   metadata = null,
   storageMode = "eager",
+  scrollMode = "terminal",
   wrapMode = "xterm-delayed"
 }: {
   rows: number;
   cols: number;
   metadata?: RetroScreenAnsiMetadata | null;
   storageMode?: RetroScreenAnsiSnapshotStorageMode;
+  scrollMode?: RetroScreenAnsiScrollMode;
   wrapMode?: RetroScreenAnsiWrapMode;
 }): RetroScreenAnsiSnapshotStream => {
   const normalizedRows = Math.max(1, Math.floor(rows));
@@ -655,7 +658,9 @@ export const createRetroScreenAnsiSnapshotStream = ({
     cursorCol = 0;
 
     if (cursorRow === normalizedRows - 1) {
-      scrollViewportUp();
+      if (scrollMode === "terminal") {
+        scrollViewportUp();
+      }
       return;
     }
 
@@ -714,7 +719,9 @@ export const createRetroScreenAnsiSnapshotStream = ({
     normalizeCursorForMovement();
 
     if (cursorRow === normalizedRows - 1) {
-      scrollViewportUp();
+      if (scrollMode === "terminal") {
+        scrollViewportUp();
+      }
       return;
     }
 
@@ -1114,13 +1121,15 @@ const toRetroScreenAnsiFrameStreamSnapshot = (
 export const createRetroScreenAnsiFrameStream = ({
   rows,
   cols,
+  scrollMode = "terminal",
   wrapMode = "xterm-delayed"
 }: {
   rows: number;
   cols: number;
+  scrollMode?: RetroScreenAnsiScrollMode;
   wrapMode?: RetroScreenAnsiWrapMode;
 }): RetroScreenAnsiFrameStream => {
-  const snapshotStream = createRetroScreenAnsiSnapshotStream({ rows, cols, wrapMode });
+  const snapshotStream = createRetroScreenAnsiSnapshotStream({ rows, cols, scrollMode, wrapMode });
 
   return {
     appendChunk(chunk) {
@@ -1142,9 +1151,10 @@ export const materializeRetroScreenAnsiFrames = (
   bytesOrText: Uint8Array | string,
   rows: number,
   cols: number,
-  wrapMode: RetroScreenAnsiWrapMode = "xterm-delayed"
+  wrapMode: RetroScreenAnsiWrapMode = "xterm-delayed",
+  scrollMode: RetroScreenAnsiScrollMode = "terminal"
 ) => {
-  const stream = createRetroScreenAnsiFrameStream({ rows, cols, wrapMode });
+  const stream = createRetroScreenAnsiFrameStream({ rows, cols, scrollMode, wrapMode });
   const snapshot =
     typeof bytesOrText === "string" ? stream.appendText(bytesOrText) : stream.appendChunk(bytesOrText);
 
@@ -1156,9 +1166,16 @@ export const materializeRetroScreenAnsiSnapshots = (
   rows: number,
   cols: number,
   metadata: RetroScreenAnsiMetadata | null = null,
-  wrapMode: RetroScreenAnsiWrapMode = "xterm-delayed"
+  wrapMode: RetroScreenAnsiWrapMode = "xterm-delayed",
+  scrollMode: RetroScreenAnsiScrollMode = "terminal"
 ) => {
-  const stream = createRetroScreenAnsiSnapshotStream({ rows, cols, metadata, wrapMode });
+  const stream = createRetroScreenAnsiSnapshotStream({
+    rows,
+    cols,
+    metadata,
+    scrollMode,
+    wrapMode
+  });
   const snapshot =
     typeof bytesOrText === "string" ? stream.appendText(bytesOrText) : stream.appendChunk(bytesOrText);
 

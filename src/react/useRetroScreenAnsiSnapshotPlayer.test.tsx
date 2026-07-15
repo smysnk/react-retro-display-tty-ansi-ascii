@@ -137,6 +137,41 @@ describe("useRetroScreenAnsiSnapshotPlayer", () => {
     });
   });
 
+  it("threads canvas scrolling through streamed React playback", async () => {
+    const encoder = new TextEncoder();
+    let latestState: RetroScreenAnsiSnapshotPlayerState | null = null;
+
+    function Harness() {
+      const state = useRetroScreenAnsiSnapshotPlayer({
+        byteStream: [encoder.encode("ABCD\r\nEFGH\r\n")],
+        metadata: {
+          title: "canvas-scroll",
+          author: "artist",
+          group: "crew",
+          font: "IBM VGA",
+          width: 4,
+          height: 3,
+        },
+        complete: true,
+        scrollMode: "canvas",
+        wrapMode: "dos-immediate",
+      });
+
+      latestState = state;
+      return <output data-testid="snapshot-state">{state.displayValue}</output>;
+    }
+
+    render(<Harness />);
+
+    await waitFor(() => {
+      expect(latestState?.lines).toEqual([
+        "ABCD",
+        "    ",
+        "EFGH",
+      ]);
+    });
+  });
+
   it("returns sparse frame accessors for huge source geometries", async () => {
     const encoder = new TextEncoder();
     let latestState: RetroScreenAnsiSnapshotPlayerState | null = null;

@@ -3,6 +3,7 @@ import {
   createRetroScreenAnsiSnapshotStream,
   type RetroScreenAnsiByteChunk,
   type RetroScreenAnsiMetadata,
+  type RetroScreenAnsiScrollMode,
   type RetroScreenAnsiSnapshotFrame,
   type RetroScreenAnsiSnapshotStreamSnapshot,
   type RetroScreenAnsiWrapMode
@@ -36,6 +37,7 @@ type UseRetroScreenAnsiSnapshotPlayerArgs = {
   loop?: boolean;
   complete?: boolean;
   loadingValue?: string;
+  scrollMode?: RetroScreenAnsiScrollMode;
   wrapMode?: RetroScreenAnsiWrapMode;
 };
 
@@ -213,6 +215,7 @@ export const useRetroScreenAnsiSnapshotPlayer = ({
   loop = false,
   complete = false,
   loadingValue = "Loading ANSI stream...",
+  scrollMode = "terminal",
   wrapMode = "xterm-delayed"
 }: UseRetroScreenAnsiSnapshotPlayerArgs): RetroScreenAnsiSnapshotPlayerState => {
   const normalizedMetadata = useMemo(
@@ -246,6 +249,7 @@ export const useRetroScreenAnsiSnapshotPlayer = ({
       cols: sourceGeometry.cols,
       metadata: normalizedMetadata,
       storageMode: sourceGeometry.storageMode,
+      scrollMode,
       wrapMode
     })
   );
@@ -269,6 +273,7 @@ export const useRetroScreenAnsiSnapshotPlayer = ({
       cols: sourceGeometry.cols,
       metadata: normalizedMetadata,
       storageMode: sourceGeometry.storageMode,
+      scrollMode,
       wrapMode
     });
     processedChunkCountRef.current = 0;
@@ -287,6 +292,7 @@ export const useRetroScreenAnsiSnapshotPlayer = ({
     sourceGeometry.cols,
     sourceGeometry.rows,
     sourceGeometry.storageMode,
+    scrollMode,
     wrapMode
   ]);
 
@@ -328,6 +334,7 @@ export const useRetroScreenAnsiSnapshotPlayer = ({
     sourceGeometry.cols,
     sourceGeometry.rows,
     sourceGeometry.storageMode,
+    scrollMode,
     wrapMode
   ]);
 
