@@ -117,6 +117,7 @@ jobs:
 
       - name: Publish test-station ingest
         if: always() && hashFiles('.test-results/test-station/report.json') != ''
+        continue-on-error: true
         env:
           TEST_STATION_INGEST_ENDPOINT: https://test-station.smysnk.com/api/ingest
           TEST_STATION_INGEST_PROJECT_KEY: react-retro-display-tty-ansi-ascii
