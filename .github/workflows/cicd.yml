@@ -39,7 +39,7 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Upgrade npm
-        run: npm install --global npm@latest
+        run: npm install --global npm@11
 
       - name: Enable Corepack
         run: corepack enable
@@ -265,7 +265,7 @@ jobs:
           node-version: "20"
 
       - name: Upgrade npm
-        run: npm install --global npm@latest
+        run: npm install --global npm@11
 
       - name: Enable Corepack
         run: corepack enable
