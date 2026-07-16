@@ -1,6 +1,13 @@
 import type { CSSProperties } from "react";
 import type { RetroScreenCell, RetroScreenTerminalColor } from "../core/terminal/types";
 import type { RetroScreenDisplayColorMode, RetroScreenDisplaySurfaceMode } from "../core/types";
+import {
+  hexToRgba,
+  rgbaToCss,
+  rgbaToHex,
+  TRANSPARENT_RGBA,
+  type RetroScreenRgbaColor
+} from "../core/rendering/bitmap-colors";
 
 const DEFAULT_DISPLAY_COLOR_MODE: RetroScreenDisplayColorMode = "phosphor-green";
 
@@ -415,12 +422,18 @@ export const getDisplayModeRootVars = (
   } as CSSProperties;
 };
 
-export const getCellPresentationStyle = (
+export type RetroScreenCellPresentationColors = {
+  foreground: RetroScreenRgbaColor;
+  background: RetroScreenRgbaColor;
+  glow: boolean;
+};
+
+export const getCellPresentationColors = (
   cell: RetroScreenCell,
   displayColorMode: RetroScreenDisplayColorMode,
   displaySurfaceMode: RetroScreenDisplaySurfaceMode,
   displayIceColors = false
-): CSSProperties | undefined => {
+): RetroScreenCellPresentationColors | undefined => {
   const normalizedDisplayColorMode = normalizeDisplayColorMode(displayColorMode);
 
   if (!isAnsiDisplayColorMode(normalizedDisplayColorMode)) {
@@ -509,11 +522,36 @@ export const getCellPresentationStyle = (
   }
 
   return {
-    color: cell.style.conceal ? "transparent" : color,
-    backgroundColor: showBackground ? backgroundColor : "transparent",
-    textShadow:
-      cell.style.conceal || normalizedDisplayColorMode === "ansi-vga"
-        ? "none"
-        : buildTextGlow(color, displaySurfaceMode)
+    foreground: cell.style.conceal ? TRANSPARENT_RGBA : hexToRgba(color),
+    background: showBackground ? hexToRgba(backgroundColor) : TRANSPARENT_RGBA,
+    glow: !cell.style.conceal && normalizedDisplayColorMode !== "ansi-vga"
+  };
+};
+
+export const getCellPresentationStyle = (
+  cell: RetroScreenCell,
+  displayColorMode: RetroScreenDisplayColorMode,
+  displaySurfaceMode: RetroScreenDisplaySurfaceMode,
+  displayIceColors = false
+): CSSProperties | undefined => {
+  const presentation = getCellPresentationColors(
+    cell,
+    displayColorMode,
+    displaySurfaceMode,
+    displayIceColors
+  );
+
+  if (!presentation) {
+    return undefined;
+  }
+
+  const color = rgbaToCss(presentation.foreground);
+
+  return {
+    color,
+    backgroundColor: rgbaToCss(presentation.background),
+    textShadow: presentation.glow
+      ? buildTextGlow(rgbaToHex(presentation.foreground), displaySurfaceMode)
+      : "none"
   };
 };

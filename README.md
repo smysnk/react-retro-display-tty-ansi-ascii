@@ -685,6 +685,32 @@ are:
 - `displayScanlines={false}` and `disableCellRowScale`: opt out of CRT-style effects that can
   create unwanted seams in ANSI art.
 
+### Canvas backend for read-only artwork
+
+Large, read-only ANSI documents can opt into the bitmap canvas backend. It rasterizes CP437 glyphs
+into retained `ImageData`, updates only changed cells during playback, and divides tall documents
+into canvases no taller than 256 text rows. In explicit canvas mode no `.retro-screen__line` or
+`.retro-screen__cell` elements are mounted.
+
+```tsx
+<RetroScreenAnsiPlayer
+  byteStream={asset.byteStream}
+  rows={asset.height}
+  cols={asset.width}
+  displayColorMode="ansi-vga"
+  displayGlyphMode="ibm-vga-8x16"
+  renderBackend="canvas"
+  canvasAccessibilityLabel={`${asset.title} by ${asset.author}`}
+/>
+```
+
+`renderBackend="canvas"` requires a bitmap `displayGlyphMode`; font rendering and interactive
+value, terminal, prompt, and editor surfaces resolve to the DOM backend. If the browser cannot
+create a 2D canvas context the component also falls back to DOM. Omit `renderBackend` to preserve
+the legacy rendering behavior, or use `renderBackend="dom"` to force rows and cells. Canvas mode
+includes one visually hidden plain-text node by default; set `canvasAccessibleText={false}` when a
+stable accessible label is preferable for animated artwork.
+
 `BADAPPLE.ANS` uses lots of upper-half and lower-half block characters (`▀` / `▄`), so the demo
 keeps the font scale neutral, disables scanlines, and uses the IBM VGA font directly.
 

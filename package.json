@@ -55,6 +55,7 @@
     "build": "tsup",
     "tty:server": "node ./examples/node-tty-websocket-server/server.mjs",
     "perf:terminal": "yarn build && node ./scripts/benchmark-terminal-bridge.mjs",
+    "perf:bitmap": "yarn storybook:build && node ./scripts/benchmark-bitmap-renderer.mjs",
     "storybook": "storybook dev -p 6006",
     "storybook:build": "storybook build",
     "demo:webp": "storybook build && node ./scripts/generate-demo-webp.mjs",

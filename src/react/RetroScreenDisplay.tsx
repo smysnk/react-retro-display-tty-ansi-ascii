@@ -14,38 +14,30 @@ import type {
   RetroScreenDisplayColorMode,
   RetroScreenDisplayGlyphMode,
   RetroScreenDisplaySurfaceMode,
+  RetroScreenRenderBackend,
   RetroScreenProps
 } from "../core/types";
-import {
-  getCellCharacter,
-  type RetroScreenRenderCell,
-  type RetroScreenRenderModel
-} from "./retro-screen-render-model";
-import { getCellPresentationStyle } from "./retro-screen-display-color";
-import { RetroScreenBitmapCanvas } from "./RetroScreenBitmapCanvas";
+import type { RetroScreenRenderModel } from "./retro-screen-render-model";
+import { RetroScreenCanvasSurface } from "./RetroScreenCanvasSurface";
+import { RetroScreenDomSurface } from "./RetroScreenDomSurface";
 
 const joinClassNames = (...classNames: Array<string | undefined>) =>
   classNames.filter(Boolean).join(" ");
 
-const getCellClassName = (cell: RetroScreenRenderCell, displayIceColors: boolean) =>
-  joinClassNames(
-    "retro-screen__cell",
-    cell.style.bold ? "retro-screen__cell--bold" : undefined,
-    cell.style.faint ? "retro-screen__cell--faint" : undefined,
-    cell.style.inverse ? "retro-screen__cell--inverse" : undefined,
-    cell.style.conceal ? "retro-screen__cell--conceal" : undefined,
-    cell.style.blink && !displayIceColors ? "retro-screen__cell--blink" : undefined,
-    cell.isSelected ? "retro-screen__cell--selected" : undefined
-  );
-
 type RetroScreenDisplayProps = {
   mode: RetroScreenProps["mode"];
   renderModel: RetroScreenRenderModel;
+  rows: number;
+  cols: number;
   displayColorMode: RetroScreenDisplayColorMode;
   displayGlyphMode: RetroScreenDisplayGlyphMode;
   displayIceColors: boolean;
   displaySurfaceMode: RetroScreenDisplaySurfaceMode;
   displayFrame: boolean;
+  renderBackend: RetroScreenRenderBackend;
+  canvasAccessibilityLabel?: string;
+  canvasAccessibleText: boolean;
+  onCanvasUnavailable: () => void;
   screenRef: RefObject<HTMLDivElement | null>;
   probeRef: RefObject<HTMLSpanElement | null>;
   viewportRef?: RefObject<HTMLDivElement | null>;
@@ -70,11 +62,17 @@ type RetroScreenDisplayProps = {
 export function RetroScreenDisplay({
   mode,
   renderModel,
+  rows,
+  cols,
   displayColorMode,
-  displayGlyphMode,
-  displayIceColors,
+  displayGlyphMode = "font",
+  displayIceColors = false,
   displaySurfaceMode,
-  displayFrame,
+  displayFrame = true,
+  renderBackend = "dom",
+  canvasAccessibilityLabel,
+  canvasAccessibleText = true,
+  onCanvasUnavailable = () => {},
   screenRef,
   probeRef,
   viewportRef,
@@ -95,6 +93,25 @@ export function RetroScreenDisplay({
   viewportTabIndex,
   children
 }: RetroScreenDisplayProps) {
+  const renderDomSurface = renderBackend !== "canvas";
+  const renderCanvasSurface = renderBackend !== "dom" && displayGlyphMode !== "font";
+  const handleCopy: ClipboardEventHandler<HTMLDivElement> = (event) => {
+    if (renderBackend !== "canvas") {
+      return;
+    }
+
+    const selectedRows = renderModel.cells
+      .map((row) => row.filter((cell) => cell.isSelected).map((cell) => cell.char).join(""))
+      .filter((row) => row.length > 0);
+
+    if (selectedRows.length === 0) {
+      return;
+    }
+
+    event.preventDefault();
+    event.clipboardData.setData("text/plain", selectedRows.join("\n"));
+  };
+
   return (
     <div className={joinClassNames("retro-screen__screen", displayFrame ? undefined : "retro-screen__screen--frameless")}>
       <div
@@ -104,6 +121,7 @@ export function RetroScreenDisplay({
         onFocus={onViewportFocus}
         onBlur={onViewportBlur}
         onPaste={onViewportPaste}
+        onCopy={handleCopy}
         onKeyDown={onViewportKeyDown}
         onKeyUp={onViewportKeyUp}
         onMouseDownCapture={onViewportMouseDownCapture}
@@ -130,45 +148,38 @@ export function RetroScreenDisplay({
             className={joinClassNames(
               "retro-screen__content",
               mode === "value" ? "retro-screen__content--centered" : undefined,
-              displayGlyphMode !== "font" ? "retro-screen__content--bitmap" : undefined
+              renderCanvasSurface ? "retro-screen__content--bitmap" : undefined
             )}
           >
             <div
               className={joinClassNames(
                 "retro-screen__body",
-                displayGlyphMode !== "font" ? "retro-screen__body--bitmap" : undefined
+                renderCanvasSurface ? "retro-screen__body--bitmap" : undefined,
+                renderBackend === "canvas" ? "retro-screen__body--canvas-only" : undefined
               )}
-              aria-live={mode === "terminal" ? "polite" : undefined}
+              aria-live={mode === "terminal" && renderDomSurface ? "polite" : undefined}
             >
-              {renderModel.cells.map((line, rowIndex) => (
-                <div
-                  className={joinClassNames("retro-screen__line", "retro-screen__line--cells")}
-                  key={`cells-${rowIndex}`}
-                >
-                  {line.map((cell, colIndex) => (
-                    <span
-                      className={getCellClassName(cell, displayIceColors)}
-                      key={`${rowIndex}-${colIndex}-${cell.char}`}
-                      data-source-offset={cell.sourceOffset ?? undefined}
-                      style={getCellPresentationStyle(
-                        cell,
-                        displayColorMode,
-                        displaySurfaceMode,
-                        displayIceColors
-                      )}
-                    >
-                      {getCellCharacter(cell)}
-                    </span>
-                  ))}
-                </div>
-              ))}
-              {displayGlyphMode !== "font" ? (
-                <RetroScreenBitmapCanvas
+              {renderDomSurface ? (
+                <RetroScreenDomSurface
                   displayColorMode={displayColorMode}
-                  displayGlyphMode={displayGlyphMode}
                   displayIceColors={displayIceColors}
                   displaySurfaceMode={displaySurfaceMode}
                   renderModel={renderModel}
+                />
+              ) : null}
+              {renderCanvasSurface ? (
+                <RetroScreenCanvasSurface
+                  accessibilityLabel={canvasAccessibilityLabel}
+                  accessible={renderBackend === "canvas"}
+                  accessibleText={renderBackend === "canvas" && canvasAccessibleText}
+                  cols={cols}
+                  displayColorMode={displayColorMode}
+                  displayGlyphMode={displayGlyphMode as Exclude<RetroScreenDisplayGlyphMode, "font">}
+                  displayIceColors={displayIceColors}
+                  displaySurfaceMode={displaySurfaceMode}
+                  onCanvasUnavailable={onCanvasUnavailable}
+                  renderModel={renderModel}
+                  rows={rows}
                 />
               ) : null}
             </div>

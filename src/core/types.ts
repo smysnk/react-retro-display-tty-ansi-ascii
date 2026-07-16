@@ -20,6 +20,7 @@ export type RetroScreenDisplayGlyphMode =
   | "ibm-vga-8x16"
   | "ibm-vga-9x16"
   | "amiga-microknight-8x16";
+export type RetroScreenRenderBackend = "auto" | "dom" | "canvas";
 export type RetroScreenResizeMode = "width" | "height" | "both";
 export type RetroScreenDisplayPaddingValue = number | string;
 export type RetroScreenDisplayPadding =
@@ -79,6 +80,9 @@ export type RetroScreenSharedProps = {
   displayFontSizingMode?: RetroScreenDisplayFontSizingMode;
   displayCharacterSizingMode?: RetroScreenDisplayCharacterSizingMode;
   displayGlyphMode?: RetroScreenDisplayGlyphMode;
+  renderBackend?: RetroScreenRenderBackend;
+  canvasAccessibilityLabel?: string;
+  canvasAccessibleText?: boolean;
   displayIceColors?: boolean;
   displayDebugOverlay?: boolean;
   displayScanlines?: boolean;

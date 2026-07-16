@@ -14,6 +14,7 @@ export type {
   RetroScreenDisplayColorMode,
   RetroScreenDisplayCharacterSizingMode,
   RetroScreenDisplayGlyphMode,
+  RetroScreenRenderBackend,
   RetroScreenDisplayLayoutMode,
   RetroScreenDisplaySurfaceMode,
   RetroScreenDisplayPadding,

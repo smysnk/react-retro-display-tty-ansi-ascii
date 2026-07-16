@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useCallback,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -123,6 +124,18 @@ export function RetroScreen(props: RetroScreenProps) {
   const displaySurfaceMode = props.displaySurfaceMode ?? "dark";
   const displayCharacterSizingMode = props.displayCharacterSizingMode ?? "grid";
   const displayGlyphMode = props.displayGlyphMode ?? "font";
+  const requestedRenderBackend = props.renderBackend ?? "auto";
+  const canvasBackendEligible =
+    displayGlyphMode !== "font" && props.mode === "value" && !props.editable;
+  const [canvasUnavailable, setCanvasUnavailable] = useState(false);
+  const resolvedRenderBackend = canvasUnavailable || displayGlyphMode === "font"
+    ? "dom"
+    : requestedRenderBackend === "canvas" && !canvasBackendEligible
+      ? "dom"
+      : requestedRenderBackend;
+  const handleCanvasUnavailable = useCallback(() => {
+    setCanvasUnavailable(true);
+  }, []);
   const displayIceColors = props.displayIceColors ?? false;
   const bitmapCellWidth = displayGlyphMode === "ibm-vga-9x16"
     ? 9
@@ -188,6 +201,10 @@ export function RetroScreen(props: RetroScreenProps) {
     resizable: fitWidthLayoutActive ? false : props.resizable,
     resizableLeadingEdges: props.resizableLeadingEdges
   });
+
+  useEffect(() => {
+    setCanvasUnavailable(false);
+  }, [canvasBackendEligible, displayGlyphMode, requestedRenderBackend]);
   const { geometry, cssVars } = useRetroScreenGeometry({
     screenRef,
     probeRef,
@@ -1305,6 +1322,7 @@ export function RetroScreen(props: RetroScreenProps) {
       data-display-frame={displayFrame ? "true" : "false"}
       data-display-character-sizing-mode={displayCharacterSizingMode}
       data-display-glyph-mode={displayGlyphMode}
+      data-render-backend={resolvedRenderBackend}
       data-display-ice-colors={displayIceColors ? "true" : "false"}
       data-display-font-sizing-mode={props.displayFontSizingMode ?? "contain"}
       data-display-layout-mode={props.displayLayoutMode ?? "default"}
@@ -1361,11 +1379,17 @@ export function RetroScreen(props: RetroScreenProps) {
       <RetroScreenDisplay
         mode={props.mode}
         renderModel={renderModel}
+        rows={geometry.rows}
+        cols={geometry.cols}
         displayColorMode={displayColorMode}
         displayGlyphMode={displayGlyphMode}
         displayIceColors={displayIceColors}
         displaySurfaceMode={displaySurfaceMode}
         displayFrame={displayFrame}
+        renderBackend={resolvedRenderBackend}
+        canvasAccessibilityLabel={props.canvasAccessibilityLabel}
+        canvasAccessibleText={props.canvasAccessibleText ?? true}
+        onCanvasUnavailable={handleCanvasUnavailable}
         screenRef={screenRef}
         probeRef={probeRef}
         viewportRef={viewportRef}

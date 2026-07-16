@@ -3610,6 +3610,10 @@ const fitWidthLockedFrameFixture = Array.from({ length: 25 }, (_, rowIndex) => {
   return cells.join("");
 }).join("\n");
 
+const canvasBackendStressFixture = Array.from({ length: 1_000 }, (_, rowIndex) =>
+  `${String(rowIndex + 1).padStart(4, "0")} ${"█▓▒░".repeat(18)}`.slice(0, 79)
+).join("\n");
+
 export const CalmReadout: Story = {
   args: {
     mode: "value",
@@ -3663,6 +3667,26 @@ export const FitWidthLockedFrame: Story = {
         />
       </div>
     </StoryShell>
+  )
+};
+
+export const CanvasBackendStress: Story = {
+  render: () => (
+    <div data-canvas-backend-stress-stage="true" style={{ width: "800px" }}>
+      <RetroScreen
+        mode="value"
+        value={canvasBackendStressFixture}
+        gridMode="static"
+        rows={1_000}
+        cols={80}
+        displayCharacterSizingMode="font"
+        displayColorMode="ansi-vga"
+        displayGlyphMode="ibm-vga-8x16"
+        displayPadding={0}
+        displayScanlines={false}
+        renderBackend="canvas"
+      />
+    </div>
   )
 };
 
