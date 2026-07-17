@@ -53,6 +53,9 @@ export {
   splitRetroScreenAnsiBytes,
   stripRetroScreenAnsiSauce
 } from "./core/ansi/player";
+export { createRetroScreenAnsiBytePlaybackClock } from "./core/ansi/byte-playback-clock";
+export { createRetroScreenAnsiBytePlaybackEngine } from "./core/ansi/byte-playback-engine";
+export { rasterizeRetroScreenAnsiSnapshot } from "./react/retro-screen-ansi-raster";
 export type {
   RetroScreenAnsiControlCharacterMode,
   RetroScreenAnsiScrollMode,
@@ -154,6 +157,15 @@ export type {
   RetroScreenAnsiSnapshotStream,
   RetroScreenAnsiSnapshotStreamSnapshot
 } from "./core/ansi/player";
+export type {
+  RetroScreenAnsiBytePlaybackClock,
+  RetroScreenAnsiBytePlaybackClockState
+} from "./core/ansi/byte-playback-clock";
+export type {
+  RetroScreenAnsiBytePlaybackEngine,
+  RetroScreenAnsiBytePlaybackState,
+  RetroScreenAnsiBytePlaybackStatus
+} from "./core/ansi/byte-playback-types";
 export type {
   RetroScreenAnsiFrameSnapshot,
   RetroScreenAnsiCellSliceAccessor,

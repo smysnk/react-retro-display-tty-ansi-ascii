@@ -1,5 +1,31 @@
 # Third-party notices
 
+## AnsiLove.js test oracle
+
+The test-only ANSI playback oracle in `scripts/ansilove/vendor/ansilove.js`
+is pinned from `ansilove/ansilove.js` commit
+`145def0340833ef55b914c6727bd42c431a67f8d` and is not included in the
+published production bundle.
+
+Copyright (c) 2019-2020, Frederic Cambus
+Copyright (c) 2013-2017, Andrew Herbert and Frederic Cambus
+
+AnsiLove.js is distributed under the BSD 2-Clause license. The complete
+license text is retained in `scripts/ansilove/vendor/ANSILOVE_JS_LICENSE`.
+
+## AnsiLove/C native test oracle
+
+The test tooling builds source-pinned copies of the `ansilove` command-line
+frontend and `libansilove` rasterizer. These test binaries are not included in
+the npm package. Their exact source revisions are recorded in
+`scripts/ansilove/oracle-lock.json`.
+
+Copyright (c) 2011-2026, Stefan Vogt, Brian Cassidy, and Frederic Cambus
+
+AnsiLove/C and libansilove are distributed under the BSD 2-Clause license. The
+complete license text is retained in
+`scripts/ansilove/vendor/ANSILOVE_C_LICENSE`.
+
 ## libansilove IBM VGA and Amiga MicroKnight 8x16 font bitmaps
 
 The IBM VGA and Amiga MicroKnight 8x16 glyph bitmaps in

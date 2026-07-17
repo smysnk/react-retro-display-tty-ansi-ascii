@@ -6,3 +6,4 @@ coverage
 storybook-static
 references/
 .tmp-types/
+.tmp/

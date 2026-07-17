@@ -147,6 +147,9 @@ const createEmptySnapshot = ({
   currentFrame: EMPTY_FRAME,
   sourceRows,
   sourceCols,
+  cursorRow: 0,
+  cursorCol: 0,
+  parserSettled: true,
   metadata,
   storageMode
 });

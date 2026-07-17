@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "ansiloveCli": {
+    "repository": "https://github.com/ansilove/ansilove.git",
+    "commit": "14c8f23ef94bb131a235259f94b65c7c06a3ef17",
+    "tag": "4.2.2",
+    "version": "4.2.2"
+  },
+  "libansilove": {
+    "repository": "https://github.com/ansilove/libansilove.git",
+    "commit": "d2294f2cbe2c7af5f583dee63585c121bd404dd6",
+    "version": "1.4.2"
+  },
+  "ansiloveJs": {
+    "repository": "https://github.com/ansilove/ansilove.js.git",
+    "commit": "145def0340833ef55b914c6727bd42c431a67f8d",
+    "version": "1.0.0",
+    "sha256": "bfd2f07ecf93b1c00b3437e0b22a77920c356e34c2d172ad86174cf6ee1b4721"
+  }
+}
