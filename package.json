@@ -90,7 +90,7 @@
     "test:e2e:docs-preview:built": "yarn node --test ./e2e/storybook-docs-preview-parity.test.mjs ./e2e/storybook-docs-preview-visual-parity.test.mjs ./e2e/storybook-docs-overflow.test.mjs",
     "test:e2e:tty": "storybook build && node --test ./e2e/tty-*.test.mjs",
     "test:e2e": "storybook build && yarn test:e2e:built",
-    "test:e2e:built": "yarn node --test ./e2e/*.test.mjs",
+    "test:e2e:built": "yarn node ./scripts/run-standard-e2e-tests.mjs",
     "test:watch": "vitest",
     "clean": "node ./scripts/clean-dist.mjs"
   },

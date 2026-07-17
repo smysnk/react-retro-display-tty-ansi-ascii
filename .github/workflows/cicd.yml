@@ -78,6 +78,9 @@ jobs:
           CHROME_PATH: ${{ steps.browser.outputs.path }}
         run: yarn test:ci
 
+      - name: Run pinned Ansilove oracle contracts and focused parity
+        run: yarn test:ansilove:native && yarn test:ansilove:focused-parity
+
       - name: Capture test-station start time
         run: echo "TEST_STATION_BUILD_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
 
