@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { createRetroScreenAnsiBytePlaybackEngine } from "./byte-playback-engine";
-import { createRetroScreenAnsiSnapshotStream } from "./player";
+import {
+  createRetroScreenAnsiSnapshotStream,
+  stripRetroScreenAnsiSauce
+} from "./player";
 
 const encoder = new TextEncoder();
 
@@ -116,5 +119,117 @@ describe("ANSI byte playback engine", () => {
     expect(() => engine.appendSource(Uint8Array.of(1))).toThrow(/source has closed/);
     expect(() => engine.advanceBytes(-1)).toThrow(RangeError);
     expect(() => engine.advanceTime(-1)).toThrow(RangeError);
+  });
+
+  it("accepts source arriving after buffering and completes only after the close", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({ rows: 1, cols: 4 });
+    engine.appendSource(encoder.encode("A"));
+    engine.advanceBytes(1);
+
+    expect(engine.getPlaybackState()).toMatchObject({ status: "buffering", totalBytes: null });
+    engine.appendSource(encoder.encode("B"));
+    expect(engine.advanceBytes(1)).toMatchObject({ status: "buffering", processedBytes: 2 });
+    expect(engine.closeSource()).toMatchObject({ status: "complete", totalBytes: 2 });
+    expect(engine.getScreenSnapshot().lines[0]).toBe("AB  ");
+  });
+
+  it("plays only canonical payload bytes after SAUCE removal", () => {
+    const sauce = new Uint8Array(128).fill(0x20);
+    sauce.set(encoder.encode("SAUCE00"), 0);
+    const raw = Uint8Array.from([...encoder.encode("ART"), 0x1a, ...sauce]);
+    const payload = stripRetroScreenAnsiSauce(raw);
+    const engine = createRetroScreenAnsiBytePlaybackEngine({ rows: 1, cols: 8 });
+    engine.appendSource(payload);
+    engine.closeSource();
+    engine.drain();
+
+    expect(Array.from(payload)).toEqual(Array.from(encoder.encode("ART")));
+    expect(engine.getPlaybackState().totalBytes).toBe(3);
+    expect(engine.getScreenSnapshot().lines[0]).toBe("ART     ");
+  });
+
+  it("preserves DOS CP437 glyph bytes while ignoring ANSI NUL", () => {
+    const ansi = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 1,
+      cols: 4,
+      controlCharacterMode: "ansi"
+    });
+    const cp437 = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 1,
+      cols: 4,
+      controlCharacterMode: "dos-cp437"
+    });
+    const payload = Uint8Array.of(0x00, 0x01, 0xdb);
+
+    for (const engine of [ansi, cp437]) {
+      engine.appendSource(payload);
+      engine.closeSource();
+      engine.drain();
+    }
+
+    expect(ansi.getScreenSnapshot().lines[0]).toBe("█   ");
+    expect(cp437.getScreenSnapshot().lines[0]).toBe(" ☺█ ");
+  });
+
+  it("keeps canvas overflow separate from terminal viewport scrolling", () => {
+    const payload = encoder.encode("A\r\nB\r\nC");
+    const terminal = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 2,
+      cols: 2,
+      scrollMode: "terminal"
+    });
+    const canvas = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 2,
+      cols: 2,
+      scrollMode: "canvas"
+    });
+
+    for (const engine of [terminal, canvas]) {
+      engine.appendSource(payload);
+      engine.closeSource();
+      engine.drain();
+    }
+
+    expect(terminal.getScreenSnapshot().lines).toEqual(["B ", "C "]);
+    expect(canvas.getScreenSnapshot().lines).toEqual(["A ", "B "]);
+  });
+
+  it("supports delayed and immediate DOS wrapping as explicit policies", () => {
+    const payload = encoder.encode("ABC");
+    const delayed = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 2,
+      cols: 2,
+      wrapMode: "xterm-delayed",
+      scrollMode: "canvas"
+    });
+    const immediate = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 2,
+      cols: 2,
+      wrapMode: "dos-immediate",
+      scrollMode: "canvas"
+    });
+
+    for (const engine of [delayed, immediate]) {
+      engine.appendSource(payload);
+      engine.closeSource();
+      engine.drain();
+    }
+
+    expect(delayed.getScreenSnapshot().lines).toEqual(["AB", "C "]);
+    expect(immediate.getScreenSnapshot().lines).toEqual(["AB", "C "]);
+  });
+
+  it("derives blink presentation from the deterministic playback clock", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 1,
+      cols: 2,
+      baud: 8,
+      blinkIntervalMs: 250
+    });
+    engine.appendSource(encoder.encode("AB"));
+
+    expect(engine.getPlaybackState().blinkVisible).toBe(true);
+    expect(engine.advanceTime(250)).toMatchObject({ processedBytes: 0, blinkVisible: false });
+    expect(engine.advanceTime(250)).toMatchObject({ processedBytes: 0, blinkVisible: true });
   });
 });

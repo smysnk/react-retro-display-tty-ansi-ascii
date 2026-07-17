@@ -84,6 +84,7 @@ export type RetroScreenSharedProps = {
   canvasAccessibilityLabel?: string;
   canvasAccessibleText?: boolean;
   displayIceColors?: boolean;
+  displayBlinkVisible?: boolean;
   displayDebugOverlay?: boolean;
   displayScanlines?: boolean;
   displayPadding?: RetroScreenDisplayPadding;

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { getCp437GlyphIndex } from "../core/ansi/cp437";
 import { hexToRgba, TRANSPARENT_RGBA } from "../core/rendering/bitmap-colors";
 import {
@@ -194,6 +194,7 @@ export function RetroScreenCanvasSurface({
   displayGlyphMode,
   displayIceColors,
   displaySurfaceMode,
+  blinkVisible,
   accessibilityLabel,
   accessible,
   accessibleText,
@@ -206,30 +207,12 @@ export function RetroScreenCanvasSurface({
   displayGlyphMode: BitmapGlyphMode;
   displayIceColors: boolean;
   displaySurfaceMode: RetroScreenDisplaySurfaceMode;
+  blinkVisible: boolean;
   accessibilityLabel?: string;
   accessible: boolean;
   accessibleText: boolean;
   onCanvasUnavailable: () => void;
 }) {
-  const hasBlinkingCells = useMemo(
-    () => !displayIceColors && renderModel.cells.some((row) => row.some((cell) => cell.style.blink)),
-    [displayIceColors, renderModel.cells]
-  );
-  const [blinkVisible, setBlinkVisible] = useState(true);
-
-  useEffect(() => {
-    if (!hasBlinkingCells) {
-      setBlinkVisible(true);
-      return;
-    }
-
-    const interval = window.setInterval(() => {
-      setBlinkVisible((current) => !current);
-    }, 600);
-
-    return () => window.clearInterval(interval);
-  }, [hasBlinkingCells]);
-
   const rasterCells = useMemo(
     () => renderModel.cells.map((row) => row.map((cell) => resolveRasterCell({
       cell,

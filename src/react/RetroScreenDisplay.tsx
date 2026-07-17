@@ -32,6 +32,7 @@ type RetroScreenDisplayProps = {
   displayColorMode: RetroScreenDisplayColorMode;
   displayGlyphMode: RetroScreenDisplayGlyphMode;
   displayIceColors: boolean;
+  displayBlinkVisible: boolean;
   displaySurfaceMode: RetroScreenDisplaySurfaceMode;
   displayFrame: boolean;
   renderBackend: RetroScreenRenderBackend;
@@ -67,6 +68,7 @@ export function RetroScreenDisplay({
   displayColorMode,
   displayGlyphMode = "font",
   displayIceColors = false,
+  displayBlinkVisible = true,
   displaySurfaceMode,
   displayFrame = true,
   renderBackend = "dom",
@@ -163,6 +165,7 @@ export function RetroScreenDisplay({
                 <RetroScreenDomSurface
                   displayColorMode={displayColorMode}
                   displayIceColors={displayIceColors}
+                  blinkVisible={displayBlinkVisible}
                   displaySurfaceMode={displaySurfaceMode}
                   renderModel={renderModel}
                 />

@@ -137,6 +137,7 @@ export function RetroScreen(props: RetroScreenProps) {
     setCanvasUnavailable(true);
   }, []);
   const displayIceColors = props.displayIceColors ?? false;
+  const displayBlinkVisible = props.displayBlinkVisible ?? true;
   const bitmapCellWidth = displayGlyphMode === "ibm-vga-9x16"
     ? 9
     : displayGlyphMode === "font"
@@ -1384,6 +1385,7 @@ export function RetroScreen(props: RetroScreenProps) {
         displayColorMode={displayColorMode}
         displayGlyphMode={displayGlyphMode}
         displayIceColors={displayIceColors}
+        displayBlinkVisible={displayBlinkVisible}
         displaySurfaceMode={displaySurfaceMode}
         displayFrame={displayFrame}
         renderBackend={resolvedRenderBackend}
