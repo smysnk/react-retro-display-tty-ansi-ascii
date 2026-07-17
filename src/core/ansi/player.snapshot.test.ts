@@ -7,11 +7,8 @@ import { describe, expect, it } from "vitest";
 import { Terminal } from "@xterm/headless";
 
 import {
-  createRetroScreenAnsiFrameStream,
   createRetroScreenAnsiSnapshotStream,
   decodeRetroScreenAnsiBytes,
-  materializeRetroScreenAnsiFrames,
-  materializeRetroScreenAnsiSnapshots,
   stripRetroScreenAnsiSauce,
 } from "./player";
 import { normalizeXtermSnapshot } from "../terminal/conformance/normalize-xterm";
@@ -132,18 +129,6 @@ describe("ANSI snapshot stream", () => {
     });
   });
 
-  it("keeps completed frames in snapshot form and stays compatible with the string player", () => {
-    const payload = "\u001b[24;1Htail\u001b[1;1Hhead";
-    const snapshotFrames = materializeRetroScreenAnsiSnapshots(payload, 25, 8);
-    const stringFrames = materializeRetroScreenAnsiFrames(payload, 25, 8);
-    const stringStreamSnapshot = createRetroScreenAnsiFrameStream({ rows: 25, cols: 8 }).appendText(payload);
-
-    expect(snapshotFrames).toHaveLength(2);
-    expect(snapshotFrames.map((frame) => frame.text)).toEqual(stringFrames);
-    expect(stringStreamSnapshot.completedFrames).toEqual([snapshotFrames[0]?.text]);
-    expect(stringStreamSnapshot.currentFrame).toBe(snapshotFrames[1]?.text);
-  });
-
   it("supports sparse snapshots for huge geometries without flattening the full buffer", () => {
     const stream = createRetroScreenAnsiSnapshotStream({
       rows: 25,
@@ -165,20 +150,6 @@ describe("ANSI snapshot stream", () => {
     expect(snapshot.currentFrame.lines).toHaveLength(25);
     expect(snapshot.currentFrame.getLineSlice(0, 20_478, 20_480)).toBe("XY");
     expect(snapshot.currentFrame.text.length).toBeLessThanOrEqual(25 * 80 + 24);
-  });
-
-  it("freezes completed sparse frames when later cursor jumps create a new frame", () => {
-    const stream = createRetroScreenAnsiSnapshotStream({
-      rows: 25,
-      cols: 20_480,
-      storageMode: "sparse",
-    });
-    const snapshot = stream.appendText("\u001b[1;20479HAB\u001b[1;1HCD");
-
-    expect(snapshot.completedFrames).toHaveLength(1);
-    expect(snapshot.completedFrames[0]?.storageMode).toBe("sparse");
-    expect(snapshot.completedFrames[0]?.getLineSlice(0, 20_478, 20_480)).toBe("AB");
-    expect(snapshot.currentFrame.getLineSlice(0, 0, 2)).toBe("CD");
   });
 
   it("preserves styled spaces in sparse snapshots", () => {

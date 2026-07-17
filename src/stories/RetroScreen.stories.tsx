@@ -16,8 +16,8 @@ import { createRetroScreenController } from "../core/terminal/controller";
 import { createRetroScreenWebSocketSession } from "../core/terminal/websocket-session";
 import type { RetroScreenDisplayColorMode, RetroScreenGeometry } from "../core/types";
 import { RetroScreen as RetroScreenBase } from "../react/RetroScreen";
-import { RetroScreenAnsiPlayer } from "../react/RetroScreenAnsiPlayer";
-import type { RetroScreenAnsiPlayerState } from "../react/useRetroScreenAnsiPlayer";
+import { RetroScreenAnsiBytePlayer as RetroScreenAnsiPlayer } from "../react/RetroScreenAnsiBytePlayer";
+import type { RetroScreenAnsiBytePlayerState as RetroScreenAnsiPlayerState } from "../react/useRetroScreenAnsiBytePlayer";
 import { loadBadAppleAnsiAsset, type BadAppleAnsiAsset } from "./bad-apple-ansi";
 import {
   streamBadAppleGzipAnsiAsset,
@@ -2282,10 +2282,6 @@ function BadAppleAnsiSurface({
       active = false;
     };
   }, []);
-  const loadingValue =
-    playbackState === "failed"
-      ? "Bad Apple ANSI failed to load.\nSee the browser console for details."
-      : "Loading Bad Apple ANSI...\nWaiting for CP437 decode.";
   const playerStyle = {
     width: "100%",
     "--retro-screen-font-family": "AnsiIBMVGA"
@@ -2295,10 +2291,9 @@ function BadAppleAnsiSurface({
       rows={asset?.height ?? 25}
       cols={asset?.width ?? 80}
       byteStream={playbackState === "playing" && asset ? asset.byteStream : []}
-      frameDelayMs={asset?.frameDelayMs ?? 72}
+      baud={14_400}
       complete={asset?.complete ?? false}
       loop
-      loadingValue={loadingValue}
       onPlaybackStateChange={setPlayerState}
       className="sb-retro-bad-apple-screen"
       displayCharacterSizingMode="font"
@@ -2326,12 +2321,12 @@ function BadAppleAnsiSurface({
     <StoryShell
       kicker="ANSI Playback"
       title="Play Bad Apple!! inside RetroScreen at its native 80x25 geometry."
-      copy="This demo loads the full original ANSI release, prepares a byte stream outside of RetroScreen, and feeds those bytes into the reusable ANSI player wrapper. The player incrementally materializes stable 80x25 frames while keeping byte loading and playback concerns decoupled."
+      copy="This demo loads the full original ANSI release, prepares a byte stream outside of RetroScreen, and feeds those bytes into the reusable ANSI player wrapper. The player consumes the original stream at 14,400 baud while keeping byte loading and playback concerns decoupled."
       footer={
         <div className="sb-retro-status">
           <span>
             {asset
-              ? `Frame ${String((playerState?.frameIndex ?? 0) + 1).padStart(2, "0")} / ${playerState?.frameCount ?? "..."} · ${asset.width}x${asset.height} · ${asset.font}`
+              ? `${playerState?.processedBytes ?? 0} / ${playerState?.totalBytes ?? "..."} bytes · ${asset.width}x${asset.height} · ${asset.font}`
               : "Loading Mistigris ANSI release..."}
           </span>
           <span>
@@ -2396,10 +2391,6 @@ function BadAppleAnsiGzipSurface({
       abortController.abort();
     };
   }, []);
-  const loadingValue =
-    playbackState === "failed"
-      ? "Bad Apple ANSI gzip stream failed to load.\nSee the browser console for details."
-      : "Streaming Bad Apple ANSI over gzip...\nWaiting for the first decompressed frames.";
   const playerStyle = {
     width: "100%",
     "--retro-screen-font-family": "AnsiIBMVGA"
@@ -2409,10 +2400,9 @@ function BadAppleAnsiGzipSurface({
       rows={asset?.height ?? 25}
       cols={asset?.width ?? 80}
       byteStream={playbackState === "playing" && asset ? asset.byteStream : []}
-      frameDelayMs={asset?.frameDelayMs ?? 72}
+      baud={14_400}
       complete={asset?.complete ?? false}
       loop
-      loadingValue={loadingValue}
       onPlaybackStateChange={setPlayerState}
       className="sb-retro-bad-apple-screen"
       displayCharacterSizingMode="font"
@@ -2447,7 +2437,7 @@ function BadAppleAnsiGzipSurface({
         <div className="sb-retro-status">
           <span>
             {asset
-              ? `Frame ${String((playerState?.frameIndex ?? 0) + 1).padStart(2, "0")} / ${playerState?.frameCount ?? "..."} · ${asset.width}x${asset.height} · ${asset.font} · ${asset.complete ? "stream complete" : `streaming ${Math.max(1, Math.round(asset.streamedByteCount / 1024))} KiB`}`
+              ? `${playerState?.processedBytes ?? 0} / ${playerState?.totalBytes ?? "..."} bytes · ${asset.width}x${asset.height} · ${asset.font} · ${asset.complete ? "stream complete" : `streaming ${Math.max(1, Math.round(asset.streamedByteCount / 1024))} KiB`}`
               : "Opening gzipped Bad Apple stream..."}
           </span>
           <span>

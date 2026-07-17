@@ -11,7 +11,6 @@ const DEFAULT_ANSI_STREAM_ROWS = 25;
 
 export type GzipAnsiStreamAsset = {
   byteStream: readonly RetroScreenAnsiByteChunk[];
-  frameDelayMs: number;
   url: string;
   complete: boolean;
   streamedByteCount: number;
@@ -101,21 +100,18 @@ const createAssetSnapshot = ({
   complete,
   metadata,
   streamedByteCount,
-  frameDelayMs,
   url
 }: {
   byteStream: readonly RetroScreenAnsiByteChunk[];
   complete: boolean;
   metadata: RetroScreenAnsiMetadata;
   streamedByteCount: number;
-  frameDelayMs: number;
   url: string;
 }) =>
   ({
     ...metadata,
     byteStream: [...byteStream],
     complete,
-    frameDelayMs,
     streamedByteCount,
     url
   }) satisfies GzipAnsiStreamAsset;
@@ -153,14 +149,12 @@ export const streamGzipAnsiAsset = async ({
   url,
   onUpdate,
   signal,
-  fallbackMetadata,
-  frameDelayMs = 72
+  fallbackMetadata
 }: {
   url: string;
   onUpdate: (asset: GzipAnsiStreamAsset) => void;
   signal?: AbortSignal;
   fallbackMetadata: RetroScreenAnsiMetadata;
-  frameDelayMs?: number;
 }) => {
   const response = await fetch(url, { signal });
   if (!response.ok) {
@@ -183,7 +177,6 @@ export const streamGzipAnsiAsset = async ({
       complete: false,
       metadata: fallbackMetadata,
       streamedByteCount,
-      frameDelayMs,
       url
     })
   );
@@ -218,7 +211,6 @@ export const streamGzipAnsiAsset = async ({
         complete: false,
         metadata: fallbackMetadata,
         streamedByteCount,
-        frameDelayMs,
         url
       })
     );
@@ -238,7 +230,6 @@ export const streamGzipAnsiAsset = async ({
     complete: true,
     metadata,
     streamedByteCount,
-    frameDelayMs,
     url
   });
 

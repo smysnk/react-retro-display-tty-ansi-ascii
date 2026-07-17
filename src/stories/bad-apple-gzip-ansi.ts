@@ -17,8 +17,6 @@ const BAD_APPLE_GZIP_FALLBACK_METADATA = {
   height: 25
 } satisfies RetroScreenAnsiMetadata;
 
-const BAD_APPLE_GZIP_FRAME_DELAY_MS = 72;
-
 export type BadAppleGzipAnsiAsset = GzipAnsiStreamAsset;
 
 export {
@@ -38,6 +36,5 @@ export const streamBadAppleGzipAnsiAsset = ({
     url: badAppleAnsiGzipUrl,
     onUpdate,
     signal,
-    fallbackMetadata: BAD_APPLE_GZIP_FALLBACK_METADATA,
-    frameDelayMs: BAD_APPLE_GZIP_FRAME_DELAY_MS
+    fallbackMetadata: BAD_APPLE_GZIP_FALLBACK_METADATA
   });

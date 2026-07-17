@@ -630,7 +630,7 @@ Open it here:
 Storybook now includes a dedicated `Bad Apple ANSI` demo that loads the real ANSI release,
 decodes the original IBM VGA / CP437 bytes outside the display component, and then feeds those
 bytes into the reusable `RetroScreenAnsiPlayer` wrapper. The player incrementally materializes
-stabilized full-screen `80 x 25` snapshots while the parent owns byte loading and streaming. The
+one mutable `80 x 25` terminal state at the configured baud while the parent owns byte loading and streaming. The
 demo uses the full `BADAPPLE.ANS` payload, not a trimmed excerpt, and now uses the current
 font-driven, width-led ANSI sizing path.
 
@@ -653,7 +653,7 @@ The key wiring for this kind of ANSI-art playback is:
   byteStream={asset.byteStream}
   rows={25}
   cols={80}
-  frameDelayMs={asset.frameDelayMs}
+  baud={14_400}
   complete
   loop
   displayCharacterSizingMode="font"
@@ -673,7 +673,9 @@ The key wiring for this kind of ANSI-art playback is:
 
 Use `RetroScreenAnsiPlayer` when a parent is responsible for supplying ANSI bytes or byte chunks,
 including incremental streams. Keep the asset loading outside the display component, pass the
-native `rows` and `cols` so the art is not reflowed. For ANSI art, the most useful display props
+native `rows` and `cols` so the art is not reflowed. Playback state reports `processedBytes`,
+`totalBytes`, `status`, and `estimatedDurationMs`; snapshots use `drain` to reach the same engine's
+final state immediately. For ANSI art, the most useful display props
 are:
 
 - `displayCharacterSizingMode="font"`: lets browser font rendering own glyph sizing instead of
@@ -725,7 +727,7 @@ stable `80 x 25` window while the underlying source geometry remains larger.
   byteStream={asset.byteStream}
   rows={asset.height}
   cols={asset.width}
-  frameDelayMs={asset.frameDelayMs}
+  baud={14_400}
   complete={asset.complete}
   loop={asset.complete}
   viewportRows={25}
@@ -741,15 +743,15 @@ stable `80 x 25` window while the underlying source geometry remains larger.
 />
 ```
 
-The playback callback now reports both the source geometry and the active viewport window, so a
-parent can keep status UI in sync with the rendered window:
+The playback callback reports source geometry and byte progress, so a parent can keep status UI
+in sync with the rendered stream:
 
 ```tsx
 <RetroScreenAnsiPlayer
   // ...
   onPlaybackStateChange={(state) => {
     console.log(state.sourceRows, state.sourceCols);
-    console.log(state.viewport?.rowOffset, state.viewport?.colOffset);
+    console.log(state.processedBytes, state.totalBytes, state.status);
   }}
 />
 ```

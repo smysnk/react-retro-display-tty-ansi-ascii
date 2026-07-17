@@ -205,7 +205,7 @@ test("render smoke stories stay stable in the browser", async (t) => {
         cols: Number(root?.getAttribute("data-cols") ?? "0"),
         hasVisibleArt: text.replace(/\s/gu, "").length > 0,
         creditText: creditLink?.textContent ?? "",
-        frameLabel: shell?.textContent ?? ""
+        playbackLabel: shell?.textContent ?? ""
       };
     });
 
@@ -213,7 +213,7 @@ test("render smoke stories stay stable in the browser", async (t) => {
     assert.equal(summary.cols, 80);
     assert.ok(summary.hasVisibleArt, "The Bad Apple story should paint visible ANSI art.");
     assert.equal(summary.creditText, "Mistigris");
-    assert.match(summary.frameLabel, /Frame\s+\d+\s+\/\s+3061/u);
+    assert.match(summary.playbackLabel, /\d+\s+\/\s+1278996\s+bytes/u);
   });
 
   await t.test("capture demos keep interactive surfaces expanded to the full frame", async () => {

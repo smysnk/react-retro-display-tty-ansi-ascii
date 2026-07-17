@@ -69,8 +69,7 @@ export const createRetroScreenAnsiBytePlaybackEngine = ({
       storageMode,
       controlCharacterMode,
       scrollMode,
-      wrapMode,
-      captureCompletedFrames: false
+      wrapMode
     });
 
   let stream = createStream();

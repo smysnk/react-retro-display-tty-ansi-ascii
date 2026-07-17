@@ -9,7 +9,6 @@ import {
 
 export type BadAppleAnsiAsset = {
   byteStream: readonly RetroScreenAnsiByteChunk[];
-  frameDelayMs: number;
   url: string;
   complete: true;
 } & RetroScreenAnsiMetadata;
@@ -37,7 +36,6 @@ export const loadBadAppleAnsiAsset = () => {
     return {
       ...sauce,
       byteStream,
-      frameDelayMs: 72,
       url: badAppleAnsiUrl,
       complete: true
     } satisfies BadAppleAnsiAsset;

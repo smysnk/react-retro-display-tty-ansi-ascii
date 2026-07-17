@@ -31,11 +31,6 @@ export type RetroScreenAnsiMetadata = {
   geometrySource?: "sauce" | "fallback";
 };
 
-export type RetroScreenAnsiFrameStreamSnapshot = {
-  completedFrames: readonly string[];
-  currentFrame: string;
-};
-
 export type RetroScreenAnsiSnapshotFrame = {
   lines: readonly string[];
   text: string;
@@ -46,7 +41,6 @@ export type RetroScreenAnsiSnapshotFrame = {
 };
 
 export type RetroScreenAnsiSnapshotStreamSnapshot = {
-  completedFrames: readonly RetroScreenAnsiSnapshotFrame[];
   currentFrame: RetroScreenAnsiSnapshotFrame;
   sourceRows: number;
   sourceCols: number;
@@ -55,13 +49,6 @@ export type RetroScreenAnsiSnapshotStreamSnapshot = {
   parserSettled: boolean;
   metadata: RetroScreenAnsiMetadata | null;
   storageMode: RetroScreenAnsiSnapshotStorageMode;
-};
-
-export type RetroScreenAnsiFrameStream = {
-  appendChunk: (chunk: RetroScreenAnsiByteChunk) => RetroScreenAnsiFrameStreamSnapshot;
-  appendText: (text: string) => RetroScreenAnsiFrameStreamSnapshot;
-  getSnapshot: () => RetroScreenAnsiFrameStreamSnapshot;
-  reset: () => void;
 };
 
 export type RetroScreenAnsiSnapshotStream = {
@@ -255,17 +242,6 @@ const buildSparseCellSlice = ({
 
   return slice;
 };
-
-const cloneDenseGrid = (grid: readonly RetroScreenCell[][]): RetroScreenAnsiDenseGrid =>
-  grid.map((row) => cloneAnsiCellRow(row));
-
-const cloneSparseGrid = (grid: RetroScreenAnsiSparseGrid): RetroScreenAnsiSparseGrid =>
-  new Map(
-    Array.from(grid, ([rowIndex, row]) => [
-      rowIndex,
-      new Map(Array.from(row, ([colIndex, cell]) => [colIndex, cloneAnsiCell(cell)]))
-    ])
-  );
 
 const buildPreviewLinesFromSliceAccessor = ({
   rows,
@@ -498,8 +474,7 @@ export const createRetroScreenAnsiSnapshotStream = ({
   storageMode = "eager",
   controlCharacterMode = "ansi",
   scrollMode = "terminal",
-  wrapMode = "xterm-delayed",
-  captureCompletedFrames = true
+  wrapMode = "xterm-delayed"
 }: {
   rows: number;
   cols: number;
@@ -508,7 +483,6 @@ export const createRetroScreenAnsiSnapshotStream = ({
   controlCharacterMode?: RetroScreenAnsiControlCharacterMode;
   scrollMode?: RetroScreenAnsiScrollMode;
   wrapMode?: RetroScreenAnsiWrapMode;
-  captureCompletedFrames?: boolean;
 }): RetroScreenAnsiSnapshotStream => {
   const normalizedRows = Math.max(1, Math.floor(rows));
   const normalizedCols = Math.max(1, Math.floor(cols));
@@ -527,7 +501,6 @@ export const createRetroScreenAnsiSnapshotStream = ({
       : null;
   let sparseGrid: RetroScreenAnsiSparseGrid =
     normalizedStorageMode === "sparse" ? new Map() : new Map();
-  let completedFrames: RetroScreenAnsiSnapshotFrame[] = [];
   let currentFrameLinesCache =
     normalizedStorageMode === "eager" && grid ? stringifyGridLines(grid) : [];
   let currentFrameTextCache = currentFrameLinesCache.join("\n");
@@ -536,8 +509,6 @@ export const createRetroScreenAnsiSnapshotStream = ({
   let cursorCol = 0;
   let savedCursorRow = 0;
   let savedCursorCol = 0;
-  let previousAbsoluteRow: number | null = null;
-  let previousAbsoluteCol: number | null = null;
   let pendingWrap = false;
   let pendingEscape: string | null = null;
   let currentStyle = cloneStyle(DEFAULT_CELL_STYLE);
@@ -570,7 +541,6 @@ export const createRetroScreenAnsiSnapshotStream = ({
   };
 
   const getSnapshot = (): RetroScreenAnsiSnapshotStreamSnapshot => ({
-    completedFrames,
     currentFrame: getCurrentFrame(),
     sourceRows: normalizedRows,
     sourceCols: normalizedCols,
@@ -580,34 +550,6 @@ export const createRetroScreenAnsiSnapshotStream = ({
     metadata,
     storageMode: normalizedStorageMode
   });
-
-  const pushCompletedFrame = () => {
-    if (!captureCompletedFrames) {
-      return;
-    }
-
-    if (normalizedStorageMode === "sparse") {
-      completedFrames.push(
-        createSparseFrame({
-          grid: cloneSparseGrid(sparseGrid),
-          rows: normalizedRows,
-          cols: normalizedCols
-        })
-      );
-      return;
-    }
-
-    const currentFrame = getCurrentFrame();
-
-    completedFrames.push(
-      createDenseFrame({
-        grid: cloneDenseGrid(currentFrame.cells ?? []),
-        lines: currentFrame.lines,
-        text: currentFrame.text,
-        cols: normalizedCols
-      })
-    );
-  };
 
   const createBlankDenseRow = () =>
     Array.from({ length: normalizedCols }, () => createAnsiCell());
@@ -764,8 +706,13 @@ export const createRetroScreenAnsiSnapshotStream = ({
     }
 
     if (cursorCol === normalizedCols - 1) {
-      cursorCol = normalizedCols;
-      pendingWrap = true;
+      if (wrapMode === "dos-immediate") {
+        newLine();
+        pendingWrap = false;
+      } else {
+        cursorCol = normalizedCols;
+        pendingWrap = true;
+      }
     } else {
       cursorCol += 1;
       pendingWrap = false;
@@ -953,19 +900,9 @@ export const createRetroScreenAnsiSnapshotStream = ({
       const nextAbsoluteRow = clamp(getCursorParam(0, 1) - 1, 0, maximumCursorRow);
       const nextAbsoluteCol = clamp(getCursorParam(1, 1) - 1, 0, normalizedCols - 1);
 
-      if (
-        previousAbsoluteRow !== null &&
-        (nextAbsoluteRow < previousAbsoluteRow ||
-          (nextAbsoluteRow === previousAbsoluteRow && nextAbsoluteCol < previousAbsoluteCol!))
-      ) {
-        pushCompletedFrame();
-      }
-
       pendingWrap = false;
       cursorRow = nextAbsoluteRow;
       cursorCol = nextAbsoluteCol;
-      previousAbsoluteRow = nextAbsoluteRow;
-      previousAbsoluteCol = nextAbsoluteCol;
       return;
     }
 
@@ -1138,7 +1075,6 @@ export const createRetroScreenAnsiSnapshotStream = ({
           ? createEmptyDenseGrid()
           : null;
       sparseGrid = new Map();
-      completedFrames = [];
       currentFrameLinesCache =
         normalizedStorageMode === "eager" && grid ? stringifyGridLines(grid) : [];
       currentFrameTextCache = currentFrameLinesCache.join("\n");
@@ -1147,99 +1083,9 @@ export const createRetroScreenAnsiSnapshotStream = ({
       cursorCol = 0;
       savedCursorRow = 0;
       savedCursorCol = 0;
-      previousAbsoluteRow = null;
-      previousAbsoluteCol = null;
       pendingWrap = false;
       pendingEscape = null;
       currentStyle = cloneStyle(DEFAULT_CELL_STYLE);
     }
   };
-};
-
-const toRetroScreenAnsiFrameStreamSnapshot = (
-  snapshot: RetroScreenAnsiSnapshotStreamSnapshot
-): RetroScreenAnsiFrameStreamSnapshot => ({
-  completedFrames: snapshot.completedFrames.map((frame) => frame.text),
-  currentFrame: snapshot.currentFrame.text
-});
-
-export const createRetroScreenAnsiFrameStream = ({
-  rows,
-  cols,
-  controlCharacterMode = "ansi",
-  scrollMode = "terminal",
-  wrapMode = "xterm-delayed"
-}: {
-  rows: number;
-  cols: number;
-  controlCharacterMode?: RetroScreenAnsiControlCharacterMode;
-  scrollMode?: RetroScreenAnsiScrollMode;
-  wrapMode?: RetroScreenAnsiWrapMode;
-}): RetroScreenAnsiFrameStream => {
-  const snapshotStream = createRetroScreenAnsiSnapshotStream({
-    rows,
-    cols,
-    controlCharacterMode,
-    scrollMode,
-    wrapMode
-  });
-
-  return {
-    appendChunk(chunk) {
-      return toRetroScreenAnsiFrameStreamSnapshot(snapshotStream.appendChunk(chunk));
-    },
-    appendText(text) {
-      return toRetroScreenAnsiFrameStreamSnapshot(snapshotStream.appendText(text));
-    },
-    getSnapshot() {
-      return toRetroScreenAnsiFrameStreamSnapshot(snapshotStream.getSnapshot());
-    },
-    reset() {
-      snapshotStream.reset();
-    }
-  };
-};
-
-export const materializeRetroScreenAnsiFrames = (
-  bytesOrText: Uint8Array | string,
-  rows: number,
-  cols: number,
-  wrapMode: RetroScreenAnsiWrapMode = "xterm-delayed",
-  scrollMode: RetroScreenAnsiScrollMode = "terminal",
-  controlCharacterMode: RetroScreenAnsiControlCharacterMode = "ansi"
-) => {
-  const stream = createRetroScreenAnsiFrameStream({
-    rows,
-    cols,
-    controlCharacterMode,
-    scrollMode,
-    wrapMode
-  });
-  const snapshot =
-    typeof bytesOrText === "string" ? stream.appendText(bytesOrText) : stream.appendChunk(bytesOrText);
-
-  return [...snapshot.completedFrames, snapshot.currentFrame];
-};
-
-export const materializeRetroScreenAnsiSnapshots = (
-  bytesOrText: Uint8Array | string,
-  rows: number,
-  cols: number,
-  metadata: RetroScreenAnsiMetadata | null = null,
-  wrapMode: RetroScreenAnsiWrapMode = "xterm-delayed",
-  scrollMode: RetroScreenAnsiScrollMode = "terminal",
-  controlCharacterMode: RetroScreenAnsiControlCharacterMode = "ansi"
-) => {
-  const stream = createRetroScreenAnsiSnapshotStream({
-    rows,
-    cols,
-    controlCharacterMode,
-    metadata,
-    scrollMode,
-    wrapMode
-  });
-  const snapshot =
-    typeof bytesOrText === "string" ? stream.appendText(bytesOrText) : stream.appendChunk(bytesOrText);
-
-  return [...snapshot.completedFrames, snapshot.currentFrame];
 };

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { RetroScreenAnsiPlayer } from "../react/RetroScreenAnsiPlayer";
-import type { RetroScreenAnsiPlayerState } from "../react/useRetroScreenAnsiPlayer";
+import { RetroScreenAnsiBytePlayer as RetroScreenAnsiPlayer } from "../react/RetroScreenAnsiBytePlayer";
+import type { RetroScreenAnsiBytePlayerState as RetroScreenAnsiPlayerState } from "../react/useRetroScreenAnsiBytePlayer";
 import { streamGzipAnsiAsset, type GzipAnsiStreamAsset } from "./gzip-ansi-stream";
 
 type AnsiGalleryManifestItem = {
@@ -102,7 +102,6 @@ export function AnsiGalleryViewer() {
     streamGzipAnsiAsset({
       url: assetUrl,
       signal: abortController.signal,
-      frameDelayMs: 72,
       fallbackMetadata: {
         title: selectedEntry.title,
         author: selectedEntry.author,
@@ -163,13 +162,6 @@ export function AnsiGalleryViewer() {
     };
   }, [manifest]);
 
-  const loadingValue =
-    assetState === "failed"
-      ? `ANSI gallery item failed to load.\n${errorMessage ?? "See the browser console for details."}`
-      : manifest
-        ? "Streaming gzipped ANSI file...\nPress Left / Right to browse."
-        : "Loading ANSI gallery manifest...";
-
   return (
     <div
       style={{
@@ -196,10 +188,9 @@ export function AnsiGalleryViewer() {
           rows={asset?.height ?? selectedEntry?.height ?? 25}
           cols={asset?.width ?? selectedEntry?.width ?? 80}
           byteStream={asset ? asset.byteStream : []}
-          frameDelayMs={asset?.frameDelayMs ?? 72}
+          baud={14_400}
           complete={asset?.complete ?? false}
           loop={Boolean(asset?.complete)}
-          loadingValue={loadingValue}
           onPlaybackStateChange={setPlayerState}
           displayColorMode="ansi-classic"
           displayFontScale={1.08}
@@ -244,7 +235,7 @@ export function AnsiGalleryViewer() {
                 : `Streaming ${formatByteCount(asset?.streamedByteCount ?? 0)}`
               : "Waiting"}
           </span>
-          <span>{playerState ? `Frame ${playerState.frameIndex + 1}/${playerState.frameCount}` : "Arrow keys browse"}</span>
+          <span>{playerState ? `${playerState.processedBytes}/${playerState.totalBytes ?? "..."} bytes` : "Arrow keys browse"}</span>
         </div>
       </div>
     </div>

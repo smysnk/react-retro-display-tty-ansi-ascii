@@ -65,7 +65,7 @@ describe("ANSI byte playback engine", () => {
     expect(engine.getScreenSnapshot().lines[1]?.slice(0, 3)).toBe("  Z");
   });
 
-  it("drains to the legacy parser final state without retaining completed frames", () => {
+  it("drains to the parser final state without retaining semantic frames", () => {
     const payload = encoder.encode("\u001b[2;1Htail\u001b[1;1Hhead");
     const legacy = createRetroScreenAnsiSnapshotStream({ rows: 2, cols: 8 });
     const legacySnapshot = legacy.appendChunk(payload);
@@ -74,7 +74,6 @@ describe("ANSI byte playback engine", () => {
     engine.closeSource();
     engine.drain();
 
-    expect(legacySnapshot.completedFrames).toHaveLength(1);
     expect(engine.getScreenSnapshot().lines).toEqual(legacySnapshot.currentFrame.lines);
   });
 
@@ -212,11 +211,32 @@ describe("ANSI byte playback engine", () => {
     for (const engine of [delayed, immediate]) {
       engine.appendSource(payload);
       engine.closeSource();
-      engine.drain();
     }
+
+    delayed.drain();
+    immediate.drain();
 
     expect(delayed.getScreenSnapshot().lines).toEqual(["AB", "C "]);
     expect(immediate.getScreenSnapshot().lines).toEqual(["AB", "C "]);
+
+    const delayedBoundary = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 1,
+      cols: 2,
+      wrapMode: "xterm-delayed",
+      scrollMode: "terminal"
+    });
+    const immediateBoundary = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 1,
+      cols: 2,
+      wrapMode: "dos-immediate",
+      scrollMode: "terminal"
+    });
+    for (const engine of [delayedBoundary, immediateBoundary]) {
+      engine.appendSource(encoder.encode("AB"));
+      engine.advanceBytes(2);
+    }
+    expect(delayedBoundary.getScreenSnapshot().lines).toEqual(["AB"]);
+    expect(immediateBoundary.getScreenSnapshot().lines).toEqual(["  "]);
   });
 
   it("derives blink presentation from the deterministic playback clock", () => {
