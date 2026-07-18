@@ -223,6 +223,22 @@ describe("ANSI byte playback engine", () => {
     expect(cells[1]?.style.foreground).toEqual({ mode: "rgb", value: 0x0c2238 });
   });
 
+  it("restores the underlying DOS palette when bold clears PabloDraw truecolor", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 1,
+      cols: 2,
+      controlCharacterMode: "dos-cp437"
+    });
+    engine.appendSource(encoder.encode("\u001b[36m\u001b[1;12;34;56tA\u001b[1mB"));
+    engine.closeSource();
+    engine.drain();
+    const cells = engine.getScreenSnapshot().cells[0];
+
+    expect(cells[0]?.style.foreground).toEqual({ mode: "rgb", value: 0x0c2238 });
+    expect(cells[1]?.style.foreground).toEqual({ mode: "palette", value: 6 });
+    expect(cells[1]?.style.bold).toBe(true);
+  });
+
   it("uses Ansilove line-feed, carriage-return, and tab semantics in DOS mode", () => {
     const engine = createRetroScreenAnsiBytePlaybackEngine({
       rows: 2,
@@ -234,6 +250,20 @@ describe("ANSI byte playback engine", () => {
     engine.drain();
 
     expect(engine.getScreenSnapshot().lines).toEqual(["A○B     ", "CD      "]);
+  });
+
+  it("keeps DOS saved cursor coordinates fixed while the viewport scrolls", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 2,
+      cols: 3,
+      controlCharacterMode: "dos-cp437",
+      scrollMode: "terminal"
+    });
+    engine.appendSource(encoder.encode("A\r\n\u001b[sB\r\nC\u001b[uX"));
+    engine.closeSource();
+    engine.drain();
+
+    expect(engine.getScreenSnapshot().lines).toEqual(["B  ", "X  "]);
   });
 
   it("keeps canvas overflow separate from terminal viewport scrolling", () => {

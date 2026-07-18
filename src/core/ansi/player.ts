@@ -3,7 +3,11 @@ import type {
   RetroScreenAnsiLineSliceAccessor,
   RetroScreenAnsiSnapshotStorageMode
 } from "./snapshot-contract";
-import type { RetroScreenCell, RetroScreenCellStyle } from "../terminal/types";
+import type {
+  RetroScreenCell,
+  RetroScreenCellStyle,
+  RetroScreenTerminalColor
+} from "../terminal/types";
 import {
   applySgrParameters,
   cloneColor,
@@ -528,6 +532,8 @@ export const createRetroScreenAnsiSnapshotStream = ({
   let pendingEscape: string | null = null;
   let pendingCarriageReturn = false;
   let currentStyle = cloneStyle(DEFAULT_CELL_STYLE);
+  let foreground24BitFallback: RetroScreenTerminalColor | null = null;
+  let background24BitFallback: RetroScreenTerminalColor | null = null;
 
   const markFrameDirty = () => {
     frameDirty = true;
@@ -615,7 +621,7 @@ export const createRetroScreenAnsiSnapshotStream = ({
       sparseGrid = nextSparseGrid;
     }
 
-    if (savedCursorRow > 0) {
+    if (controlCharacterMode !== "dos-cp437" && savedCursorRow > 0) {
       savedCursorRow -= 1;
     }
 
@@ -920,13 +926,41 @@ export const createRetroScreenAnsiSnapshotStream = ({
     }
 
     if (finalByte === "m") {
-      currentStyle = applySgrParameters(currentStyle, params, {
-        extendedColors: controlCharacterMode !== "dos-cp437"
-      });
+      if (controlCharacterMode !== "dos-cp437") {
+        currentStyle = applySgrParameters(currentStyle, params);
+        return;
+      }
+
+      for (const code of params.length > 0 ? params : [0]) {
+        if (code === 0) {
+          foreground24BitFallback = null;
+          background24BitFallback = null;
+        } else if (code === 1 && foreground24BitFallback) {
+          currentStyle.foreground = foreground24BitFallback;
+          foreground24BitFallback = null;
+        } else if (code >= 30 && code <= 37) {
+          foreground24BitFallback = null;
+        } else if (code >= 40 && code <= 47) {
+          background24BitFallback = null;
+        }
+
+        if (
+          code === 0 || code === 1 || code === 5 || code === 7 || code === 22 ||
+          code === 25 || code === 27 || (code >= 30 && code <= 37) ||
+          (code >= 40 && code <= 47)
+        ) {
+          currentStyle = applySgrParameters(currentStyle, [code], { extendedColors: false });
+        }
+      }
       return;
     }
 
     if (finalByte === "t" && params.length === 4 && (params[0] === 0 || params[0] === 1)) {
+      if (params[0] === 0) {
+        background24BitFallback ??= cloneColor(currentStyle.background);
+      } else {
+        foreground24BitFallback ??= cloneColor(currentStyle.foreground);
+      }
       currentStyle = applySgrParameters(currentStyle, [
         params[0] === 0 ? 48 : 38,
         2,
@@ -1131,6 +1165,8 @@ export const createRetroScreenAnsiSnapshotStream = ({
       pendingEscape = null;
       pendingCarriageReturn = false;
       currentStyle = cloneStyle(DEFAULT_CELL_STYLE);
+      foreground24BitFallback = null;
+      background24BitFallback = null;
     }
   };
 };
