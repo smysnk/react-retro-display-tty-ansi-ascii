@@ -164,6 +164,26 @@ describe("ANSI byte playback engine", () => {
     expect(engine.getScreenSnapshot().lines).toEqual(["ART     "]);
   });
 
+  it("removes SAUCE comment blocks and their optional EOF marker", () => {
+    const sauce = new Uint8Array(128).fill(0x20);
+    sauce.set(encoder.encode("SAUCE00"), 0);
+    sauce[104] = 2;
+    const comments = new Uint8Array(5 + 2 * 64).fill(0x20);
+    comments.set(encoder.encode("COMNT"), 0);
+    comments.set(encoder.encode("first comment"), 5);
+    comments.set(encoder.encode("second comment"), 5 + 64);
+    const raw = Uint8Array.from([
+      ...encoder.encode("ART"),
+      0x1a,
+      ...comments,
+      ...sauce,
+    ]);
+
+    expect(Array.from(stripRetroScreenAnsiSauce(raw))).toEqual(
+      Array.from(encoder.encode("ART")),
+    );
+  });
+
   it("preserves DOS CP437 glyph bytes while ignoring ANSI NUL", () => {
     const ansi = createRetroScreenAnsiBytePlaybackEngine({
       rows: 1,

@@ -64,6 +64,9 @@ export type RetroScreenAnsiSnapshotStream = {
 
 const SAUCE_RECORD_SIZE = 128;
 const SAUCE_SIGNATURE = "SAUCE";
+const SAUCE_COMMENT_COUNT_OFFSET = 104;
+const SAUCE_COMMENT_HEADER = "COMNT";
+const SAUCE_COMMENT_LINE_SIZE = 64;
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
@@ -420,8 +423,20 @@ export const stripRetroScreenAnsiSauce = (bytes: Uint8Array) => {
     return bytes;
   }
 
+  const commentCount = bytes[sauceIndex + SAUCE_COMMENT_COUNT_OFFSET] ?? 0;
+  const commentBlockSize = SAUCE_COMMENT_HEADER.length + commentCount * SAUCE_COMMENT_LINE_SIZE;
+  const possibleCommentIndex = sauceIndex - commentBlockSize;
+  const hasCommentBlock =
+    commentCount > 0 &&
+    possibleCommentIndex >= 0 &&
+    Array.from(SAUCE_COMMENT_HEADER).every(
+      (char, offset) => bytes[possibleCommentIndex + offset] === (char.codePointAt(0) ?? 0)
+    );
+  const metadataIndex = hasCommentBlock ? possibleCommentIndex : sauceIndex;
   const payloadEnd =
-    sauceIndex > 0 && bytes[sauceIndex - 1] === 0x1a ? sauceIndex - 1 : sauceIndex;
+    metadataIndex > 0 && bytes[metadataIndex - 1] === 0x1a
+      ? metadataIndex - 1
+      : metadataIndex;
 
   return bytes.slice(0, payloadEnd);
 };

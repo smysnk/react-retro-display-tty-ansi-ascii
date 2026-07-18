@@ -5,7 +5,7 @@ import {
   type RetroScreenAnsiMetadata
 } from "../core/ansi/player";
 
-const ANSI_STREAM_SAUCE_HOLDBACK_BYTES = 129;
+const ANSI_STREAM_SAUCE_HOLDBACK_BYTES = 128 + 1 + 5 + 255 * 64;
 const DEFAULT_ANSI_STREAM_COLS = 80;
 const DEFAULT_ANSI_STREAM_ROWS = 25;
 

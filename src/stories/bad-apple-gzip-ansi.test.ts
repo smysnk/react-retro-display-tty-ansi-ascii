@@ -46,7 +46,8 @@ describe("Bad Apple gzip ANSI helpers", () => {
     const source = Uint8Array.from({ length: 200 }, (_, index) => index);
     const { emitChunk, pendingTail } = takeAnsiPayloadChunkWithSauceHoldback(
       new Uint8Array(0),
-      source
+      source,
+      129
     );
 
     expect(emitChunk).toHaveLength(71);
@@ -84,6 +85,25 @@ describe("Bad Apple gzip ANSI helpers", () => {
       hasSauce: true,
       geometrySource: "sauce"
     });
+  });
+
+  it("strips SAUCE comment blocks from the held-back tail", () => {
+    const payload = new TextEncoder().encode("AB");
+    const sauce = createSauceRecord({
+      title: "Comments",
+      author: "NDH",
+      group: "Mistigris",
+      font: "IBM VGA",
+      width: 80,
+      height: 25
+    });
+    sauce[104] = 1;
+    const comment = new Uint8Array(69).fill(0x20);
+    comment.set(new TextEncoder().encode("COMNT"), 0);
+    comment.set(new TextEncoder().encode("metadata only"), 5);
+    const tail = Uint8Array.from([...payload, 0x1a, ...comment, ...sauce]);
+
+    expect(decodeRetroScreenAnsiBytes(finalizeAnsiPayloadFromSauceTail(tail).payloadBytes)).toBe("AB");
   });
 
   it("preserves fallback metadata when no sauce record is present", () => {
