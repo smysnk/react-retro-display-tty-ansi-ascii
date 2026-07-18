@@ -207,6 +207,22 @@ describe("ANSI byte playback engine", () => {
     expect(cp437.getScreenSnapshot().lines[0]).toBe(" ☺█ ");
   });
 
+  it("matches Ansilove DOS extended-color and PabloDraw truecolor sequences", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 1,
+      cols: 2,
+      controlCharacterMode: "dos-cp437"
+    });
+    engine.appendSource(encoder.encode("\u001b[38;5;123;48;5;0mA\u001b[1;12;34;56tB"));
+    engine.closeSource();
+    engine.drain();
+    const cells = engine.getScreenSnapshot().cells[0];
+
+    expect(cells[0]?.style.foreground).toEqual({ mode: "default", value: 0 });
+    expect(cells[0]?.style.background).toEqual({ mode: "default", value: 0 });
+    expect(cells[1]?.style.foreground).toEqual({ mode: "rgb", value: 0x0c2238 });
+  });
+
   it("uses Ansilove line-feed, carriage-return, and tab semantics in DOS mode", () => {
     const engine = createRetroScreenAnsiBytePlaybackEngine({
       rows: 2,

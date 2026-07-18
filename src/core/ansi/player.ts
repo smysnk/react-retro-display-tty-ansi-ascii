@@ -920,7 +920,20 @@ export const createRetroScreenAnsiSnapshotStream = ({
     }
 
     if (finalByte === "m") {
-      currentStyle = applySgrParameters(currentStyle, params);
+      currentStyle = applySgrParameters(currentStyle, params, {
+        extendedColors: controlCharacterMode !== "dos-cp437"
+      });
+      return;
+    }
+
+    if (finalByte === "t" && params.length === 4 && (params[0] === 0 || params[0] === 1)) {
+      currentStyle = applySgrParameters(currentStyle, [
+        params[0] === 0 ? 48 : 38,
+        2,
+        params[1] ?? 0,
+        params[2] ?? 0,
+        params[3] ?? 0
+      ]);
       return;
     }
 

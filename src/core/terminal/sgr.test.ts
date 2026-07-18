@@ -45,6 +45,16 @@ describe("applySgrParameters", () => {
     });
   });
 
+  it("can preserve Ansilove DOS interpretation of extended SGR parameters", () => {
+    const style = applySgrParameters(DEFAULT_CELL_STYLE, [38, 5, 123, 48, 5, 0], {
+      extendedColors: false
+    });
+
+    expect(style.foreground).toEqual({ mode: "default", value: 0 });
+    expect(style.background).toEqual({ mode: "default", value: 0 });
+    expect(style.blink).toBe(false);
+  });
+
   it("resets default foreground and background independently", () => {
     const colored = applySgrParameters(DEFAULT_CELL_STYLE, [38, 5, 123, 48, 5, 45]);
     const reset = applySgrParameters(colored, [39, 49]);

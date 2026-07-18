@@ -72,7 +72,11 @@ const setExtendedColor = (
   return index;
 };
 
-export const applySgrParameters = (style: RetroScreenCellStyle, params: number[]) => {
+export const applySgrParameters = (
+  style: RetroScreenCellStyle,
+  params: number[],
+  { extendedColors = true }: { extendedColors?: boolean } = {}
+) => {
   const nextStyle = cloneStyle(style);
   const values = params.length > 0 ? params : [0];
 
@@ -125,7 +129,9 @@ export const applySgrParameters = (style: RetroScreenCellStyle, params: number[]
         nextStyle.foreground = toPaletteColor(code - 30);
         break;
       case 38:
-        index = setExtendedColor(nextStyle, "foreground", values, index);
+        if (extendedColors) {
+          index = setExtendedColor(nextStyle, "foreground", values, index);
+        }
         break;
       case 39:
         nextStyle.foreground = cloneColor(DEFAULT_TERMINAL_COLOR);
@@ -141,7 +147,9 @@ export const applySgrParameters = (style: RetroScreenCellStyle, params: number[]
         nextStyle.background = toPaletteColor(code - 40);
         break;
       case 48:
-        index = setExtendedColor(nextStyle, "background", values, index);
+        if (extendedColors) {
+          index = setExtendedColor(nextStyle, "background", values, index);
+        }
         break;
       case 49:
         nextStyle.background = cloneColor(DEFAULT_TERMINAL_COLOR);
