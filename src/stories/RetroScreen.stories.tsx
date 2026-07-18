@@ -2282,10 +2282,6 @@ function BadAppleAnsiSurface({
       active = false;
     };
   }, []);
-  const playerStyle = {
-    width: "100%",
-    "--retro-screen-font-family": "AnsiIBMVGA"
-  } as const;
   const player = (
     <RetroScreenAnsiPlayer
       rows={asset?.height ?? 25}
@@ -2296,16 +2292,17 @@ function BadAppleAnsiSurface({
       loop
       onPlaybackStateChange={setPlayerState}
       className="sb-retro-bad-apple-screen"
-      displayCharacterSizingMode="font"
+      canvasAccessibilityLabel={
+        asset ? `${asset.title} by ${asset.author}` : "Bad Apple ANSI playback"
+      }
+      canvasAccessibleText={false}
       displayColorMode="ansi-classic"
-      displayFontScale={1}
-      displayFontSizingMode="fit-cols"
-      displayRowScale={1}
+      displayGlyphMode="ibm-vga-8x16"
       displayLayoutMode="fit-width"
       displayScanlines={false}
-      disableCellRowScale
       displayPadding={0}
-      style={playerStyle}
+      renderBackend="canvas"
+      style={{ width: "100%" }}
     />
   );
 
@@ -2391,10 +2388,6 @@ function BadAppleAnsiGzipSurface({
       abortController.abort();
     };
   }, []);
-  const playerStyle = {
-    width: "100%",
-    "--retro-screen-font-family": "AnsiIBMVGA"
-  } as const;
   const player = (
     <RetroScreenAnsiPlayer
       rows={asset?.height ?? 25}
@@ -2405,16 +2398,17 @@ function BadAppleAnsiGzipSurface({
       loop
       onPlaybackStateChange={setPlayerState}
       className="sb-retro-bad-apple-screen"
-      displayCharacterSizingMode="font"
+      canvasAccessibilityLabel={
+        asset ? `${asset.title} by ${asset.author}` : "Bad Apple ANSI gzip stream playback"
+      }
+      canvasAccessibleText={false}
       displayColorMode="ansi-classic"
-      displayFontScale={1}
-      displayFontSizingMode="fit-cols"
-      displayRowScale={1}
+      displayGlyphMode="ibm-vga-8x16"
       displayLayoutMode="fit-width"
       displayScanlines={false}
-      disableCellRowScale
       displayPadding={0}
-      style={playerStyle}
+      renderBackend="canvas"
+      style={{ width: "100%" }}
     />
   );
 

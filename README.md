@@ -632,7 +632,7 @@ decodes the original IBM VGA / CP437 bytes outside the display component, and th
 bytes into the reusable `RetroScreenAnsiPlayer` wrapper. The player incrementally materializes
 one mutable `80 x 25` terminal state at the configured baud while the parent owns byte loading and streaming. The
 demo uses the full `BADAPPLE.ANS` payload, not a trimmed excerpt, and now uses the current
-font-driven, width-led ANSI sizing path.
+retained bitmap canvas backend with IBM VGA 8x16 glyphs.
 
 [![Bad Apple ANSI Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi-ascii/main/docs/assets/react-retro-display-tty-ansi-ascii-bad-apple-ansi.webp)](https://github.com/user-attachments/assets/82d505be-5296-4139-ab64-83aae59804ad)
 
@@ -656,18 +656,14 @@ The key wiring for this kind of ANSI-art playback is:
   baud={14_400}
   complete
   loop
-  displayCharacterSizingMode="font"
+  canvasAccessibleText={false}
   displayColorMode="ansi-classic"
-  displayFontScale={1}
-  displayFontSizingMode="fit-cols"
+  displayGlyphMode="ibm-vga-8x16"
   displayLayoutMode="fit-width"
   displayPadding={0}
   displayScanlines={false}
-  disableCellRowScale
-  style={{
-    width: "100%",
-    "--retro-screen-font-family": "AnsiIBMVGA"
-  }}
+  renderBackend="canvas"
+  style={{ width: "100%" }}
 />
 ```
 
@@ -714,7 +710,7 @@ includes one visually hidden plain-text node by default; set `canvasAccessibleTe
 stable accessible label is preferable for animated artwork.
 
 `BADAPPLE.ANS` uses lots of upper-half and lower-half block characters (`▀` / `▄`), so the demo
-keeps the font scale neutral, disables scanlines, and uses the IBM VGA font directly.
+disables scanlines and rasterizes the IBM VGA glyph data directly.
 
 ### Viewported ANSI Playback
 

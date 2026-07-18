@@ -41,3 +41,35 @@ test("explicit canvas backend removes cell DOM and bounds tall artwork tiles", a
     { width: 640, height: 3712, startRow: 768, ready: "true" }
   ]);
 });
+
+test("ANSI playback demos use the retained canvas backend", async () => {
+  const storyIds = [
+    "retroscreen-display-buffer--bad-apple-ansi",
+    "retroscreen-display-buffer--bad-apple-ansi-gzip-stream"
+  ];
+
+  for (const storyId of storyIds) {
+    await harness.gotoStory(storyId);
+    await harness.page.waitForSelector('[data-retro-screen-canvas-ready="true"]');
+
+    const metrics = await harness.page.evaluate(() => {
+      const root = document.querySelector(".retro-screen");
+
+      return {
+        backend: root?.getAttribute("data-render-backend"),
+        glyphMode: root?.getAttribute("data-display-glyph-mode"),
+        lineCount: root?.querySelectorAll(".retro-screen__line").length,
+        cellCount: root?.querySelectorAll(".retro-screen__cell").length,
+        canvasCount: root?.querySelectorAll("[data-retro-screen-bitmap-canvas='true']").length
+      };
+    });
+
+    assert.deepEqual(metrics, {
+      backend: "canvas",
+      glyphMode: "ibm-vga-8x16",
+      lineCount: 0,
+      cellCount: 0,
+      canvasCount: 1
+    });
+  }
+});

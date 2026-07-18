@@ -192,10 +192,16 @@ export function AnsiGalleryViewer() {
           complete={asset?.complete ?? false}
           loop={Boolean(asset?.complete)}
           onPlaybackStateChange={setPlayerState}
+          canvasAccessibilityLabel={
+            selectedEntry
+              ? `${selectedEntry.title} by ${selectedEntry.author}`
+              : "ANSI gallery playback"
+          }
+          canvasAccessibleText={false}
           displayColorMode="ansi-classic"
-          displayFontScale={1.08}
-          displayRowScale={1.04}
+          displayGlyphMode="ibm-vga-8x16"
           displayPadding={{ block: 8, inline: 12 }}
+          renderBackend="canvas"
           style={{
             height: "min(78vh, 860px)",
             maxWidth: "min(94vw, 1500px)",

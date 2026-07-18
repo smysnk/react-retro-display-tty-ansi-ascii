@@ -4,12 +4,43 @@ import { RetroScreenAnsiBytePlayer } from "./RetroScreenAnsiBytePlayer";
 import type { RetroScreenAnsiBytePlayerState } from "./useRetroScreenAnsiBytePlayer";
 
 const encoder = new TextEncoder();
+const createCanvasContext = () => ({
+  imageSmoothingEnabled: true,
+  createImageData: (width: number, height: number) => ({
+    data: new Uint8ClampedArray(width * height * 4),
+    width,
+    height
+  }),
+  putImageData: vi.fn()
+}) as unknown as CanvasRenderingContext2D;
 
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
 describe("RetroScreenAnsiBytePlayer", () => {
+  it("renders ANSI playback through the canvas backend without cell DOM", async () => {
+    const context = createCanvasContext();
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(context);
+    const { container } = render(
+      <RetroScreenAnsiBytePlayer
+        rows={1}
+        cols={4}
+        byteStream={[encoder.encode("ABCD")]}
+        complete
+        drain
+        displayGlyphMode="ibm-vga-8x16"
+        renderBackend="canvas"
+      />
+    );
+
+    expect(container.querySelector(".retro-screen")?.getAttribute("data-render-backend")).toBe("canvas");
+    expect(container.querySelectorAll(".retro-screen__line")).toHaveLength(0);
+    expect(container.querySelectorAll(".retro-screen__cell")).toHaveLength(0);
+    expect(container.querySelectorAll("[data-retro-screen-bitmap-canvas='true']")).toHaveLength(1);
+    await waitFor(() => expect(context.putImageData).toHaveBeenCalled());
+  });
+
   it("drains a closed source without waiting for real-time baud", async () => {
     const onPlaybackStateChange = vi.fn();
     const { container } = render(
