@@ -177,14 +177,17 @@ test("render smoke stories stay stable in the browser", async (t) => {
     await page().waitForFunction(
       () => {
         const root = document.querySelector(".retro-screen");
-        const text = (root?.querySelector(".retro-screen__body")?.textContent ?? "").replace(
-          /\u00a0/gu,
-          " "
-        );
+        const canvas = root?.querySelector('[data-retro-screen-canvas-ready="true"]');
+        const context = canvas instanceof HTMLCanvasElement ? canvas.getContext("2d") : null;
+        const pixels = context && canvas instanceof HTMLCanvasElement
+          ? context.getImageData(0, 0, canvas.width, canvas.height).data
+          : null;
         return (
           Number(root?.getAttribute("data-rows") ?? "0") === 25 &&
           Number(root?.getAttribute("data-cols") ?? "0") === 80 &&
-          text.replace(/\s/gu, "").length > 0
+          root?.getAttribute("data-render-backend") === "canvas" &&
+          pixels !== null &&
+          pixels.some((channel, index) => index % 4 === 3 && channel > 0)
         );
       },
       undefined,
@@ -195,15 +198,18 @@ test("render smoke stories stay stable in the browser", async (t) => {
       const root = document.querySelector(".retro-screen");
       const shell = document.querySelector(".sb-retro-shell");
       const creditLink = shell?.querySelector('a[href="https://mistigris.org/"]');
-      const text = (root?.querySelector(".retro-screen__body")?.textContent ?? "").replace(
-        /\u00a0/gu,
-        " "
-      );
+      const canvas = root?.querySelector('[data-retro-screen-canvas-ready="true"]');
+      const context = canvas instanceof HTMLCanvasElement ? canvas.getContext("2d") : null;
+      const pixels = context && canvas instanceof HTMLCanvasElement
+        ? context.getImageData(0, 0, canvas.width, canvas.height).data
+        : null;
 
       return {
         rows: Number(root?.getAttribute("data-rows") ?? "0"),
         cols: Number(root?.getAttribute("data-cols") ?? "0"),
-        hasVisibleArt: text.replace(/\s/gu, "").length > 0,
+        backend: root?.getAttribute("data-render-backend"),
+        hasVisibleArt:
+          pixels !== null && pixels.some((channel, index) => index % 4 === 3 && channel > 0),
         creditText: creditLink?.textContent ?? "",
         playbackLabel: shell?.textContent ?? ""
       };
@@ -211,6 +217,7 @@ test("render smoke stories stay stable in the browser", async (t) => {
 
     assert.equal(summary.rows, 25);
     assert.equal(summary.cols, 80);
+    assert.equal(summary.backend, "canvas");
     assert.ok(summary.hasVisibleArt, "The Bad Apple story should paint visible ANSI art.");
     assert.equal(summary.creditText, "Mistigris");
     assert.match(summary.playbackLabel, /\d+\s+\/\s+1278996\s+bytes/u);
