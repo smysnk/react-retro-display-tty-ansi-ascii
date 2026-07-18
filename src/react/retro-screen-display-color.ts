@@ -446,12 +446,28 @@ export const getCellPresentationColors = (
       : normalizedDisplayColorMode === "ansi-extended"
         ? XTERM_256_PALETTE
         : ANSI_CLASSIC_PALETTE;
+  // Ansilove's DOS renderer swaps the palette channels first, then applies
+  // bold to the displayed foreground and iCE blink to the displayed
+  // background. Applying intensity before inverse produces the opposite cell
+  // colors for combinations such as SGR 1 + SGR 7.
+  const baseForeground =
+    normalizedDisplayColorMode === "ansi-vga" && cell.style.inverse
+      ? cell.style.background.mode === "default"
+        ? { mode: "palette" as const, value: 0 }
+        : cell.style.background
+      : cell.style.foreground;
+  const baseBackground =
+    normalizedDisplayColorMode === "ansi-vga" && cell.style.inverse
+      ? cell.style.foreground.mode === "default"
+        ? { mode: "palette" as const, value: 7 }
+        : cell.style.foreground
+      : cell.style.background;
   const foreground = (() => {
     if (normalizedDisplayColorMode !== "ansi-vga" || !cell.style.bold) {
-      return cell.style.foreground;
+      return baseForeground;
     }
 
-    if (cell.style.foreground.mode === "default") {
+    if (baseForeground.mode === "default") {
       return {
         mode: "palette" as const,
         value: 15
@@ -459,17 +475,17 @@ export const getCellPresentationColors = (
     }
 
     if (
-      cell.style.foreground.mode === "palette" &&
-      cell.style.foreground.value >= 0 &&
-      cell.style.foreground.value < 8
+      baseForeground.mode === "palette" &&
+      baseForeground.value >= 0 &&
+      baseForeground.value < 8
     ) {
       return {
-        ...cell.style.foreground,
-        value: cell.style.foreground.value + 8
+        ...baseForeground,
+        value: baseForeground.value + 8
       };
     }
 
-    return cell.style.foreground;
+    return baseForeground;
   })();
   const resolvedForeground = resolveAnsiColor(
     foreground,
@@ -480,10 +496,10 @@ export const getCellPresentationColors = (
   );
   const background = (() => {
     if (normalizedDisplayColorMode !== "ansi-vga" || !displayIceColors || !cell.style.blink) {
-      return cell.style.background;
+      return baseBackground;
     }
 
-    if (cell.style.background.mode === "default") {
+    if (baseBackground.mode === "default") {
       return {
         mode: "palette" as const,
         value: 8
@@ -491,17 +507,17 @@ export const getCellPresentationColors = (
     }
 
     if (
-      cell.style.background.mode === "palette" &&
-      cell.style.background.value >= 0 &&
-      cell.style.background.value < 8
+      baseBackground.mode === "palette" &&
+      baseBackground.value >= 0 &&
+      baseBackground.value < 8
     ) {
       return {
-        ...cell.style.background,
-        value: cell.style.background.value + 8
+        ...baseBackground,
+        value: baseBackground.value + 8
       };
     }
 
-    return cell.style.background;
+    return baseBackground;
   })();
   const resolvedBackground = resolveAnsiColor(
     background,
@@ -510,7 +526,8 @@ export const getCellPresentationColors = (
     normalizedDisplayColorMode,
     displaySurfaceMode
   );
-  let [color, backgroundColor] = cell.style.inverse
+  let [color, backgroundColor] =
+    normalizedDisplayColorMode !== "ansi-vga" && cell.style.inverse
     ? [resolvedBackground, resolvedForeground]
     : [resolvedForeground, resolvedBackground];
   const showBackground = cell.style.inverse || background.mode !== "default";

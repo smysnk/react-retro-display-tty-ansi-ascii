@@ -239,6 +239,66 @@ describe("ANSI byte playback engine", () => {
     expect(cells[1]?.style.bold).toBe(true);
   });
 
+  it("does not turn a trailing SGR separator into a reset parameter", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 1,
+      cols: 2,
+      controlCharacterMode: "dos-cp437"
+    });
+    engine.appendSource(encoder.encode("\u001b[0;1;mX"));
+    engine.closeSource();
+    engine.drain();
+
+    expect(engine.getScreenSnapshot().cells[0]?.[0]?.style.bold).toBe(true);
+  });
+
+  it("uses Ansilove letter-only CSI termination in DOS mode", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 1,
+      cols: 3,
+      controlCharacterMode: "dos-cp437"
+    });
+    engine.appendSource(encoder.encode("\u001b[0_pX\u001b[0}YZ"));
+    engine.closeSource();
+    engine.drain();
+
+    expect(engine.getScreenSnapshot().lines[0]).toBe("XZ ");
+  });
+
+  it("keeps nested escape bytes inside malformed DOS CSI sequences", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 1,
+      cols: 3,
+      controlCharacterMode: "dos-cp437"
+    });
+    engine.appendSource(Uint8Array.from([
+      0x1b, 0x5b, 0x31, 0x6d,
+      0x1b, 0x5b, 0x30, 0x7d, 0xdb,
+      0x1b, 0x5b, 0x33, 0x31, 0x6d,
+      0x58
+    ]));
+    engine.closeSource();
+    engine.drain();
+
+    const cell = engine.getScreenSnapshot().cells[0]?.[0];
+    expect(cell?.char).toBe("X");
+    expect(cell?.style.bold).toBe(false);
+    expect(cell?.style.foreground).toEqual({ mode: "default", value: 0 });
+  });
+
+  it("ignores HVP while retaining Ansilove DOS CUP positioning", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 2,
+      cols: 4,
+      controlCharacterMode: "dos-cp437"
+    });
+    engine.appendSource(encoder.encode("A\u001b[2;3fB\u001b[2;3HC"));
+    engine.closeSource();
+    engine.drain();
+
+    expect(engine.getScreenSnapshot().lines).toEqual(["AB  ", "  C "]);
+  });
+
   it("uses Ansilove line-feed, carriage-return, and tab semantics in DOS mode", () => {
     const engine = createRetroScreenAnsiBytePlaybackEngine({
       rows: 2,
@@ -250,6 +310,19 @@ describe("ANSI byte playback engine", () => {
     engine.drain();
 
     expect(engine.getScreenSnapshot().lines).toEqual(["A○B     ", "CD      "]);
+  });
+
+  it("homes the DOS cursor when CSI 2 J clears the screen", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 3,
+      cols: 4,
+      controlCharacterMode: "dos-cp437"
+    });
+    engine.appendSource(encoder.encode("old\r\nline\u001b[2JX"));
+    engine.closeSource();
+    engine.drain();
+
+    expect(engine.getScreenSnapshot().lines).toEqual(["X   ", "    ", "    "]);
   });
 
   it("keeps DOS saved cursor coordinates fixed while the viewport scrolls", () => {

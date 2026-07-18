@@ -881,6 +881,11 @@ export const createRetroScreenAnsiSnapshotStream = ({
         for (let rowIndex = 0; rowIndex < normalizedRows; rowIndex += 1) {
           replaceRow(rowIndex);
         }
+        if (controlCharacterMode === "dos-cp437") {
+          cursorRow = 0;
+          cursorCol = 0;
+          pendingWrap = false;
+        }
         break;
       default:
         if (cursorRow < normalizedRows) {
@@ -903,19 +908,20 @@ export const createRetroScreenAnsiSnapshotStream = ({
   const handleCsiSequence = (sequence: string) => {
     const finalByte = sequence.at(-1) ?? "";
     const rawParams = sequence.slice(2, -1);
-    const params =
-      rawParams.length === 0
-        ? []
-        : rawParams
-            .split(";")
-            .map((value) => (value.length === 0 ? 0 : Number.parseInt(value, 10)))
-            .filter((value) => Number.isFinite(value));
+    const rawParamValues = rawParams.length === 0 ? [] : rawParams.split(";");
+    // Ansilove treats a trailing separator as sequence punctuation rather than
+    // another omitted parameter (`CSI 0;1;m` is reset + bold, not reset + bold
+    // + reset). Interior omissions retain the ANSI default value of zero.
+    while (rawParamValues.at(-1) === "") rawParamValues.pop();
+    const params = rawParamValues
+      .map((value) => (value.length === 0 ? 0 : Number.parseInt(value, 10)))
+      .filter((value) => Number.isFinite(value));
     const getCursorParam = (index: number, fallback: number) => {
       const value = params[index];
       return Number.isFinite(value) && value! > 0 ? value! : fallback;
     };
 
-    if (finalByte === "H" || finalByte === "f") {
+    if (finalByte === "H" || (finalByte === "f" && controlCharacterMode !== "dos-cp437")) {
       const nextAbsoluteRow = clamp(getCursorParam(0, 1) - 1, 0, maximumCursorRow);
       const nextAbsoluteCol = clamp(getCursorParam(1, 1) - 1, 0, normalizedCols - 1);
 
@@ -1036,12 +1042,15 @@ export const createRetroScreenAnsiSnapshotStream = ({
       }
 
       if (pendingEscape !== null) {
-        if (character === "\u001b") {
+        if (character === "\u001b" && controlCharacterMode !== "dos-cp437") {
           pendingEscape = character;
           continue;
         }
 
-        if (character === "\u0018" || character === "\u001a") {
+        if (
+          controlCharacterMode !== "dos-cp437" &&
+          (character === "\u0018" || character === "\u001a")
+        ) {
           pendingEscape = null;
           continue;
         }
@@ -1057,7 +1066,10 @@ export const createRetroScreenAnsiSnapshotStream = ({
           continue;
         }
 
-        if (pendingEscape.length >= 3 && character >= "@" && character <= "~") {
+        const terminatesCsi = controlCharacterMode === "dos-cp437"
+          ? (character >= "A" && character <= "Z") || (character >= "a" && character <= "z")
+          : character >= "@" && character <= "~";
+        if (pendingEscape.length >= 3 && terminatesCsi) {
           handleCsiSequence(pendingEscape);
           pendingEscape = null;
         }

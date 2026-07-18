@@ -22,6 +22,21 @@ const cell: RetroScreenCell = {
 };
 
 describe("shared DOM and bitmap color resolution", () => {
+  it("applies DOS bold after inverse swaps the displayed VGA channels", () => {
+    const colors = getCellPresentationColors({
+      ...cell,
+      style: {
+        ...cell.style,
+        blink: false,
+        foreground: { mode: "palette", value: 0 },
+        background: { mode: "default", value: 0 }
+      }
+    }, "ansi-vga", "dark", false);
+
+    expect(rgbaToCss(colors!.foreground)).toBe("#555555");
+    expect(rgbaToCss(colors!.background)).toBe("#000000");
+  });
+
   it.each<RetroScreenDisplayColorMode>(["ansi-vga", "ansi-classic", "ansi-extended"])(
     "uses the same resolved colors for %s",
     (displayColorMode) => {
