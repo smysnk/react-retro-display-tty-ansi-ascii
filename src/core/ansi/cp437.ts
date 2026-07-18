@@ -27,7 +27,6 @@ export const CP437_GLYPH_CODE_POINTS = [
 // These remaining bytes are structural while decoding the artwork. Other C0
 // values, including BS, are CP437 glyph cells rather than terminal input.
 const DOS_ANSI_CONTROL_BYTES = new Set([
-  0x09,
   0x0a,
   0x0d,
   0x1a,

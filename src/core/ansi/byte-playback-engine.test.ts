@@ -147,6 +147,23 @@ describe("ANSI byte playback engine", () => {
     expect(engine.getScreenSnapshot().lines[0]).toBe("ART     ");
   });
 
+  it("removes legacy SAUCE records with malformed version bytes like Ansilove", () => {
+    const sauce = new Uint8Array(128).fill(0x20);
+    sauce.set(encoder.encode("SAUCE"), 0);
+    sauce[5] = 0;
+    sauce[6] = 0;
+    const payload = stripRetroScreenAnsiSauce(
+      Uint8Array.from([...encoder.encode("ART"), 0x1a, ...sauce]),
+    );
+    const engine = createRetroScreenAnsiBytePlaybackEngine({ rows: 1, cols: 8 });
+    engine.appendSource(payload);
+    engine.closeSource();
+    engine.drain();
+
+    expect(engine.getPlaybackState().totalBytes).toBe(3);
+    expect(engine.getScreenSnapshot().lines).toEqual(["ART     "]);
+  });
+
   it("preserves DOS CP437 glyph bytes while ignoring ANSI NUL", () => {
     const ansi = createRetroScreenAnsiBytePlaybackEngine({
       rows: 1,
@@ -168,6 +185,19 @@ describe("ANSI byte playback engine", () => {
 
     expect(ansi.getScreenSnapshot().lines[0]).toBe("█   ");
     expect(cp437.getScreenSnapshot().lines[0]).toBe(" ☺█ ");
+  });
+
+  it("uses Ansilove line-feed, carriage-return, and tab semantics in DOS mode", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 2,
+      cols: 8,
+      controlCharacterMode: "dos-cp437",
+    });
+    engine.appendSource(Uint8Array.from([0x41, 0x09, 0x42, 0x0a, 0x43, 0x0d, 0x44]));
+    engine.closeSource();
+    engine.drain();
+
+    expect(engine.getScreenSnapshot().lines).toEqual(["A○B     ", "CD      "]);
   });
 
   it("keeps canvas overflow separate from terminal viewport scrolling", () => {

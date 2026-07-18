@@ -63,7 +63,7 @@ export type RetroScreenAnsiSnapshotStream = {
 };
 
 const SAUCE_RECORD_SIZE = 128;
-const SAUCE_SIGNATURE = "SAUCE00";
+const SAUCE_SIGNATURE = "SAUCE";
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
@@ -511,6 +511,7 @@ export const createRetroScreenAnsiSnapshotStream = ({
   let savedCursorCol = 0;
   let pendingWrap = false;
   let pendingEscape: string | null = null;
+  let pendingCarriageReturn = false;
   let currentStyle = cloneStyle(DEFAULT_CELL_STYLE);
 
   const markFrameDirty = () => {
@@ -546,7 +547,7 @@ export const createRetroScreenAnsiSnapshotStream = ({
     sourceCols: normalizedCols,
     cursorRow,
     cursorCol: Math.min(cursorCol, normalizedCols - 1),
-    parserSettled: pendingEscape === null,
+    parserSettled: pendingEscape === null && !pendingCarriageReturn,
     metadata,
     storageMode: normalizedStorageMode
   });
@@ -558,7 +559,9 @@ export const createRetroScreenAnsiSnapshotStream = ({
     Array.from({ length: normalizedCols }, () => createAnsiCell(EMPTY_CELL_CHARACTER, style));
 
   const scrollViewportUp = () => {
-    const fillStyle = createEraseStyle(currentStyle);
+    // Ansilove animation playback clears the row exposed by a scroll to the
+    // default VGA background, independently of the active SGR background.
+    const fillStyle = cloneStyle(DEFAULT_CELL_STYLE);
 
     if (grid) {
       grid.shift();
@@ -634,11 +637,6 @@ export const createRetroScreenAnsiSnapshotStream = ({
       cursorCol = Math.max(0, normalizedCols - 1);
       pendingWrap = false;
     }
-  };
-
-  const carriageReturn = () => {
-    pendingWrap = false;
-    cursorCol = 0;
   };
 
   const saveCursor = () => {
@@ -962,6 +960,14 @@ export const createRetroScreenAnsiSnapshotStream = ({
 
   const writeText = (text: string) => {
     for (const character of text) {
+      if (pendingCarriageReturn) {
+        pendingCarriageReturn = false;
+        if (character === "\n") {
+          newLine();
+          continue;
+        }
+      }
+
       if (wrapMode === "dos-immediate" && pendingWrap) {
         newLine();
         pendingWrap = false;
@@ -1003,12 +1009,21 @@ export const createRetroScreenAnsiSnapshotStream = ({
       }
 
       if (character === "\r") {
-        carriageReturn();
+        if (controlCharacterMode === "dos-cp437") {
+          pendingCarriageReturn = true;
+        } else {
+          pendingWrap = false;
+          cursorCol = 0;
+        }
         continue;
       }
 
       if (character === "\n") {
-        lineFeed();
+        if (controlCharacterMode === "dos-cp437") {
+          newLine();
+        } else {
+          lineFeed();
+        }
         continue;
       }
 
@@ -1063,11 +1078,12 @@ export const createRetroScreenAnsiSnapshotStream = ({
     writeText,
     finalize() {
       pendingEscape = null;
+      pendingCarriageReturn = false;
       return getSnapshot();
     },
     getSnapshot,
     isParserSettled() {
-      return pendingEscape === null;
+      return pendingEscape === null && !pendingCarriageReturn;
     },
     reset() {
       grid =
@@ -1085,6 +1101,7 @@ export const createRetroScreenAnsiSnapshotStream = ({
       savedCursorCol = 0;
       pendingWrap = false;
       pendingEscape = null;
+      pendingCarriageReturn = false;
       currentStyle = cloneStyle(DEFAULT_CELL_STYLE);
     }
   };

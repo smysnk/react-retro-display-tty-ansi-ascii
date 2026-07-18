@@ -533,33 +533,22 @@ describe("ANSI snapshot stream", () => {
     terminal.dispose();
   });
 
-  it("preserves erase background styles on rows scrolled into view", async () => {
+  it("clears rows scrolled into view to the Ansilove VGA default", () => {
     const payload = "\u001b[40m\u001b[2J12\r\n34\r\n";
-    const terminal = new Terminal({
-      allowProposedApi: true,
-      rows: 2,
-      cols: 4,
-      scrollback: 16,
-    });
-
-    await new Promise<void>((resolveWrite) => {
-      terminal.write(payload, () => resolveWrite());
-    });
-
-    const referenceSnapshot = normalizeXtermSnapshot(terminal);
     const snapshot = createRetroScreenAnsiSnapshotStream({
       rows: 2,
       cols: 4,
     }).appendText(payload);
 
-    expect(snapshot.currentFrame.lines).toEqual(referenceSnapshot.rawLines);
-    expect(snapshot.currentFrame.cells?.[0]?.[2]?.style.background).toEqual(
-      referenceSnapshot.cells[0]?.[2]?.style.background
-    );
-    expect(snapshot.currentFrame.cells?.[1]?.[3]?.style.background).toEqual(
-      referenceSnapshot.cells[1]?.[3]?.style.background
-    );
-    terminal.dispose();
+    expect(snapshot.currentFrame.lines).toEqual(["34  ", "    "]);
+    expect(snapshot.currentFrame.cells?.[0]?.[2]?.style.background).toEqual({
+      mode: "palette",
+      value: 0,
+    });
+    expect(snapshot.currentFrame.cells?.[1]?.[3]?.style.background).toEqual({
+      mode: "default",
+      value: 0,
+    });
   });
 
   it("matches the terminal reference for the Solid Waste 87260 artifact", async () => {
