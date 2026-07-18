@@ -89,6 +89,20 @@ export const createRetroScreenAnsiBytePlaybackEngine = ({
     }
   };
 
+  const peekNextAvailableByte = () => {
+    const chunk = sourceChunks[sourceChunkIndex];
+    return chunk && sourceChunkOffset < chunk.length
+      ? chunk[sourceChunkOffset]
+      : undefined;
+  };
+
+  const resolveAvailableLookahead = () => {
+    const nextByte = peekNextAvailableByte();
+    if (nextByte !== undefined) {
+      stream.resolveLookahead(nextByte);
+    }
+  };
+
   const getPlaybackState = (): RetroScreenAnsiBytePlaybackState => {
     const clockState = clock.getState();
     const parserSettled = stream.isParserSettled();
@@ -147,6 +161,7 @@ export const createRetroScreenAnsiBytePlaybackEngine = ({
       }
     }
 
+    resolveAvailableLookahead();
     settleIfComplete();
     return getPlaybackState();
   };
@@ -180,6 +195,7 @@ export const createRetroScreenAnsiBytePlaybackEngine = ({
       if (normalized.length > 0) {
         sourceChunks.push(normalized);
         availableBytes += normalized.length;
+        resolveAvailableLookahead();
       }
     },
     closeSource() {
@@ -235,6 +251,14 @@ export const createRetroScreenAnsiBytePlaybackEngine = ({
     getPlaybackState,
     getScreenSnapshot() {
       return stream.getSnapshot().currentFrame;
+    },
+    getParserState() {
+      const snapshot = stream.getSnapshot();
+      return {
+        cursorRow: snapshot.cursorRow,
+        cursorCol: snapshot.cursorCol,
+        parserSettled: snapshot.parserSettled
+      };
     },
     reset() {
       stream = createStream();

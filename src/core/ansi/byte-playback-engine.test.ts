@@ -164,6 +164,24 @@ describe("ANSI byte playback engine", () => {
     expect(engine.getScreenSnapshot().lines).toEqual(["ART     "]);
   });
 
+  it("removes repeated trailing SAUCE records before playback", () => {
+    const innerSauce = new Uint8Array(128).fill(0x20);
+    innerSauce.set(encoder.encode("SAUCE00"), 0);
+    const outerSauce = new Uint8Array(128).fill(0x20);
+    outerSauce.set(encoder.encode("SAUCE00"), 0);
+    const raw = Uint8Array.from([
+      ...encoder.encode("ART"),
+      0x1a,
+      ...innerSauce,
+      0x1a,
+      ...outerSauce,
+    ]);
+
+    expect(Array.from(stripRetroScreenAnsiSauce(raw))).toEqual(
+      Array.from(encoder.encode("ART")),
+    );
+  });
+
   it("removes SAUCE comment blocks and their optional EOF marker", () => {
     const sauce = new Uint8Array(128).fill(0x20);
     sauce.set(encoder.encode("SAUCE00"), 0);
@@ -252,6 +270,66 @@ describe("ANSI byte playback engine", () => {
     expect(engine.getScreenSnapshot().cells[0]?.[0]?.style.bold).toBe(true);
   });
 
+  it("uses Ansilove omitted and explicit-zero DOS CSI parameters", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 1,
+      cols: 4,
+      controlCharacterMode: "dos-cp437"
+    });
+    engine.appendSource(encoder.encode("\u001b[mA\u001b[0CB\u001b[1CC"));
+    engine.closeSource();
+    engine.drain();
+
+    const cells = engine.getScreenSnapshot().cells[0];
+    expect(cells[0]?.char).toBe("A");
+    expect(cells[0]?.style.bold).toBe(true);
+    expect(cells[1]?.char).toBe("B");
+    expect(cells[3]?.char).toBe("C");
+  });
+
+  it("renders a DOS ESC byte literally when it does not introduce CSI", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 1,
+      cols: 4,
+      controlCharacterMode: "dos-cp437"
+    });
+    engine.appendSource(Uint8Array.of(0x1b, 0x75, 0x58));
+    engine.closeSource();
+    engine.drain();
+
+    expect(engine.getScreenSnapshot().lines[0]).toBe("←uX ");
+  });
+
+  it("uses Ansilove's non-consuming ESC lookahead at byte checkpoints", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 1,
+      cols: 3,
+      controlCharacterMode: "dos-cp437"
+    });
+    engine.appendSource(Uint8Array.of(0x1b, 0x73));
+    engine.closeSource();
+
+    engine.advanceBytes(1);
+    expect(engine.getPlaybackState().processedBytes).toBe(1);
+    expect(engine.getScreenSnapshot().lines[0]).toBe("←  ");
+
+    engine.advanceBytes(1);
+    expect(engine.getScreenSnapshot().lines[0]).toBe("←s ");
+  });
+
+  it("renders a lone DOS ESC at end of source", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 1,
+      cols: 2,
+      controlCharacterMode: "dos-cp437"
+    });
+    engine.appendSource(Uint8Array.of(0x1b));
+    engine.closeSource();
+    engine.drain();
+
+    expect(engine.getScreenSnapshot().lines[0]).toBe("← ");
+  });
+
   it("uses Ansilove letter-only CSI termination in DOS mode", () => {
     const engine = createRetroScreenAnsiBytePlaybackEngine({
       rows: 1,
@@ -323,6 +401,62 @@ describe("ANSI byte playback engine", () => {
     engine.drain();
 
     expect(engine.getScreenSnapshot().lines).toEqual(["X   ", "    ", "    "]);
+  });
+
+  it("uses the default VGA background for DOS erase commands", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 2,
+      cols: 3,
+      controlCharacterMode: "dos-cp437"
+    });
+    engine.appendSource(encoder.encode("\u001b[41mABC\u001b[1;1H\u001b[K\u001b[2J"));
+    engine.closeSource();
+    engine.drain();
+
+    for (const row of engine.getScreenSnapshot().cells) {
+      for (const cell of row) {
+        expect(cell.style.background).toEqual({ mode: "default", value: 0 });
+      }
+    }
+  });
+
+  it("retains Ansilove's offscreen CUP sentinel and right-edge C behavior", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 2,
+      cols: 3,
+      controlCharacterMode: "dos-cp437"
+    });
+    engine.appendSource(encoder.encode("A\u001b[3;1HX\u001b[AQ\u001b[1;3H\u001b[0CZ"));
+    engine.closeSource();
+    engine.drain();
+
+    expect(engine.getScreenSnapshot().lines).toEqual(["A  ", "ZQ "]);
+  });
+
+  it("skips right movement when DOS CSI C scrolls from the bottom edge", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 1,
+      cols: 3,
+      controlCharacterMode: "dos-cp437"
+    });
+    engine.appendSource(encoder.encode("\u001b[1;3H\u001b[2CX"));
+    engine.closeSource();
+    engine.drain();
+
+    expect(engine.getScreenSnapshot().lines[0]).toBe("X  ");
+  });
+
+  it("retains Ansilove's stale CSI prefix after right-edge C scrolls", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 1,
+      cols: 10,
+      controlCharacterMode: "dos-cp437"
+    });
+    engine.appendSource(encoder.encode("\u001b[1;10H\u001b[6C\u001b[30CX"));
+    engine.closeSource();
+    engine.drain();
+
+    expect(engine.getScreenSnapshot().lines[0]).toBe("      X   ");
   });
 
   it("keeps DOS saved cursor coordinates fixed while the viewport scrolls", () => {

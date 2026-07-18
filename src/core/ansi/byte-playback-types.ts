@@ -21,6 +21,12 @@ export type RetroScreenAnsiBytePlaybackState = {
   blinkVisible: boolean;
 };
 
+export type RetroScreenAnsiByteParserState = {
+  cursorRow: number;
+  cursorCol: number;
+  parserSettled: boolean;
+};
+
 export type RetroScreenAnsiBytePlaybackEngine = {
   appendSource: (chunk: Uint8Array | ArrayBuffer | ArrayLike<number>) => void;
   closeSource: () => RetroScreenAnsiBytePlaybackState;
@@ -34,5 +40,6 @@ export type RetroScreenAnsiBytePlaybackEngine = {
   setBaud: (baud: number) => RetroScreenAnsiBytePlaybackState;
   getPlaybackState: () => RetroScreenAnsiBytePlaybackState;
   getScreenSnapshot: () => RetroScreenAnsiSnapshotFrame;
+  getParserState: () => RetroScreenAnsiByteParserState;
   reset: () => RetroScreenAnsiBytePlaybackState;
 };

@@ -15,6 +15,7 @@ import {
   DEFAULT_CELL_STYLE
 } from "../terminal/sgr";
 import {
+  CP437_GLYPH_CODE_POINTS,
   decodeCp437Byte,
   type RetroScreenAnsiControlCharacterMode
 } from "./cp437";
@@ -60,6 +61,7 @@ export type RetroScreenAnsiSnapshotStream = {
   appendText: (text: string) => RetroScreenAnsiSnapshotStreamSnapshot;
   writeChunk: (chunk: RetroScreenAnsiByteChunk) => void;
   writeText: (text: string) => void;
+  resolveLookahead: (nextByte: number) => RetroScreenAnsiSnapshotStreamSnapshot;
   finalize: () => RetroScreenAnsiSnapshotStreamSnapshot;
   getSnapshot: () => RetroScreenAnsiSnapshotStreamSnapshot;
   isParserSettled: () => boolean;
@@ -420,7 +422,7 @@ export const findRetroScreenAnsiSauceIndex = (bytes: Uint8Array) => {
   return -1;
 };
 
-export const stripRetroScreenAnsiSauce = (bytes: Uint8Array) => {
+const stripOneRetroScreenAnsiSauceRecord = (bytes: Uint8Array) => {
   const sauceIndex = findRetroScreenAnsiSauceIndex(bytes);
 
   if (sauceIndex < 0) {
@@ -443,6 +445,16 @@ export const stripRetroScreenAnsiSauce = (bytes: Uint8Array) => {
       : metadataIndex;
 
   return bytes.slice(0, payloadEnd);
+};
+
+export const stripRetroScreenAnsiSauce = (bytes: Uint8Array) => {
+  let payload = bytes;
+
+  while (true) {
+    const stripped = stripOneRetroScreenAnsiSauceRecord(payload);
+    if (stripped.length === payload.length) return payload;
+    payload = stripped;
+  }
 };
 
 export const parseRetroScreenAnsiSauce = (bytes: Uint8Array): RetroScreenAnsiMetadata => {
@@ -508,7 +520,9 @@ export const createRetroScreenAnsiSnapshotStream = ({
   const maximumCursorRow =
     scrollMode === "canvas"
       ? normalizedRows + MAX_CANVAS_CURSOR_OVERSCAN_ROWS
-      : normalizedRows - 1;
+      : controlCharacterMode === "dos-cp437"
+        ? normalizedRows
+        : normalizedRows - 1;
   const normalizedStorageMode = storageMode;
   const createEmptyDenseGrid = () =>
     Array.from({ length: normalizedRows }, () =>
@@ -530,6 +544,8 @@ export const createRetroScreenAnsiSnapshotStream = ({
   let savedCursorCol = 0;
   let pendingWrap = false;
   let pendingEscape: string | null = null;
+  let dosStaleEscapeCode = "";
+  let retainDosEscapeCode = false;
   let pendingCarriageReturn = false;
   let currentStyle = cloneStyle(DEFAULT_CELL_STYLE);
   let foreground24BitFallback: RetroScreenTerminalColor | null = null;
@@ -785,7 +801,9 @@ export const createRetroScreenAnsiSnapshotStream = ({
       return;
     }
 
-    const eraseStyle = createEraseStyle(currentStyle);
+    const eraseStyle = controlCharacterMode === "dos-cp437"
+      ? cloneStyle(DEFAULT_CELL_STYLE)
+      : createEraseStyle(currentStyle);
     const applyEraseAtColumn = (col: number) => {
       const nextCell = createAnsiCell(EMPTY_CELL_CHARACTER, eraseStyle);
 
@@ -843,7 +861,9 @@ export const createRetroScreenAnsiSnapshotStream = ({
   };
 
   const eraseInDisplay = (mode: number) => {
-    const eraseStyle = createEraseStyle(currentStyle);
+    const eraseStyle = controlCharacterMode === "dos-cp437"
+      ? cloneStyle(DEFAULT_CELL_STYLE)
+      : createEraseStyle(currentStyle);
     const replaceRow = (rowIndex: number) => {
       if (normalizedStorageMode === "sparse") {
         const currentRow = new Map<number, RetroScreenCell>();
@@ -908,17 +928,26 @@ export const createRetroScreenAnsiSnapshotStream = ({
   const handleCsiSequence = (sequence: string) => {
     const finalByte = sequence.at(-1) ?? "";
     const rawParams = sequence.slice(2, -1);
-    const rawParamValues = rawParams.length === 0 ? [] : rawParams.split(";");
-    // Ansilove treats a trailing separator as sequence punctuation rather than
-    // another omitted parameter (`CSI 0;1;m` is reset + bold, not reset + bold
-    // + reset). Interior omissions retain the ANSI default value of zero.
-    while (rawParamValues.at(-1) === "") rawParamValues.pop();
+    const rawParamValues = rawParams.length === 0
+      ? controlCharacterMode === "dos-cp437" ? [""] : []
+      : rawParams.split(";");
+    // The standards lane discards trailing punctuation and treats interior
+    // omissions as zero. Ansilove's DOS parser maps every missing or malformed
+    // parameter to one via parseInt(), including trailing separators.
+    if (controlCharacterMode !== "dos-cp437") {
+      while (rawParamValues.at(-1) === "") rawParamValues.pop();
+    }
     const params = rawParamValues
-      .map((value) => (value.length === 0 ? 0 : Number.parseInt(value, 10)))
+      .map((value) => {
+        const parsed = Number.parseInt(value, 10);
+        if (Number.isFinite(parsed)) return parsed;
+        return controlCharacterMode === "dos-cp437" ? 1 : 0;
+      })
       .filter((value) => Number.isFinite(value));
     const getCursorParam = (index: number, fallback: number) => {
       const value = params[index];
-      return Number.isFinite(value) && value! > 0 ? value! : fallback;
+      if (!Number.isFinite(value)) return fallback;
+      return controlCharacterMode === "dos-cp437" ? value! : value! > 0 ? value! : fallback;
     };
 
     if (finalByte === "H" || (finalByte === "f" && controlCharacterMode !== "dos-cp437")) {
@@ -978,16 +1007,18 @@ export const createRetroScreenAnsiSnapshotStream = ({
     }
 
     if (finalByte === "J") {
+      if (controlCharacterMode === "dos-cp437" && params[0] !== 2) return;
       eraseInDisplay(params[0] ?? 0);
       return;
     }
 
     if (finalByte === "K") {
-      eraseInLine(params[0] ?? 0);
+      eraseInLine(controlCharacterMode === "dos-cp437" ? 0 : params[0] ?? 0);
       return;
     }
 
     if (finalByte === "X") {
+      if (controlCharacterMode === "dos-cp437") return;
       eraseChars(getCursorParam(0, 1));
       return;
     }
@@ -1010,13 +1041,28 @@ export const createRetroScreenAnsiSnapshotStream = ({
 
     if (finalByte === "B") {
       normalizeCursorForMovement();
-      cursorRow = clamp(cursorRow + getCursorParam(0, 1), 0, maximumCursorRow);
+      const maximumRelativeRow = controlCharacterMode === "dos-cp437" && scrollMode === "terminal"
+        ? normalizedRows - 1
+        : maximumCursorRow;
+      cursorRow = clamp(cursorRow + getCursorParam(0, 1), 0, maximumRelativeRow);
       return;
     }
 
     if (finalByte === "C") {
       normalizeCursorForMovement();
-      cursorCol = clamp(cursorCol + getCursorParam(0, 1), 0, normalizedCols - 1);
+      const amount = getCursorParam(0, 1);
+      if (controlCharacterMode === "dos-cp437" && cursorCol === normalizedCols - 1) {
+        const scrolled = scrollMode === "terminal" && cursorRow === normalizedRows - 1;
+        newLine();
+        // Ansilove returns from its read quantum as soon as right-at-edge C
+        // scrolls, so the requested horizontal movement is not applied.
+        if (scrolled) {
+          dosStaleEscapeCode = sequence.slice(1);
+          retainDosEscapeCode = true;
+          return;
+        }
+      }
+      cursorCol = clamp(cursorCol + amount, 0, normalizedCols - 1);
       return;
     }
 
@@ -1027,6 +1073,58 @@ export const createRetroScreenAnsiSnapshotStream = ({
   };
 
   const writeText = (text: string) => {
+    const processUnescapedCharacter = (character: string) => {
+      if (character === "\u001b") {
+        pendingEscape = character;
+        return;
+      }
+
+      if (character === "\r") {
+        if (controlCharacterMode === "dos-cp437") {
+          pendingCarriageReturn = true;
+        } else {
+          pendingWrap = false;
+          cursorCol = 0;
+        }
+        return;
+      }
+
+      if (character === "\n") {
+        if (controlCharacterMode === "dos-cp437") {
+          newLine();
+        } else {
+          lineFeed();
+        }
+        return;
+      }
+
+      if (character === "\v") {
+        lineFeed();
+        return;
+      }
+
+      if (character === "\b") {
+        backspace();
+        return;
+      }
+
+      if (character === "\t") {
+        insertTab();
+        return;
+      }
+
+      if (character === "\f") {
+        lineFeed();
+        return;
+      }
+
+      if (character === "\u0007" || isIgnoredControlCharacter(character)) {
+        return;
+      }
+
+      writePrintable(character);
+    };
+
     for (const character of text) {
       if (pendingCarriageReturn) {
         pendingCarriageReturn = false;
@@ -1055,7 +1153,16 @@ export const createRetroScreenAnsiSnapshotStream = ({
           continue;
         }
 
-        pendingEscape += character;
+        if (
+          controlCharacterMode === "dos-cp437" &&
+          pendingEscape === "\u001b" &&
+          character === "[" &&
+          dosStaleEscapeCode
+        ) {
+          pendingEscape = `\u001b${dosStaleEscapeCode}[`;
+        } else {
+          pendingEscape += character;
+        }
 
         if (pendingEscape.length === 1) {
           continue;
@@ -1063,6 +1170,10 @@ export const createRetroScreenAnsiSnapshotStream = ({
 
         if (pendingEscape.length === 2 && character !== "[") {
           pendingEscape = null;
+          if (controlCharacterMode === "dos-cp437") {
+            writePrintable(String.fromCodePoint(CP437_GLYPH_CODE_POINTS[0x1b]));
+            processUnescapedCharacter(character);
+          }
           continue;
         }
 
@@ -1070,62 +1181,16 @@ export const createRetroScreenAnsiSnapshotStream = ({
           ? (character >= "A" && character <= "Z") || (character >= "a" && character <= "z")
           : character >= "@" && character <= "~";
         if (pendingEscape.length >= 3 && terminatesCsi) {
+          retainDosEscapeCode = false;
           handleCsiSequence(pendingEscape);
+          if (!retainDosEscapeCode) dosStaleEscapeCode = "";
           pendingEscape = null;
         }
 
         continue;
       }
 
-      if (character === "\u001b") {
-        pendingEscape = character;
-        continue;
-      }
-
-      if (character === "\r") {
-        if (controlCharacterMode === "dos-cp437") {
-          pendingCarriageReturn = true;
-        } else {
-          pendingWrap = false;
-          cursorCol = 0;
-        }
-        continue;
-      }
-
-      if (character === "\n") {
-        if (controlCharacterMode === "dos-cp437") {
-          newLine();
-        } else {
-          lineFeed();
-        }
-        continue;
-      }
-
-      if (character === "\v") {
-        lineFeed();
-        continue;
-      }
-
-      if (character === "\b") {
-        backspace();
-        continue;
-      }
-
-      if (character === "\t") {
-        insertTab();
-        continue;
-      }
-
-      if (character === "\f") {
-        lineFeed();
-        continue;
-      }
-
-      if (character === "\u0007" || isIgnoredControlCharacter(character)) {
-        continue;
-      }
-
-      writePrintable(character);
+      processUnescapedCharacter(character);
     }
 
   };
@@ -1150,8 +1215,24 @@ export const createRetroScreenAnsiSnapshotStream = ({
     },
     writeChunk,
     writeText,
+    resolveLookahead(nextByte) {
+      if (
+        controlCharacterMode === "dos-cp437" &&
+        pendingEscape === "\u001b" &&
+        (nextByte & 0xff) !== 0x5b
+      ) {
+        pendingEscape = null;
+        writePrintable(String.fromCodePoint(CP437_GLYPH_CODE_POINTS[0x1b]));
+      }
+      return getSnapshot();
+    },
     finalize() {
+      if (controlCharacterMode === "dos-cp437" && pendingEscape === "\u001b") {
+        writePrintable(String.fromCodePoint(CP437_GLYPH_CODE_POINTS[0x1b]));
+      }
       pendingEscape = null;
+      dosStaleEscapeCode = "";
+      retainDosEscapeCode = false;
       pendingCarriageReturn = false;
       return getSnapshot();
     },
@@ -1175,6 +1256,8 @@ export const createRetroScreenAnsiSnapshotStream = ({
       savedCursorCol = 0;
       pendingWrap = false;
       pendingEscape = null;
+      dosStaleEscapeCode = "";
+      retainDosEscapeCode = false;
       pendingCarriageReturn = false;
       currentStyle = cloneStyle(DEFAULT_CELL_STYLE);
       foreground24BitFallback = null;
