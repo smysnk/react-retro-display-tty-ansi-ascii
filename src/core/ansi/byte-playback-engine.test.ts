@@ -555,4 +555,21 @@ describe("ANSI byte playback engine", () => {
     expect(engine.advanceTime(250)).toMatchObject({ processedBytes: 0, blinkVisible: false });
     expect(engine.advanceTime(250)).toMatchObject({ processedBytes: 0, blinkVisible: true });
   });
+
+  it("settles completed playback with blinking foreground visible", () => {
+    const engine = createRetroScreenAnsiBytePlaybackEngine({
+      rows: 1,
+      cols: 2,
+      baud: 32,
+      blinkIntervalMs: 250
+    });
+    engine.appendSource(encoder.encode("A"));
+    engine.closeSource();
+
+    expect(engine.advanceTime(300)).toMatchObject({
+      status: "complete",
+      processedBytes: 1,
+      blinkVisible: true
+    });
+  });
 });

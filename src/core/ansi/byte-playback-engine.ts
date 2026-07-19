@@ -131,7 +131,8 @@ export const createRetroScreenAnsiBytePlaybackEngine = ({
         ? (availableBytes * 8 * 1000) / clockState.baud
         : null,
       loopCount,
-      blinkVisible: Math.floor(clockState.elapsedMs / blinkIntervalMs) % 2 === 0
+      blinkVisible:
+        complete || Math.floor(clockState.elapsedMs / blinkIntervalMs) % 2 === 0
     };
   };
 
