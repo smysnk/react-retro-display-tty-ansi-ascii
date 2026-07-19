@@ -739,6 +739,24 @@ stable `80 x 25` window while the underlying source geometry remains larger.
 />
 ```
 
+Set `viewportFollowMode="cursor"` when the viewport should remain fixed until the parser cursor
+reaches its final visible row, then follow new output without discarding the rows above it. Combine
+it with `scrollMode="canvas"` so the complete source document remains available for later panning,
+export, or a full-document reveal. The default `viewportFollowMode="fixed"` preserves explicit
+`viewportRowOffset` behavior.
+
+```tsx
+<RetroScreenAnsiPlayer
+  byteStream={asset.byteStream}
+  rows={asset.height}
+  cols={asset.width}
+  viewportRows={25}
+  viewportFollowMode="cursor"
+  scrollMode="canvas"
+  renderBackend="canvas"
+/>
+```
+
 The playback callback reports source geometry and byte progress, so a parent can keep status UI
 in sync with the rendered stream:
 

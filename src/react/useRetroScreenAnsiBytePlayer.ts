@@ -13,6 +13,8 @@ import type { RetroScreenAnsiSnapshotStorageMode } from "../core/ansi/snapshot-c
 
 export type RetroScreenAnsiBytePlayerState = RetroScreenAnsiBytePlaybackState & {
   frameSnapshot: RetroScreenAnsiSnapshotFrame;
+  cursorRow: number;
+  cursorCol: number;
   sourceRows: number;
   sourceCols: number;
   metadata: RetroScreenAnsiMetadata | null;
@@ -203,10 +205,13 @@ export const useRetroScreenAnsiBytePlayer = ({
 
   return useMemo(() => {
     const engine = engineRef.current;
+    const parserState = engine.getParserState();
 
     return {
       ...engine.getPlaybackState(),
       frameSnapshot: engine.getScreenSnapshot(),
+      cursorRow: parserState.cursorRow,
+      cursorCol: parserState.cursorCol,
       sourceRows: normalizedRows,
       sourceCols: normalizedCols,
       metadata,

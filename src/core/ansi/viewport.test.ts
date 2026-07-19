@@ -10,6 +10,7 @@ import {
   getRetroScreenAnsiViewportAspectRatio,
   MAX_RETROSCREEN_ANSI_ADAPTIVE_VIEWPORT_COLS,
   normalizeRetroScreenAnsiWheelPanDeltas,
+  resolveRetroScreenAnsiFollowViewport,
   resolveRetroScreenAnsiViewportCols,
   resolveRetroScreenAnsiViewportRows
 } from "./viewport";
@@ -25,6 +26,47 @@ describe("retro ANSI viewport helpers", () => {
     expect(resolveRetroScreenAnsiViewportRows({ sourceRows: 23 })).toBe(23);
     expect(resolveRetroScreenAnsiViewportRows({ sourceRows: 2 })).toBe(2);
     expect(resolveRetroScreenAnsiViewportRows({ sourceRows: 400 })).toBe(25);
+  });
+
+  it("follows the cursor only after it exhausts the visible rows", () => {
+    expect(
+      resolveRetroScreenAnsiFollowViewport({
+        cursorRow: 23,
+        sourceRows: 100,
+        viewportRows: 25
+      })
+    ).toBe(0);
+    expect(
+      resolveRetroScreenAnsiFollowViewport({
+        cursorRow: 24,
+        sourceRows: 100,
+        viewportRows: 25
+      })
+    ).toBe(0);
+    expect(
+      resolveRetroScreenAnsiFollowViewport({
+        cursorRow: 25,
+        sourceRows: 100,
+        viewportRows: 25
+      })
+    ).toBe(1);
+    expect(
+      resolveRetroScreenAnsiFollowViewport({
+        cursorRow: 200,
+        sourceRows: 100,
+        viewportRows: 25
+      })
+    ).toBe(75);
+  });
+
+  it("keeps short documents fixed at the first row", () => {
+    expect(
+      resolveRetroScreenAnsiFollowViewport({
+        cursorRow: 10,
+        sourceRows: 10,
+        viewportRows: 25
+      })
+    ).toBe(0);
   });
 
   it("adapts width for sane source buffers and falls back for giant buffers", () => {

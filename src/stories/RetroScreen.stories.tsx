@@ -2351,6 +2351,50 @@ export function BadAppleAnsiDemoStory() {
   return <BadAppleAnsiSurface capture />;
 }
 
+export function CursorFollowAnsiStory() {
+  const byteStream = useMemo(
+    () => [
+      new TextEncoder().encode(
+        Array.from({ length: 80 }, (_, index) =>
+          `\u001b[3${index % 8}mROW ${String(index + 1).padStart(2, "0")}  NON-DESTRUCTIVE CANVAS FOLLOW`
+        ).join("\u001b[0m\r\n")
+      )
+    ],
+    []
+  );
+
+  return (
+    <StoryShell
+      kicker="Viewport Follow"
+      title="Follow a tall canvas document without discarding completed rows."
+      copy="The player keeps the complete 80-row document in canvas storage while a 25-row viewport follows the active parser cursor. Fixed viewports and terminal rollover remain separate policies."
+    >
+      <Stage maxWidth={920}>
+        <RetroScreenAnsiPlayer
+          rows={80}
+          cols={80}
+          viewportRows={25}
+          viewportFollowMode="cursor"
+          byteStream={byteStream}
+          baud={28_000}
+          complete
+          loop
+          controlCharacterMode="dos-cp437"
+          displayColorMode="ansi-vga"
+          displayGlyphMode="ibm-vga-8x16"
+          displayLayoutMode="fit-width"
+          displayPadding={0}
+          displayScanlines={false}
+          renderBackend="canvas"
+          scrollMode="canvas"
+          wrapMode="dos-immediate"
+          style={{ width: "100%" }}
+        />
+      </Stage>
+    </StoryShell>
+  );
+}
+
 function BadAppleAnsiGzipSurface({
   capture = false
 }: {

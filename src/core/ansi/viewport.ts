@@ -6,6 +6,8 @@ export const MAX_RETROSCREEN_ANSI_ADAPTIVE_VIEWPORT_COLS = 200;
 export const MIN_RETROSCREEN_ANSI_ADAPTIVE_VIEWPORT_COLS =
   DEFAULT_RETROSCREEN_ANSI_VIEWPORT_COLS;
 
+export type RetroScreenAnsiViewportFollowMode = "fixed" | "cursor";
+
 const clamp = (value: number, min: number, max: number) =>
   Math.max(min, Math.min(max, value));
 
@@ -223,6 +225,33 @@ export const resolveRetroScreenAnsiViewportRows = ({
   const normalizedSourceRows = normalizePositiveInt(sourceRows, normalizedDefaultRows);
 
   return Math.min(normalizedDefaultRows, normalizedSourceRows);
+};
+
+export const resolveRetroScreenAnsiFollowViewport = ({
+  cursorRow = 0,
+  sourceRows,
+  viewportRows
+}: {
+  cursorRow?: number | null;
+  sourceRows?: number | null;
+  viewportRows?: number | null;
+} = {}) => {
+  const normalizedSourceRows = normalizePositiveInt(
+    sourceRows,
+    DEFAULT_RETROSCREEN_ANSI_VIEWPORT_ROWS
+  );
+  const normalizedViewportRows = Math.min(
+    normalizedSourceRows,
+    normalizePositiveInt(viewportRows, normalizedSourceRows)
+  );
+  const normalizedCursorRow = Math.max(0, Math.floor(Number(cursorRow) || 0));
+  const maxRowOffset = Math.max(0, normalizedSourceRows - normalizedViewportRows);
+
+  return clamp(
+    normalizedCursorRow - normalizedViewportRows + 1,
+    0,
+    maxRowOffset
+  );
 };
 
 export const getRetroScreenAnsiViewportAspectRatio = ({

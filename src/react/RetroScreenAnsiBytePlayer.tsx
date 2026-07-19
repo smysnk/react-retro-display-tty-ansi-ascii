@@ -8,6 +8,10 @@ import type {
 } from "../core/ansi/player";
 import type { RetroScreenAnsiSnapshotStorageMode } from "../core/ansi/snapshot-contract";
 import { normalizeRetroScreenAnsiViewportWindow } from "../core/ansi/snapshot-contract";
+import {
+  resolveRetroScreenAnsiFollowViewport,
+  type RetroScreenAnsiViewportFollowMode
+} from "../core/ansi/viewport";
 import { RetroScreen } from "./RetroScreen";
 import { ansiSnapshotToRenderModelWindow } from "./retro-screen-render-model";
 import {
@@ -30,6 +34,7 @@ export type RetroScreenAnsiBytePlayerProps = Omit<
   drain?: boolean;
   viewportRows?: number;
   viewportCols?: number;
+  viewportFollowMode?: RetroScreenAnsiViewportFollowMode;
   viewportRowOffset?: number;
   viewportColOffset?: number;
   storageMode?: RetroScreenAnsiSnapshotStorageMode;
@@ -52,6 +57,7 @@ export function RetroScreenAnsiBytePlayer({
   drain = false,
   viewportRows,
   viewportCols,
+  viewportFollowMode = "fixed",
   viewportRowOffset = 0,
   viewportColOffset = 0,
   storageMode = "eager",
@@ -78,13 +84,21 @@ export function RetroScreenAnsiBytePlayer({
     wrapMode,
     blinkIntervalMs
   });
+  const resolvedViewportRows = viewportRows ?? rows;
+  const resolvedViewportRowOffset = viewportFollowMode === "cursor"
+    ? resolveRetroScreenAnsiFollowViewport({
+        cursorRow: playbackState.cursorRow,
+        sourceRows: playbackState.sourceRows,
+        viewportRows: resolvedViewportRows
+      })
+    : viewportRowOffset;
   const viewport = useMemo(
     () => normalizeRetroScreenAnsiViewportWindow({
       sourceRows: playbackState.sourceRows,
       sourceCols: playbackState.sourceCols,
-      rowOffset: viewportRowOffset,
+      rowOffset: resolvedViewportRowOffset,
       colOffset: viewportColOffset,
-      rows: viewportRows ?? rows,
+      rows: resolvedViewportRows,
       cols: viewportCols ?? cols
     }),
     [
@@ -94,8 +108,8 @@ export function RetroScreenAnsiBytePlayer({
       rows,
       viewportColOffset,
       viewportCols,
-      viewportRowOffset,
-      viewportRows
+      resolvedViewportRowOffset,
+      resolvedViewportRows
     ]
   );
   const viewportRenderModel = useMemo(
@@ -125,7 +139,9 @@ export function RetroScreenAnsiBytePlayer({
       previous.status !== playbackState.status ||
       previous.blinkVisible !== playbackState.blinkVisible ||
       previous.loopCount !== playbackState.loopCount ||
-      previous.parserSettled !== playbackState.parserSettled;
+      previous.parserSettled !== playbackState.parserSettled ||
+      previous.cursorRow !== playbackState.cursorRow ||
+      previous.cursorCol !== playbackState.cursorCol;
 
     if (changed) {
       notifiedStateRef.current = playbackState;
@@ -143,6 +159,8 @@ export function RetroScreenAnsiBytePlayer({
       rows={viewport.rows}
       cols={viewport.cols}
       displayBlinkVisible={playbackState.blinkVisible}
+      ansiViewportFollowMode={viewportFollowMode}
+      ansiViewportRowOffset={viewport.rowOffset}
     />
   );
 }

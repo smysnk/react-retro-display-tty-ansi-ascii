@@ -77,8 +77,10 @@ export {
   normalizeRetroScreenAnsiWheelPanDeltas,
   resolveRetroScreenAnsiViewportCols,
   resolveRetroScreenAnsiViewportRows,
+  resolveRetroScreenAnsiFollowViewport,
   getRetroScreenAnsiViewportAspectRatio
 } from "./core/ansi/viewport";
+export type { RetroScreenAnsiViewportFollowMode } from "./core/ansi/viewport";
 export {
   collapseRetroScreenTextSelectionToEnd,
   collapseRetroScreenTextSelectionToStart,

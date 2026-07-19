@@ -69,6 +69,62 @@ describe("RetroScreenAnsiBytePlayer", () => {
     expect(container.querySelector(".retro-screen__body")?.textContent).toContain("Z");
   });
 
+  it("follows the cursor without discarding rows from the retained canvas document", async () => {
+    const onPlaybackStateChange = vi.fn();
+    const { container } = render(
+      <RetroScreenAnsiBytePlayer
+        rows={4}
+        cols={2}
+        viewportRows={2}
+        viewportFollowMode="cursor"
+        byteStream={[encoder.encode("A\r\nB\r\nC")]}
+        complete
+        drain
+        scrollMode="canvas"
+        onPlaybackStateChange={onPlaybackStateChange}
+      />
+    );
+
+    await waitFor(() => {
+      const state = onPlaybackStateChange.mock.calls.at(-1)?.[0] as
+        | RetroScreenAnsiBytePlayerState
+        | undefined;
+      expect(state).toMatchObject({
+        cursorRow: 2,
+        cursorCol: 1,
+        status: "complete"
+      });
+      expect(state?.frameSnapshot.lines.slice(0, 3)).toEqual(["A ", "B ", "C "]);
+    });
+
+    const root = container.querySelector(".retro-screen");
+    expect(root?.getAttribute("data-ansi-viewport-follow-mode")).toBe("cursor");
+    expect(root?.getAttribute("data-ansi-viewport-row-offset")).toBe("1");
+    expect(container.querySelector(".retro-screen__body")?.textContent).not.toContain("A");
+    expect(container.querySelector(".retro-screen__body")?.textContent).toContain("B");
+    expect(container.querySelector(".retro-screen__body")?.textContent).toContain("C");
+  });
+
+  it("preserves an explicitly fixed viewport by default", async () => {
+    const { container } = render(
+      <RetroScreenAnsiBytePlayer
+        rows={4}
+        cols={2}
+        viewportRows={2}
+        byteStream={[encoder.encode("A\r\nB\r\nC")]}
+        complete
+        drain
+        scrollMode="canvas"
+      />
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector(".retro-screen__body")?.textContent).toContain("A");
+    });
+    expect(container.querySelector(".retro-screen")?.getAttribute("data-ansi-viewport-follow-mode")).toBe("fixed");
+    expect(container.querySelector(".retro-screen")?.getAttribute("data-ansi-viewport-row-offset")).toBe("0");
+  });
+
   it("coalesces byte advancement to animation frames and cancels on unmount", async () => {
     const callbacks = new Map<number, FrameRequestCallback>();
     let nextId = 1;

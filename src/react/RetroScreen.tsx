@@ -1340,6 +1340,12 @@ export function RetroScreen(props: RetroScreenProps) {
       data-buffer-offset={bufferViewport.viewportState.scrollOffset}
       data-buffer-max-offset={bufferViewport.viewportState.maxScrollOffset}
       data-auto-follow={bufferViewport.viewportState.autoFollow ? "true" : "false"}
+      data-ansi-viewport-follow-mode={props.ansiViewportFollowMode}
+      data-ansi-viewport-row-offset={
+        props.ansiViewportRowOffset === undefined
+          ? undefined
+          : String(props.ansiViewportRowOffset)
+      }
       data-terminal-mouse-tracking={props.mode === "terminal" ? terminalSnapshot.modes.mouseTrackingMode : undefined}
       data-terminal-mouse-protocol={props.mode === "terminal" ? terminalSnapshot.modes.mouseProtocol : undefined}
       data-terminal-alternate-screen={

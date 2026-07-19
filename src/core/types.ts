@@ -85,6 +85,8 @@ export type RetroScreenSharedProps = {
   canvasAccessibleText?: boolean;
   displayIceColors?: boolean;
   displayBlinkVisible?: boolean;
+  ansiViewportFollowMode?: "fixed" | "cursor";
+  ansiViewportRowOffset?: number;
   displayDebugOverlay?: boolean;
   displayScanlines?: boolean;
   displayPadding?: RetroScreenDisplayPadding;
