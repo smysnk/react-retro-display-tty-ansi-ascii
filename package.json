@@ -53,6 +53,9 @@
   ],
   "scripts": {
     "build": "tsup",
+    "examples:typecheck": "tsc -p ./examples/readme/tsconfig.json --noEmit",
+    "readme:examples:sync": "node ./scripts/sync-readme-examples.mjs",
+    "readme:examples:check": "node ./scripts/check-readme-examples.mjs",
     "tty:server": "node ./examples/node-tty-websocket-server/server.mjs",
     "perf:terminal": "yarn build && node ./scripts/benchmark-terminal-bridge.mjs",
     "perf:bitmap": "yarn storybook:build && node ./scripts/benchmark-bitmap-renderer.mjs",
@@ -76,7 +79,7 @@
     "test:unit": "vitest run",
     "report:ansi-display": "node ./scripts/generate-ansi-display-support-report.mjs",
     "check:ansi-display-report": "node ./scripts/generate-ansi-display-support-report.mjs --check",
-    "test:ci": "yarn test:conformance && yarn test:e2e && yarn check:ansi-display-report",
+    "test:ci": "yarn build && yarn examples:typecheck && yarn readme:examples:check && yarn test:conformance && yarn test:e2e && yarn check:ansi-display-report",
     "test:e2e:ansi-display": "storybook build && yarn test:e2e:ansi-display:built",
     "test:e2e:ansi-display:built": "yarn node --test ./e2e/ansi-display-fidelity.test.mjs ./e2e/cursor-position.test.mjs ./e2e/display-buffer.test.mjs",
     "test:ansi:fidelity": "yarn test:conformance && yarn storybook:build && yarn test:e2e:ansi-display:built && yarn node --test ./e2e/tty-*.test.mjs && yarn check:ansi-display-report",

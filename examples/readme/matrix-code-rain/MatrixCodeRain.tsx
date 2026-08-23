@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import type { RetroScreenCell } from "../core/terminal/types";
-import type { RetroScreenDisplayPadding } from "../core/types";
-import { RetroScreen } from "../react/RetroScreen";
+import {
+  RetroScreen,
+  type RetroScreenCell,
+  type RetroScreenCellStyle,
+  type RetroScreenDisplayPadding
+} from "react-retro-display-tty-ansi-ascii";
+import "react-retro-display-tty-ansi-ascii/styles.css";
+import "./matrix-code-rain.css";
 
 const MATRIX_GREEN = "#8efe8e";
 export const MATRIX_FONT_FAMILY = "\"Matrix\"";
@@ -16,7 +21,7 @@ const GLYPH_POOL = Array.from(
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()-_=+[]{}<>?/\\|"
 );
 
-const SHADE_STYLES = SHADE_COLORS.map((value) => ({
+const SHADE_STYLES: readonly RetroScreenCellStyle[] = SHADE_COLORS.map((value) => ({
   intensity: "normal" as const,
   bold: false,
   faint: false,
@@ -50,7 +55,7 @@ type MatrixRainEngine = {
   columns: MatrixRainColumn[];
 };
 
-type MatrixCodeRainScreenProps = {
+export type MatrixCodeRainScreenProps = {
   rows?: number;
   cols?: number;
   tickMs?: number;

@@ -26,7 +26,8 @@ const config: StorybookConfig = {
     "../src/stories/AnsiDisplayBuffer.stories.tsx",
     "../src/stories/Editor.stories.tsx",
     "../src/stories/ResizeResponsive.stories.tsx",
-    "../src/stories/RetroScreenCapture.stories.tsx"
+    "../src/stories/RetroScreenCapture.stories.tsx",
+    "../src/stories/ReadmeExamples.stories.tsx"
   ],
   addons: [getAbsolutePath("@storybook/addon-docs")],
   framework: {
@@ -43,7 +44,17 @@ const config: StorybookConfig = {
     return mergeConfig(existingConfig, {
       base: resolveStorybookBasePath(),
       resolve: {
-        preserveSymlinks: false
+        preserveSymlinks: false,
+        alias: [
+          {
+            find: "react-retro-display-tty-ansi-ascii/styles.css",
+            replacement: resolve(workspaceRoot, "src/styles/retro-screen.css")
+          },
+          {
+            find: "react-retro-display-tty-ansi-ascii",
+            replacement: resolve(workspaceRoot, "src/index.ts")
+          }
+        ]
       },
       server: {
         fs: {

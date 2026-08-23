@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "declaration": false,
+    "noEmit": true,
+    "target": "ES2022",
+    "types": [],
+    "baseUrl": "../.."
+  },
+  "include": ["./**/*.ts", "./**/*.tsx", "./styles.css.d.ts"]
+}

@@ -171,6 +171,77 @@ test("render smoke stories stay stable in the browser", async (t) => {
     }
   );
 
+  await t.test("light and dark hosts type together and complete together", async () => {
+    await harness.gotoStory("retroscreen-capture--light-dark-hosts-demo");
+
+    const grid = page().locator("[data-demo-capture='light-dark-hosts'] .sb-retro-host-grid");
+    const cards = grid.locator(".sb-retro-host-card");
+
+    await page().waitForFunction(() => {
+      const hostGrid = document.querySelector(
+        "[data-demo-capture='light-dark-hosts'] .sb-retro-host-grid"
+      );
+      const bodies = Array.from(hostGrid?.querySelectorAll(".retro-screen__body") ?? []);
+      return (
+        hostGrid?.getAttribute("data-animation-phase") === "typing" &&
+        bodies.length === 2 &&
+        bodies.every((body) => (body.textContent ?? "").trim().length > 0)
+      );
+    });
+
+    const typingState = await grid.evaluate((hostGrid) => ({
+      phase: hostGrid.getAttribute("data-animation-phase"),
+      active: Array.from(hostGrid.querySelectorAll(".sb-retro-host-card")).map(
+        (card) => card.getAttribute("data-active")
+      ),
+      text: Array.from(hostGrid.querySelectorAll(".retro-screen__body")).map((body) =>
+        (body.textContent ?? "").replace(/\u00a0/gu, " ").trim()
+      )
+    }));
+
+    assert.equal(typingState.phase, "typing");
+    assert.deepEqual(typingState.active, ["true", "true"]);
+    assert.equal(typingState.text.length, 2);
+    assert.ok(typingState.text.every((value) => value.length > 0));
+    assert.ok(typingState.text.every((value) => !value.includes("typed live")));
+
+    await page().waitForFunction(() => {
+      const hostGrid = document.querySelector(
+        "[data-demo-capture='light-dark-hosts'] .sb-retro-host-grid"
+      );
+      return hostGrid?.getAttribute("data-animation-phase") === "hold";
+    });
+
+    const completedState = await cards.evaluateAll((hostCards) =>
+      hostCards.map((card) => ({
+        active: card.getAttribute("data-active"),
+        text: (card.querySelector(".retro-screen__body")?.textContent ?? "")
+          .replace(/\u00a0/gu, " ")
+          .trim()
+      }))
+    );
+
+    assert.deepEqual(
+      completedState.map((entry) => entry.active),
+      ["true", "true"]
+    );
+    assert.match(completedState[0]?.text ?? "", /typed live on bright LCD glass/u);
+    assert.match(completedState[1]?.text ?? "", /typed live on deep terminal glass/u);
+
+    await page().waitForFunction(() => {
+      const hostGrid = document.querySelector(
+        "[data-demo-capture='light-dark-hosts'] .sb-retro-host-grid"
+      );
+      return hostGrid?.getAttribute("data-animation-phase") === "typing";
+    });
+
+    const resetText = await cards.evaluateAll((hostCards) =>
+      hostCards.map((card) => card.querySelector(".retro-screen__body")?.textContent ?? "")
+    );
+
+    assert.ok(resetText.every((value) => !value.includes("typed live")));
+  });
+
   await t.test("bad apple ansi story loads the Mistigris asset at native 80x25 geometry", async () => {
     await harness.gotoStory("retroscreen-display-buffer--bad-apple-ansi");
 

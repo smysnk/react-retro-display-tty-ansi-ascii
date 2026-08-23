@@ -35,6 +35,9 @@ Install the package, bring in the shared stylesheet, and start with the simplest
 npm install react-retro-display-tty-ansi-ascii
 ```
 
+**Complete example:** this block includes every import required in an existing React app.
+
+<!-- readme-example:getting-started source="examples/readme/getting-started/StatusCard.tsx" start -->
 ```tsx
 import { RetroScreen } from "react-retro-display-tty-ansi-ascii";
 import "react-retro-display-tty-ansi-ascii/styles.css";
@@ -49,6 +52,7 @@ export function StatusCard() {
   );
 }
 ```
+<!-- readme-example:getting-started end -->
 
 That is the whole entry point.
 You hand the component a mode, a value or controller when needed, and let it handle the grid,
@@ -74,6 +78,9 @@ at a time.
 
 See it in action in the live [m68k-interpreter touch demo](https://smysnk.github.io/m68k-interpreter/).
 
+**Complete example:** the rendered `<output>` makes the emitted coordinates visible to the host.
+
+<!-- readme-example:touch-input source="examples/readme/touch-input/TouchDemo.tsx" start -->
 ```tsx
 import { useState } from "react";
 import { RetroScreen } from "react-retro-display-tty-ansi-ascii";
@@ -83,35 +90,39 @@ export function TouchDemo() {
   const [lastTouch, setLastTouch] = useState("Tap the screen");
 
   return (
-    <RetroScreen
-      mode="terminal"
-      gridMode="static"
-      rows={12}
-      cols={32}
-      value={[
-        "┌──────────────────────────────┐",
-        "│                              │",
-        "│          TOUCH ME            │",
-        "│                              │",
-        "│   ↑ up          right →      │",
-        "│                              │",
-        "│   ← left       down ↓        │",
-        "│                              │",
-        "│                              │",
-        "│                              │",
-        "│                              │",
-        "└──────────────────────────────┘"
-      ].join("\\n")}
-      touchInput={{
-        enabled: true,
-        onTouchCell: ({ row, col, rows, cols, pointerType }) => {
-          setLastTouch(`${pointerType} @ ${row},${col} inside ${rows}x${cols}`);
-        }
-      }}
-    />
+    <>
+      <RetroScreen
+        mode="terminal"
+        gridMode="static"
+        rows={12}
+        cols={32}
+        value={[
+          "┌──────────────────────────────┐",
+          "│                              │",
+          "│          TOUCH ME            │",
+          "│                              │",
+          "│   ↑ up          right →      │",
+          "│                              │",
+          "│   ← left       down ↓        │",
+          "│                              │",
+          "│                              │",
+          "│                              │",
+          "│                              │",
+          "└──────────────────────────────┘"
+        ].join("\n")}
+        touchInput={{
+          enabled: true,
+          onTouchCell: ({ row, col, rows, cols, pointerType }) => {
+            setLastTouch(`${pointerType} @ ${row},${col} inside ${rows}x${cols}`);
+          }
+        }}
+      />
+      <output>{lastTouch}</output>
+    </>
   );
 }
 ```
+<!-- readme-example:touch-input end -->
 
 The host remains responsible for deciding what a touch means. RetroScreen only handles the
 overlay, pointer capture, hit testing, and the single-press-until-release behavior.
@@ -125,6 +136,8 @@ more. The prop accepts:
 - a CSS length string for uniform padding
 - an object with `block` and `inline`
 - an object with per-side `top`, `right`, `bottom`, and `left`
+
+**API fragment:** these calls assume `RetroScreen` and the package stylesheet are already imported.
 
 ```tsx
 <RetroScreen mode="value" value="Tight framing" displayPadding={8} />
@@ -146,6 +159,8 @@ more. The prop accepts:
 RetroScreen also shows a focus glow around the shell by default so editable, prompt, and terminal
 surfaces clearly read as active. Disable it when you want a quieter shell:
 
+**API fragment:**
+
 ```tsx
 <RetroScreen mode="terminal" focusGlow={false} />
 ```
@@ -155,6 +170,8 @@ surfaces clearly read as active. Disable it when you want a quieter shell:
 Use `displayFrame={false}` when the glass itself should stay visible but the outer shell chrome
 should drop away. This is especially useful for fullscreen mobile artwork, embedded canvases, or
 layouts where the host surface already provides the surrounding frame.
+
+**API fragment:** this assumes the Getting Started imports.
 
 ```tsx
 <RetroScreen
@@ -179,20 +196,41 @@ handles, including the optional leading-edge handles, so the docs match the ship
 
 [![Resizable Panel Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi-ascii/main/docs/assets/react-retro-display-tty-ansi-ascii-resizable-panel.webp)](https://github.com/user-attachments/assets/227b03f2-23a1-43eb-91b1-e326988313da)
 
+**Complete example:** the Storybook capture adds a scripted mouse only to demonstrate the real
+handles; the component below is everything the application needs for user-driven resizing.
+
+<!-- readme-example:resizable-panel source="examples/readme/resizable-panel/ResizablePanel.tsx" start -->
 ```tsx
-<RetroScreen
-  mode="terminal"
-  resizable="both"
-  resizableLeadingEdges
-  displayPadding={{ block: 12, inline: 14 }}
-  value={[
-    "All resize handles are live here.",
-    "",
-    "Drag left, right, top, bottom, or either corner.",
-    "Rows and columns recompute as the panel changes size."
-  ].join("\n")}
-/>
+import { useState } from "react";
+import {
+  RetroScreen,
+  type RetroScreenGeometry
+} from "react-retro-display-tty-ansi-ascii";
+import "react-retro-display-tty-ansi-ascii/styles.css";
+
+export function ResizablePanel() {
+  const [geometry, setGeometry] = useState<RetroScreenGeometry | null>(null);
+
+  return (
+    <RetroScreen
+      mode="terminal"
+      resizable="both"
+      resizableLeadingEdges
+      displayPadding={{ block: 12, inline: 14 }}
+      value={[
+        "All resize handles are live here.",
+        "",
+        "Drag left, right, top, bottom, or any corner.",
+        geometry
+          ? `grid: ${geometry.cols} cols x ${geometry.rows} rows`
+          : "grid: measuring"
+      ].join("\n")}
+      onGeometryChange={setGeometry}
+    />
+  );
+}
 ```
+<!-- readme-example:resizable-panel end -->
 
 Reach for:
 
@@ -208,6 +246,12 @@ dark night-ops surface. This is separate from the host page theme, so the same A
 terminal content can sit inside bright docs, dark dashboards, or a side-by-side comparison view.
 
 [![Light And Dark Hosts Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi-ascii/main/docs/assets/react-retro-display-tty-ansi-ascii-light-dark-hosts.webp)](https://github.com/user-attachments/assets/fb758db8-d014-46b3-96fc-cc649bf0c475)
+
+**Complete multi-file example:** the synchronized typing, both host cards, responsive layout, and
+cleanup are in [`examples/readme/light-dark-surfaces/`](./examples/readme/light-dark-surfaces/).
+
+**API fragment:** the two calls below isolate the light and dark display props without repeating
+the host layout or animation engine.
 
 ```tsx
 <RetroScreen
@@ -241,18 +285,54 @@ same ANSI palette will still be remapped for readable contrast against each surf
 
 ## Modes Of Use
 
+Examples are labeled deliberately: a **Complete example** is copy-pasteable in an existing React
+app, a **Complete multi-file example** links every required source and asset, and an **API
+fragment** isolates one concept while linking back to a complete setup.
+
 ### 1. Quiet output
 
 Use `mode="value"` when the display is just there to speak.
 
 [![Quiet Output Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi-ascii/main/docs/assets/react-retro-display-tty-ansi-ascii-quiet-output.webp)](https://github.com/user-attachments/assets/df971b76-3de6-4686-833a-8fad19a66832)
 
+**Complete example:** this includes the typing cadence shown by the animated capture.
+
+<!-- readme-example:quiet-output source="examples/readme/quiet-output/QuietOutput.tsx" start -->
 ```tsx
-<RetroScreen
-  mode="value"
-  value="LINK STABLE\nAwaiting operator input."
-/>
+import { useEffect, useState } from "react";
+import { RetroScreen } from "react-retro-display-tty-ansi-ascii";
+import "react-retro-display-tty-ansi-ascii/styles.css";
+
+const MESSAGE = "LINK STABLE\nAwaiting operator input.";
+
+export function QuietOutput() {
+  const [value, setValue] = useState("");
+
+  useEffect(() => {
+    const timers: number[] = [];
+    let nextAt = 220;
+
+    for (let index = 1; index <= MESSAGE.length; index += 1) {
+      const character = MESSAGE[index - 1];
+      timers.push(
+        window.setTimeout(() => {
+          setValue(MESSAGE.slice(0, index));
+        }, nextAt)
+      );
+      nextAt += character === "\n" ? 260 : 92;
+    }
+
+    return () => {
+      for (const timer of timers) {
+        window.clearTimeout(timer);
+      }
+    };
+  }, []);
+
+  return <RetroScreen mode="value" value={value} color="#97ff9b" />;
+}
 ```
+<!-- readme-example:quiet-output end -->
 
 ### 2. Signal intercept
 
@@ -260,30 +340,108 @@ Use a controller when the display should reveal text over time and the cadence m
 
 [![White Rabbit Signal Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi-ascii/main/docs/assets/react-retro-display-tty-ansi-ascii-white-rabbit-signal.webp)](https://github.com/user-attachments/assets/f05998aa-40a0-4c51-9612-025b5e5f5b29)
 
+**Complete example:** this is the four-message sequence and cadence used by the capture.
+
+<!-- readme-example:signal-intercept source="examples/readme/signal-intercept/WhiteRabbitSignal.tsx" start -->
 ```tsx
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   RetroScreen,
   createRetroScreenController
 } from "react-retro-display-tty-ansi-ascii";
+import "react-retro-display-tty-ansi-ascii/styles.css";
 
-const controller = createRetroScreenController({
-  rows: 5,
-  cols: 34,
-  cursorMode: "solid"
-});
+const SIGNAL_PHRASES = [
+  { text: "Wake up, Neo...", pauseAfter: 1360 },
+  { text: "The Matrix has you...", pauseAfter: 1220 },
+  { text: "Follow the white rabbit.", pauseAfter: 1220 },
+  { text: "Knock, knock, Neo.", pauseAfter: 0 }
+] as const;
 
 export function WhiteRabbitSignal() {
+  const [controller] = useState(() =>
+    createRetroScreenController({
+      rows: 5,
+      cols: 34,
+      cursorMode: "solid"
+    })
+  );
+
   useEffect(() => {
     controller.reset();
-    controller.write("Wake up, Neo...");
-  }, []);
+    controller.resize(5, 34);
+    controller.setCursorMode("solid");
+    controller.setCursorVisible(true);
 
-  return <RetroScreen mode="terminal" controller={controller} />;
+    const timers: number[] = [];
+    let nextAt = 380;
+
+    const getTypingDelay = (character: string, nextCharacter?: string) => {
+      if (character === " ") return 86;
+      if (character === ",") return 214;
+      if (character === "." && nextCharacter === ".") return 70;
+      if (character === ".") return 320;
+      if (/[A-Z]/u.test(character)) return 154;
+      return 122;
+    };
+
+    const scheduleTypedWrite = (text: string) => {
+      const characters = Array.from(text);
+
+      for (let index = 0; index < characters.length; index += 1) {
+        const character = characters[index]!;
+
+        timers.push(
+          window.setTimeout(() => {
+            controller.write(character);
+          }, nextAt)
+        );
+        nextAt += getTypingDelay(character, characters[index + 1]);
+      }
+    };
+
+    const scheduleReset = () => {
+      timers.push(
+        window.setTimeout(() => {
+          controller.reset();
+          controller.resize(5, 34);
+          controller.setCursorMode("solid");
+          controller.setCursorVisible(true);
+        }, nextAt)
+      );
+      nextAt += 360;
+    };
+
+    SIGNAL_PHRASES.forEach(({ text, pauseAfter }, index) => {
+      if (index > 0) {
+        scheduleReset();
+      }
+
+      scheduleTypedWrite(text);
+      nextAt += pauseAfter;
+    });
+
+    return () => {
+      for (const timer of timers) {
+        window.clearTimeout(timer);
+      }
+    };
+  }, [controller]);
+
+  return (
+    <RetroScreen
+      mode="terminal"
+      controller={controller}
+      color="#97ff9b"
+      displayPadding={{ block: 14, inline: 16 }}
+      style={{ minHeight: "212px" }}
+    />
+  );
 }
 ```
+<!-- readme-example:signal-intercept end -->
 
-The Storybook version uses timed writes and screen clears so the four-line sequence lands like a late-night intercepted signal instead of a static quote.
+This is the same four-message sequence, per-character cadence, screen clearing, and display styling used by the Storybook demo.
 
 ### 3. Matrix code rain
 
@@ -291,31 +449,22 @@ Use the terminal renderer as a dense animated display surface when you want the 
 
 [![Matrix Code Rain Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi-ascii/main/docs/assets/react-retro-display-tty-ansi-ascii-matrix-code-rain.webp)](https://github.com/user-attachments/assets/df2c7fdc-cd27-4296-8f70-1373fdfb63aa)
 
+**Complete multi-file example:** the seeded glyph field, column engine, cell rasterization,
+animation loop, styling, and cleanup are in
+[`examples/readme/matrix-code-rain/`](./examples/readme/matrix-code-rain/).
+
+The runnable entry point is:
+
 ```tsx
-import type { CSSProperties } from "react";
-import { RetroScreen, createRetroScreenController } from "react-retro-display-tty-ansi-ascii";
+import { MatrixCodeRainScreen } from "./MatrixCodeRain";
 
-const controller = createRetroScreenController({ rows: 24, cols: 58 });
-const matrixFontStyle = {
-  "--retro-screen-font-family": "\"Matrix\""
-} as CSSProperties;
-
-<RetroScreen
-  mode="terminal"
-  controller={controller}
-  gridMode="static"
-  rows={24}
-  cols={58}
-  displayColorMode="ansi-extended"
-  color="#8efe8e"
-  displayFontScale={1.05}
-  displayRowScale={1.08}
-  displayPadding={{ block: 12, inline: 14 }}
-  style={matrixFontStyle}
-/>
+export function App() {
+  return <MatrixCodeRainScreen />;
+}
 ```
 
-The Storybook demo keeps the glyphs planted on the grid and moves waves of illumination through them so the effect feels closer to the movie than a simple falling-text loop. It uses the bundled `Matrix` font.
+This replaces the previous empty-controller fragment, which configured a screen but never supplied
+glyphs or animation frames.
 
 ### 4. Editable drafting
 
@@ -323,27 +472,40 @@ Turn on `editable` when you want the same surface to behave like a controlled in
 
 [![Editable Drafting Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi-ascii/main/docs/assets/react-retro-display-tty-ansi-ascii-editable-drafting.webp)](https://github.com/user-attachments/assets/5670d23a-c794-46a0-bb40-784f04a2da14)
 
+**Complete example:** the capture automatically types into this same controlled surface; that
+capture choreography is not required by the application.
+
+<!-- readme-example:editable-drafting source="examples/readme/editable-drafting/EditableDrafting.tsx" start -->
 ```tsx
 import { useState } from "react";
+import { RetroScreen } from "react-retro-display-tty-ansi-ascii";
+import "react-retro-display-tty-ansi-ascii/styles.css";
 
-export function DraftPad() {
+export function EditableDrafting() {
   const [value, setValue] = useState("");
+  const [submitted, setSubmitted] = useState("Nothing submitted yet.");
 
   return (
-    <RetroScreen
-      mode="value"
-      value={value}
-      editable
-      autoFocus
-      placeholder="Write a line, then press Enter."
-      onChange={setValue}
-      onSubmit={(submitted) => {
-        console.log("submitted:", submitted);
-      }}
-    />
+    <>
+      <RetroScreen
+        mode="value"
+        value={value}
+        editable
+        autoFocus
+        color="#97ff9b"
+        cursorMode="solid"
+        placeholder="Write a line, breathe, then press Enter."
+        onChange={setValue}
+        onSubmit={(nextValue) => {
+          setSubmitted(nextValue.length > 0 ? nextValue : "(empty)");
+        }}
+      />
+      <output>Last Enter press: {submitted}</output>
+    </>
   );
 }
 ```
+<!-- readme-example:editable-drafting end -->
 
 ### 5. Terminal output from a controller
 
@@ -351,29 +513,86 @@ Use a controller when the display should follow external writes over time.
 
 [![Terminal Output Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi-ascii/main/docs/assets/react-retro-display-tty-ansi-ascii-terminal-output.webp)](https://github.com/user-attachments/assets/57258c51-5afd-4164-87dd-d30b85726a26)
 
+**Complete example:** controller construction, all timed writes, and cleanup are included.
+
+<!-- readme-example:terminal-output source="examples/readme/terminal-output/TerminalOutput.tsx" start -->
 ```tsx
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   RetroScreen,
   createRetroScreenController
 } from "react-retro-display-tty-ansi-ascii";
+import "react-retro-display-tty-ansi-ascii/styles.css";
 
-const controller = createRetroScreenController({
-  rows: 9,
-  cols: 46,
-  cursorMode: "hollow"
-});
+const OUTPUT_SEQUENCE = [
+  {
+    at: 260,
+    text: "BOOT   react-retro-display-tty-ansi-ascii",
+    appendNewline: true
+  },
+  {
+    at: 1120,
+    text: "CHECK  controller attached",
+    appendNewline: true
+  },
+  {
+    at: 2080,
+    text: "\u001b[1mREADY\u001b[0m ansi parser online",
+    appendNewline: true
+  },
+  {
+    at: 3140,
+    text: "\u001b[2msoft notes stay readable without stealing focus\u001b[0m",
+    appendNewline: true
+  },
+  {
+    at: 4320,
+    text: "\u001b[7mLIVE\u001b[0m output keeps pace with external writes",
+    appendNewline: false
+  }
+] as const;
 
-export function StreamedTerminal() {
+export function TerminalOutput() {
+  const [controller] = useState(() =>
+    createRetroScreenController({
+      rows: 9,
+      cols: 46,
+      cursorMode: "solid"
+    })
+  );
+
   useEffect(() => {
     controller.reset();
-    controller.writeln("BOOT  react-retro-display-tty-ansi-ascii");
-    controller.write("\u001b[1mREADY\u001b[0m ansi parser online");
-  }, []);
+    controller.setCursorMode("solid");
+    controller.setCursorVisible(true);
 
-  return <RetroScreen mode="terminal" controller={controller} />;
+    const timers = OUTPUT_SEQUENCE.map(({ at, text, appendNewline }) =>
+      window.setTimeout(() => {
+        if (appendNewline) {
+          controller.writeln(text);
+        } else {
+          controller.write(text);
+        }
+      }, at)
+    );
+
+    return () => {
+      for (const timer of timers) {
+        window.clearTimeout(timer);
+      }
+    };
+  }, [controller]);
+
+  return (
+    <RetroScreen
+      mode="terminal"
+      controller={controller}
+      color="#97ff9b"
+    />
+  );
 }
 ```
+<!-- readme-example:terminal-output end -->
 
 If you already have a terminal-like buffer as a string, `mode="terminal"` also accepts `value`
 or `initialBuffer`.
@@ -390,25 +609,43 @@ The demo sequence is recorded from a live shell session and stages the kind of w
 bridge is built for: a live-updating `top` session, a fullscreen `vim` pass, and a `nano`
 screen with help bars and cursor-owned chrome.
 
+**Complete multi-file example:** the browser client is synchronized below. The required
+`node-pty` server, its security boundary, and the full source tree are documented in
+[`examples/readme/live-tty-websocket-bridge/`](./examples/readme/live-tty-websocket-bridge/).
+
+<!-- readme-example:live-tty-websocket-bridge source="examples/readme/live-tty-websocket-bridge/LiveShell.tsx" start -->
 ```tsx
+import { useMemo } from "react";
 import {
   RetroScreen,
   createRetroScreenWebSocketSession
 } from "react-retro-display-tty-ansi-ascii";
+import "react-retro-display-tty-ansi-ascii/styles.css";
 
-const session = createRetroScreenWebSocketSession({
-  url: "ws://127.0.0.1:8787",
-  openPayload: {
-    cwd: "/workspace",
-    term: "xterm-256color"
-  }
-});
+export function LiveShell({
+  url = "ws://127.0.0.1:8787",
+  cwd = "/workspace"
+}: {
+  url?: string;
+  cwd?: string;
+}) {
+  const session = useMemo(
+    () =>
+      createRetroScreenWebSocketSession({
+        url,
+        openPayload: {
+          cwd,
+          term: "xterm-256color"
+        }
+      }),
+    [cwd, url]
+  );
 
-export function LiveShell() {
   return (
     <RetroScreen
       mode="terminal"
       session={session}
+      closeSessionOnUnmount
       autoFocus
       displayColorMode="ansi-extended"
       displayPadding={{ block: 12, inline: 14 }}
@@ -416,6 +653,7 @@ export function LiveShell() {
   );
 }
 ```
+<!-- readme-example:live-tty-websocket-bridge end -->
 
 For local development, the repo includes a reference `node-pty` websocket backend:
 
@@ -437,7 +675,7 @@ If you want to override the target or the open payload, use:
 window.__RETRO_SCREEN_TTY_DEMO__ = {
   url: "ws://127.0.0.1:8787",
   openPayload: {
-    cwd: "/Users/josh/play/react-retro-display",
+    cwd: "/workspace",
     term: "xterm-256color"
   }
 };
@@ -445,7 +683,7 @@ window.__RETRO_SCREEN_TTY_DEMO__ = {
 
 The example server now supports token checks, origin checks, idle timeouts, payload-size limits,
 and optional command/cwd/env override restrictions. See
-[examples/node-tty-websocket-server/README.md](/Users/josh/play/react-retro-display/examples/node-tty-websocket-server/README.md)
+[examples/node-tty-websocket-server/README.md](./examples/node-tty-websocket-server/README.md)
 for the available flags.
 
 ### 6. Prompt-first interaction
@@ -454,29 +692,54 @@ Use `mode="prompt"` when the interface should feel like a guided shell.
 
 [![Prompt Interaction Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi-ascii/main/docs/assets/react-retro-display-tty-ansi-ascii-prompt-loop.webp)](https://github.com/user-attachments/assets/75eec8ea-6da7-41f4-98be-f17e5284980a)
 
+**Complete example:** command latency, accepted responses, and rejection behavior are included.
 
+<!-- readme-example:prompt-interaction source="examples/readme/prompt-interaction/PromptInteraction.tsx" start -->
 ```tsx
-<RetroScreen
-  mode="prompt"
-  autoFocus
-  promptChar="$"
-  acceptanceText="READY"
-  rejectionText="DENIED"
-  onCommand={async (command) => {
-    if (command === "status") {
-      return {
-        accepted: true,
-        response: ["grid synced", "cursor stable"]
-      };
-    }
+import { RetroScreen } from "react-retro-display-tty-ansi-ascii";
+import "react-retro-display-tty-ansi-ascii/styles.css";
 
-    return {
-      accepted: false,
-      response: "unknown command"
-    };
-  }}
-/>
+const wait = (duration: number) =>
+  new Promise<void>((resolve) => {
+    window.setTimeout(resolve, duration);
+  });
+
+export function PromptInteraction() {
+  return (
+    <RetroScreen
+      mode="prompt"
+      autoFocus
+      color="#97ff9b"
+      cursorMode="solid"
+      promptChar="$"
+      acceptanceText="READY"
+      rejectionText="DENIED"
+      onCommand={async (command) => {
+        await wait(420);
+
+        switch (command.trim()) {
+          case "status":
+            return {
+              accepted: true,
+              response: ["grid synced", "cursor stable", "story ready"]
+            };
+          case "scan":
+            return {
+              accepted: true,
+              response: ["signal sweep", "north: clear", "south: clear"]
+            };
+          default:
+            return {
+              accepted: false,
+              response: "unknown command"
+            };
+        }
+      }}
+    />
+  );
+}
 ```
+<!-- readme-example:prompt-interaction end -->
 
 The Apple DOS 3.3 demo sits nicely in the same family when you want the interface to feel boot-first and command-led instead of form-like.
 
@@ -486,10 +749,13 @@ Under the hood, the Apple II shell is built as a small userland runtime on top o
 
 Implementation notes:
 
-- `src/stories/Apple2Basic.stories.tsx` wires `RetroScreen` to the Apple session and powers both the interactive story and the deterministic capture/demo variants.
-- `src/stories/apple2-basic/apple2-basic-shell-session.ts` manages uppercase input, line editing, transcript updates, prompt switching, and asynchronous runner scheduling.
-- `src/stories/apple2-basic/apple2-basic-parser.ts` parses immediate commands, numbered program lines, and the supported BASIC statement/expression subset.
-- `src/stories/apple2-basic/apple2-basic-interpreter.ts` compiles stored lines into a resumable runner so `RUN`, `INPUT`, `GOTO`, `IF ... THEN`, `END`, and `CTRL+C` / `BREAK` behave like a shell instead of a static transcript.
+- [`src/stories/Apple2Basic.stories.tsx`](./src/stories/Apple2Basic.stories.tsx) wires `RetroScreen` to the Apple session and powers both the interactive story and deterministic capture variants.
+- [`src/stories/apple2-basic/apple2-basic-shell-session.ts`](./src/stories/apple2-basic/apple2-basic-shell-session.ts) manages uppercase input, line editing, transcript updates, prompt switching, and asynchronous runner scheduling.
+- [`src/stories/apple2-basic/apple2-basic-parser.ts`](./src/stories/apple2-basic/apple2-basic-parser.ts) parses immediate commands, numbered program lines, and the supported BASIC statement/expression subset.
+- [`src/stories/apple2-basic/apple2-basic-interpreter.ts`](./src/stories/apple2-basic/apple2-basic-interpreter.ts) compiles stored lines into a resumable runner so `RUN`, `INPUT`, `GOTO`, `IF ... THEN`, `END`, and `CTRL+C` / `BREAK` behave like a shell instead of a static transcript.
+
+**Complete multi-file example:** the required module map and run command are collected in
+[`examples/readme/apple2-basic/`](./examples/readme/apple2-basic/).
 
 ## Display Buffer And Follow Mode
 
@@ -506,6 +772,9 @@ Built-in behavior:
 
 Use `bufferSize` to control how many rows of history the component-managed terminal or prompt
 surface keeps, and `defaultAutoFollow` if you want the view to start detached from the tail.
+
+**API fragment:** use the complete Terminal Output example above for imports and controller
+lifecycle.
 
 ```tsx
 <RetroScreen
@@ -549,34 +818,18 @@ different visual projections.
 
 [![Auto Resize Probe Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi-ascii/main/docs/assets/react-retro-display-tty-ansi-ascii-auto-resize-probe.webp)](https://github.com/user-attachments/assets/2dfd68d7-284c-4895-ad5f-fb513cb09c80)
 
+**Complete multi-file example:** the real `redrawBorderAndMetrics` helper, controller lifecycle,
+geometry deduplication, terminal reply, and runnable component are in
+[`examples/readme/auto-resize-probe/`](./examples/readme/auto-resize-probe/). The scripted mouse
+and visual-variant cycling in the capture are Storybook presentation choreography.
+
+The runnable entry point is:
+
 ```tsx
-import {
-  RetroScreen,
-  createRetroScreenController
-} from "react-retro-display-tty-ansi-ascii";
+import { AutoResizeProbe } from "./AutoResizeProbe";
 
-const controller = createRetroScreenController({
-  rows: 9,
-  cols: 34,
-  cursorMode: "solid"
-});
-
-export function ResizingTerminalProbe() {
-  return (
-    <RetroScreen
-      mode="terminal"
-      controller={controller}
-      displayPadding={{ block: 8, inline: 10 }}
-      onGeometryChange={(geometry) => {
-        const nextReply = `\u001b[8;${geometry.rows};${geometry.cols}t`;
-
-        console.log("terminal reply:", nextReply);
-        controller.reset();
-        controller.resize(geometry.rows, geometry.cols);
-        redrawBorderAndMetrics(controller, geometry.rows, geometry.cols);
-      }}
-    />
-  );
+export function App() {
+  return <AutoResizeProbe />;
 }
 ```
 
@@ -602,17 +855,30 @@ Available modes:
 - `ansi-classic`
 - `ansi-extended`
 
+**Complete example:**
+
+<!-- readme-example:display-color-modes source="examples/readme/display-color-modes/DisplayColorModes.tsx" start -->
 ```tsx
-<RetroScreen
-  mode="terminal"
-  displayColorMode="ansi-extended"
-  value={[
-    "\u001b[31mALERT\u001b[0m \u001b[32mlink stable\u001b[0m",
-    "\u001b[38;5;196mindexed 196\u001b[0m from the 256-color palette",
-    "\u001b[38;2;255;180;120mtruecolor 255,180,120\u001b[0m"
-  ].join("\n")}
-/>
+import { RetroScreen } from "react-retro-display-tty-ansi-ascii";
+import "react-retro-display-tty-ansi-ascii/styles.css";
+
+const VALUE = [
+  "\u001b[31mALERT\u001b[0m \u001b[32mlink stable\u001b[0m",
+  "\u001b[38;5;196mindexed 196\u001b[0m from the 256-color palette",
+  "\u001b[38;2;255;180;120mtruecolor 255,180,120\u001b[0m"
+].join("\n");
+
+export function DisplayColorModes() {
+  return (
+    <RetroScreen
+      mode="terminal"
+      displayColorMode="ansi-extended"
+      value={VALUE}
+    />
+  );
+}
 ```
+<!-- readme-example:display-color-modes end -->
 
 Reach for `ansi-vga` when you need the exact IBM PC/DOS 16-color palette used by ANSI art,
 `ansi-classic` when you want the softened 16-color terminal profile, or
@@ -623,6 +889,10 @@ Reach for `ansi-vga` when you need the exact IBM PC/DOS 16-color palette used by
 The Midjourney galaxy demo uses the same `RetroScreen` cell pipeline to start from a drifting text field and pull it into a bright spiral structure.
 
 [![Midjourney Galaxy Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi-ascii/main/docs/assets/react-retro-display-tty-ansi-ascii-midjourney-galaxy.webp)](https://github.com/user-attachments/assets/623e6b5a-e0c6-4815-9b8b-6ea1b8145469)
+
+**Complete multi-file example:** the text grid, particle model, spiral rasterizer, animation loop,
+and cleanup are in
+[`examples/readme/midjourney-vortex/`](./examples/readme/midjourney-vortex/).
 
 Open it here:
 [smysnk.github.io/react-retro-display-tty-ansi-ascii/?path=/story/retroscreen--midjourney-vortex](https://smysnk.github.io/react-retro-display-tty-ansi-ascii/?path=/story/retroscreen--midjourney-vortex)
@@ -644,9 +914,13 @@ Open it here:
 [smysnk.github.io/react-retro-display-tty-ansi-ascii/?path=/story/retroscreen-display-buffer--bad-apple-ansi](https://smysnk.github.io/react-retro-display-tty-ansi-ascii/?path=/story/retroscreen-display-buffer--bad-apple-ansi)
 
 The Storybook demo is backed by the bundled asset at
-[src/stories/assets/bad-apple.ans](/Users/josh/play/react-retro-display/src/stories/assets/bad-apple.ans).
+[src/stories/assets/bad-apple.ans](./src/stories/assets/bad-apple.ans).
 
-The key wiring for this kind of ANSI-art playback is:
+**Complete multi-file example:** loading, SAUCE parsing, byte splitting, error handling, player
+wiring, asset requirements, and attribution are in
+[`examples/readme/ansi-art-playback/`](./examples/readme/ansi-art-playback/).
+
+**API fragment:** once the complete example has loaded `asset`, the key player props are:
 
 ```tsx
 <RetroScreenAnsiPlayer
@@ -690,6 +964,8 @@ into retained `ImageData`, updates only changed cells during playback, and divid
 into canvases no taller than 256 text rows. In explicit canvas mode no `.retro-screen__line` or
 `.retro-screen__cell` elements are mounted.
 
+**API fragment:** `asset` is loaded by the complete ANSI Art Playback example linked above.
+
 ```tsx
 <RetroScreenAnsiPlayer
   byteStream={asset.byteStream}
@@ -717,6 +993,8 @@ disables scanlines and rasterizes the IBM VGA glyph data directly.
 `RetroScreenAnsiPlayer` can also render a fixed viewport over a larger ANSI buffer. This is useful
 for gallery viewers, panning surfaces, and giant sparse ANSI files where the parent wants to keep a
 stable `80 x 25` window while the underlying source geometry remains larger.
+
+**API fragment:** this reuses the loader and `asset` state from the complete ANSI example.
 
 ```tsx
 <RetroScreenAnsiPlayer
@@ -778,28 +1056,56 @@ updates, ANSI 16-color, indexed 256-color, and truecolor output.
 
 [![Control Character Replay Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi-ascii/main/docs/assets/react-retro-display-tty-ansi-ascii-control-character-replay.webp)](https://github.com/user-attachments/assets/682d8e92-7871-420e-9e6d-a6a92b60c0fe)
 
+**Complete example:** writes run inside a component effect and timers are cleaned up on unmount.
+
+<!-- readme-example:control-character-replay source="examples/readme/control-character-replay/ControlCharacterReplay.tsx" start -->
 ```tsx
+import { useEffect, useState } from "react";
 import {
   RetroScreen,
   createRetroScreenController
 } from "react-retro-display-tty-ansi-ascii";
+import "react-retro-display-tty-ansi-ascii/styles.css";
 
-const controller = createRetroScreenController({ rows: 6, cols: 34 });
+export function ControlCharacterReplay() {
+  const [controller] = useState(() =>
+    createRetroScreenController({ rows: 6, cols: 34, cursorMode: "solid" })
+  );
 
-controller.write("Downloading fixtures... 12%");
-controller.write("\rDownloading fixtures... 73%");
-controller.write("\r\u001b[32mDownloaded fixtures.\u001b[0m\u001b[K\r\n");
-controller.write("\u001b[2;6r");
-controller.write(
-  "\u001b[6;1H\u001b[L\u001b[38;2;255;180;120mrecorded regression fixture\u001b[0m"
-);
+  useEffect(() => {
+    controller.reset();
+    controller.setCursorVisible(true);
 
-<RetroScreen
-  mode="terminal"
-  controller={controller}
-  displayColorMode="ansi-extended"
-/>
+    const writes = [
+      "Downloading fixtures... 12%",
+      "\rDownloading fixtures... 73%",
+      "\r\u001b[32mDownloaded fixtures.\u001b[0m\u001b[K\r\n",
+      "\u001b[2;6r",
+      "\u001b[6;1H\u001b[L\u001b[38;2;255;180;120mrecorded regression fixture\u001b[0m"
+    ];
+    const timers = writes.map((value, index) =>
+      window.setTimeout(() => {
+        controller.write(value);
+      }, 280 + index * 720)
+    );
+
+    return () => {
+      for (const timer of timers) {
+        window.clearTimeout(timer);
+      }
+    };
+  }, [controller]);
+
+  return (
+    <RetroScreen
+      mode="terminal"
+      controller={controller}
+      displayColorMode="ansi-extended"
+    />
+  );
+}
 ```
+<!-- readme-example:control-character-replay end -->
 
 The same trace fixtures used in Storybook are also exercised in the terminal verification layers:
 

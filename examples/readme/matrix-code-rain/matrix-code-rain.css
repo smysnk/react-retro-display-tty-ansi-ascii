@@ -1,0 +1,5 @@
+@font-face {
+  font-family: "Matrix";
+  src: url("../../../src/stories/assets/Matrix.ttf") format("truetype");
+  font-display: swap;
+}

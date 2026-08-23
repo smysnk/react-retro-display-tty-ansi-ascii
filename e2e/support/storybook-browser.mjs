@@ -72,6 +72,22 @@ const detectChromePath = async () => {
   );
 };
 
+const settleWithin = async (operation, timeoutMs = 5000) => {
+  let timeout;
+
+  try {
+    await Promise.race([
+      operation(),
+      new Promise((resolvePromise) => {
+        timeout = setTimeout(resolvePromise, timeoutMs);
+        timeout.unref?.();
+      })
+    ]);
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
 export const createStorybookBrowserHarness = ({
   viewport = {
     width: 1440,
@@ -103,12 +119,23 @@ export const createStorybookBrowserHarness = ({
   });
 
   after(async () => {
-    await page?.close();
-    await browser?.close();
+    await settleWithin(() => page?.close() ?? Promise.resolve());
+    await settleWithin(() => browser?.close() ?? Promise.resolve());
 
-    await new Promise((resolvePromise) => {
-      server?.close(() => resolvePromise(undefined));
-    });
+    server?.closeIdleConnections?.();
+    server?.closeAllConnections?.();
+
+    await settleWithin(
+      () =>
+        new Promise((resolvePromise) => {
+          if (!server) {
+            resolvePromise(undefined);
+            return;
+          }
+
+          server.close(() => resolvePromise(undefined));
+        })
+    );
   });
 
   return {

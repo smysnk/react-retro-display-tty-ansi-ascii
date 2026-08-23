@@ -70,7 +70,7 @@ import { RetroScreen, createRetroScreenWebSocketSession } from "react-retro-disp
 const session = createRetroScreenWebSocketSession({
   url: "ws://127.0.0.1:8787",
   openPayload: {
-    cwd: "/Users/josh/play/react-retro-display",
+    cwd: "/workspace",
     term: "xterm-256color"
   }
 });

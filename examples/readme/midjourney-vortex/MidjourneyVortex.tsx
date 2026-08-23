@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import type { RetroScreenCell, RetroScreenCellStyle } from "../core/terminal/types";
-import { RetroScreen } from "../react/RetroScreen";
+import {
+  RetroScreen,
+  type RetroScreenCell,
+  type RetroScreenCellStyle
+} from "react-retro-display-tty-ansi-ascii";
+import "react-retro-display-tty-ansi-ascii/styles.css";
 
 const VORTEX_COLOR = "#f4f4f1";
 const TAU = Math.PI * 2;
@@ -58,7 +62,7 @@ type Particle = {
   noise: number;
 };
 
-type MidjourneyVortexScreenProps = {
+export type MidjourneyVortexScreenProps = {
   rows?: number;
   cols?: number;
   style?: CSSProperties;

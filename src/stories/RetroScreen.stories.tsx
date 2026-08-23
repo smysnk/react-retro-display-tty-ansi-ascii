@@ -9,6 +9,21 @@ import {
   type ReactNode
 } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { EditableDrafting } from "../../examples/readme/editable-drafting/EditableDrafting";
+import {
+  DARK_SURFACE_STREAM,
+  LIGHT_DARK_CYCLE_MS,
+  LIGHT_DARK_TYPING_MS,
+  LIGHT_SURFACE_STREAM,
+  buildAnsiTypedFrames,
+  resolveAnsiTypedFrame
+} from "../../examples/readme/light-dark-surfaces/LightDarkSurfaces";
+import { MatrixCodeRainScreen } from "../../examples/readme/matrix-code-rain/MatrixCodeRain";
+import { MidjourneyVortexScreen } from "../../examples/readme/midjourney-vortex/MidjourneyVortex";
+import { PromptInteraction } from "../../examples/readme/prompt-interaction/PromptInteraction";
+import { QuietOutput } from "../../examples/readme/quiet-output/QuietOutput";
+import { WhiteRabbitSignal as WhiteRabbitSignalExample } from "../../examples/readme/signal-intercept/WhiteRabbitSignal";
+import { TerminalOutput } from "../../examples/readme/terminal-output/TerminalOutput";
 import { progressRewriteTraceFixture } from "../core/terminal/conformance/fixtures/real-world/progress-rewrite.trace.fixture";
 import { shellSessionTraceFixture } from "../core/terminal/conformance/fixtures/real-world/shell-session.trace.fixture";
 import { statusPaneTraceFixture } from "../core/terminal/conformance/fixtures/real-world/status-pane.trace.fixture";
@@ -24,8 +39,6 @@ import {
   type BadAppleGzipAnsiAsset
 } from "./bad-apple-gzip-ansi";
 import { AnsiGalleryViewer } from "./ansi-gallery";
-import { MatrixCodeRainScreen } from "./matrix-code-rain";
-import { MidjourneyVortexScreen } from "./midjourney-vortex";
 import { CaptureStage, Stage, StoryShell } from "./retro-story-shell";
 
 const STORY_COLOR = "#97ff9b";
@@ -603,49 +616,6 @@ const createSeededRandom = (seed: number) => {
 };
 
 const stripAnsi = (value: string) => value.replace(/\u001b\[[0-9;]*m/gu, "");
-
-const buildAnsiTypedFrames = (value: string) => {
-  const frames: string[] = [];
-  let current = "";
-
-  for (let index = 0; index < value.length; index += 1) {
-    const character = value[index];
-
-    if (character === "\u001b") {
-      let end = index + 1;
-
-      if (value[end] === "[") {
-        end += 1;
-
-        while (end < value.length && !/[\u0040-\u007e]/u.test(value[end] ?? "")) {
-          end += 1;
-        }
-
-        if (end < value.length) {
-          end += 1;
-        }
-      }
-
-      current += value.slice(index, end);
-      index = end - 1;
-      continue;
-    }
-
-    current += character;
-    frames.push(current);
-  }
-
-  return frames;
-};
-
-const resolveAnsiTypedFrame = (frames: string[], progress: number) => {
-  if (progress <= 0 || frames.length === 0) {
-    return "";
-  }
-
-  const visibleCount = Math.min(frames.length, Math.max(1, Math.round(frames.length * progress)));
-  return frames[visibleCount - 1] ?? "";
-};
 
 const applyAnsi = (code: string, text: string) => `${code}${text}${PROBE_RESET}`;
 
@@ -1295,41 +1265,14 @@ function DisplayColorModeCard({
 }
 
 export function QuietOutputDemoStory() {
-  const [value, setValue] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    const message = "LINK STABLE\nAwaiting operator input.";
-
-    const run = async () => {
-      await wait(220);
-
-      for (let index = 1; index <= message.length; index += 1) {
-        if (cancelled) {
-          return;
-        }
-
-        setValue(message.slice(0, index));
-        await wait(message[index - 1] === "\n" ? 260 : 92);
-      }
-    };
-
-    void run();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   return (
     <CaptureStage captureId="quiet-output" maxWidth={760}>
-      <RetroScreen mode="value" color={STORY_COLOR} value={value} />
+      <QuietOutput />
     </CaptureStage>
   );
 }
 
 export function EditableModeDemoStory() {
-  const [value, setValue] = useState("");
   const hostRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -1376,16 +1319,7 @@ export function EditableModeDemoStory() {
   return (
     <CaptureStage captureId="editable-drafting" maxWidth={860}>
       <div ref={hostRef} className="sb-retro-capture-host">
-        <RetroScreen
-          mode="value"
-          value={value}
-          editable
-          autoFocus
-          color={STORY_COLOR}
-          cursorMode="solid"
-          placeholder="Write a line, breathe, then press Enter."
-          onChange={setValue}
-        />
+        <EditableDrafting />
       </div>
     </CaptureStage>
   );
@@ -1567,50 +1501,6 @@ export function EditorSelectionReadOnlyStory() {
 }
 
 function TerminalStreamStory() {
-  const [controller] = useState(() =>
-    createRetroScreenController({
-      rows: 9,
-      cols: 46,
-      cursorMode: "hollow"
-    })
-  );
-
-  useEffect(() => {
-    controller.reset();
-    controller.setCursorMode("hollow");
-    controller.setCursorVisible(true);
-
-    const schedule = [
-      window.setTimeout(() => {
-        controller.writeln("BOOT   react-retro-display-tty-ansi-ascii");
-      }, 400),
-      window.setTimeout(() => {
-        controller.writeln("CHECK  measuring rows and columns");
-      }, 1050),
-      window.setTimeout(() => {
-        controller.write("\u001b[1mREADY\u001b[0m  controller attached");
-        controller.writeln("");
-      }, 1850),
-      window.setTimeout(() => {
-        controller.write("\u001b[2msoft state preserved for quiet hints\u001b[0m");
-        controller.writeln("");
-      }, 2800),
-      window.setTimeout(() => {
-        controller.write("\u001b[7mLIVE\u001b[0m feed bound to external events");
-        controller.writeln("");
-      }, 3800),
-      window.setTimeout(() => {
-        controller.write("\u001b[5mBLINK\u001b[0m cursor waiting for the next write");
-      }, 4900)
-    ];
-
-    return () => {
-      for (const timer of schedule) {
-        window.clearTimeout(timer);
-      }
-    };
-  }, [controller]);
-
   return (
     <StoryShell
       kicker="Terminal Mode"
@@ -1624,7 +1514,7 @@ function TerminalStreamStory() {
       }
     >
       <Stage>
-        <RetroScreen mode="terminal" controller={controller} color={STORY_COLOR} />
+        <TerminalOutput />
       </Stage>
     </StoryShell>
   );
@@ -1635,100 +1525,7 @@ function WhiteRabbitSignalSurface({
 }: {
   capture?: boolean;
 }) {
-  const [controller] = useState(() =>
-    createRetroScreenController({
-      rows: 5,
-      cols: 34,
-      cursorMode: "solid"
-    })
-  );
-
-  useEffect(() => {
-    controller.reset();
-    controller.resize(5, 34);
-    controller.setCursorMode("solid");
-    controller.setCursorVisible(true);
-
-    const timers: number[] = [];
-    let nextAt = 380;
-
-    const getSignalTypingDelay = (character: string, nextCharacter?: string) => {
-      if (character === " ") {
-        return 86;
-      }
-
-      if (character === ",") {
-        return 214;
-      }
-
-      if (character === "." && nextCharacter === ".") {
-        return 70;
-      }
-
-      if (character === ".") {
-        return 320;
-      }
-
-      if (/[A-Z]/u.test(character)) {
-        return 154;
-      }
-
-      return 122;
-    };
-
-    const scheduleTypedWrite = (text: string) => {
-      const characters = Array.from(text);
-
-      for (let index = 0; index < characters.length; index += 1) {
-        const character = characters[index]!;
-        timers.push(
-          window.setTimeout(() => {
-            controller.write(character);
-          }, nextAt)
-        );
-        nextAt += getSignalTypingDelay(character, characters[index + 1]);
-      }
-    };
-
-    const scheduleReset = () => {
-      timers.push(
-        window.setTimeout(() => {
-          controller.reset();
-          controller.resize(5, 34);
-          controller.setCursorMode("solid");
-          controller.setCursorVisible(true);
-        }, nextAt)
-      );
-      nextAt += 360;
-    };
-
-    scheduleTypedWrite("Wake up, Neo...");
-    nextAt += 1360;
-    scheduleReset();
-    scheduleTypedWrite("The Matrix has you...");
-    nextAt += 1220;
-    scheduleReset();
-    scheduleTypedWrite("Follow the white rabbit.");
-    nextAt += 1220;
-    scheduleReset();
-    scheduleTypedWrite("Knock, knock, Neo.");
-
-    return () => {
-      for (const timer of timers) {
-        window.clearTimeout(timer);
-      }
-    };
-  }, [controller]);
-
-  const screen = (
-    <RetroScreen
-      mode="terminal"
-      controller={controller}
-      color={STORY_COLOR}
-      displayPadding={{ block: 14, inline: 16 }}
-      style={{ minHeight: "212px" }}
-    />
-  );
+  const screen = <WhiteRabbitSignalExample />;
 
   if (capture) {
     return (
@@ -1750,9 +1547,7 @@ function WhiteRabbitSignalSurface({
         </ul>
       }
     >
-      <Stage maxWidth={760}>
-        {screen}
-      </Stage>
+      <Stage maxWidth={760}>{screen}</Stage>
     </StoryShell>
   );
 }
@@ -1858,50 +1653,9 @@ export function MidjourneyGalaxyDemoStory() {
 }
 
 export function TerminalModeDemoStory() {
-  const [controller] = useState(() =>
-    createRetroScreenController({
-      rows: 9,
-      cols: 46,
-      cursorMode: "solid"
-    })
-  );
-
-  useEffect(() => {
-    controller.reset();
-    controller.setCursorMode("solid");
-    controller.setCursorVisible(true);
-
-    const schedule = [
-      window.setTimeout(() => {
-        controller.writeln("BOOT   react-retro-display-tty-ansi-ascii");
-      }, 260),
-      window.setTimeout(() => {
-        controller.writeln("CHECK  controller attached");
-      }, 1120),
-      window.setTimeout(() => {
-        controller.write("\u001b[1mREADY\u001b[0m ansi parser online");
-        controller.writeln("");
-      }, 2080),
-      window.setTimeout(() => {
-        controller.write("\u001b[2msoft notes stay readable without stealing focus\u001b[0m");
-        controller.writeln("");
-      }, 3140),
-      window.setTimeout(() => {
-        controller.write("\u001b[7mLIVE\u001b[0m output keeps pace with external writes");
-        controller.writeln("");
-      }, 4320)
-    ];
-
-    return () => {
-      for (const timer of schedule) {
-        window.clearTimeout(timer);
-      }
-    };
-  }, [controller]);
-
   return (
     <CaptureStage captureId="terminal-output" maxWidth={860}>
-      <RetroScreen mode="terminal" controller={controller} color={STORY_COLOR} />
+      <TerminalOutput />
     </CaptureStage>
   );
 }
@@ -2003,31 +1757,7 @@ export function PromptModeDemoStory() {
   return (
     <CaptureStage captureId="prompt-interaction" maxWidth={860}>
       <div ref={hostRef} className="sb-retro-capture-host">
-        <RetroScreen
-          mode="prompt"
-          autoFocus
-          color={STORY_COLOR}
-          cursorMode="solid"
-          promptChar="$"
-          acceptanceText="READY"
-          rejectionText="DENIED"
-          onCommand={async (command) => {
-            await wait(420);
-
-            switch (command.trim()) {
-              case "status":
-                return {
-                  accepted: true,
-                  response: ["grid synced", "cursor stable", "story ready"]
-                };
-              default:
-                return {
-                  accepted: false,
-                  response: "unknown command"
-                };
-            }
-          }}
-        />
+        <PromptInteraction />
       </div>
     </CaptureStage>
   );
@@ -3329,32 +3059,19 @@ function LightDarkHostsSurface({
   animated?: boolean;
 }) {
   const [tick, setTick] = useState(0);
-  const cycleMs = 10200;
-  const now = tick % cycleMs;
+  const now = tick % LIGHT_DARK_CYCLE_MS;
   const clampProgress = (start: number, end: number) =>
     Math.max(0, Math.min(1, (now - start) / (end - start)));
-  const resolvedActiveTheme =
-    animated ? (now < cycleMs / 2 ? "light" : "dark") : activeTheme;
-  const lightStream = [
-    "\u001b[1mLIGHT SURFACE\u001b[0m",
-    "\u001b[38;5;160mR\u001b[38;5;214mA\u001b[38;5;190mI\u001b[38;5;45mN\u001b[38;5;39mB\u001b[38;5;141mO\u001b[38;5;201mW\u001b[0m contrast check",
-    "\u001b[38;2;194;94;0mamber\u001b[0m  \u001b[38;2;0;104;181mblue\u001b[0m  \u001b[38;2;108;40;148mviolet\u001b[0m",
-    "\u001b[38;2;28;139;98mtyped live\u001b[0m on bright LCD glass"
-  ].join("\r\n");
-  const darkStream = [
-    "\u001b[1mDARK SURFACE\u001b[0m",
-    "\u001b[38;5;160mR\u001b[38;5;214mA\u001b[38;5;190mI\u001b[38;5;45mN\u001b[38;5;39mB\u001b[38;5;141mO\u001b[38;5;201mW\u001b[0m contrast check",
-    "\u001b[38;2;255;176;86mamber\u001b[0m  \u001b[38;2;102;198;255mblue\u001b[0m  \u001b[38;2;214;145;255mviolet\u001b[0m",
-    "\u001b[38;2;110;255;185mtyped live\u001b[0m on deep terminal glass"
-  ].join("\r\n");
-  const lightFrames = buildAnsiTypedFrames(lightStream);
-  const darkFrames = buildAnsiTypedFrames(darkStream);
+  const resolvedActiveTheme = animated ? "both" : activeTheme;
+  const lightFrames = buildAnsiTypedFrames(LIGHT_SURFACE_STREAM);
+  const darkFrames = buildAnsiTypedFrames(DARK_SURFACE_STREAM);
+  const typingProgress = clampProgress(0, LIGHT_DARK_TYPING_MS);
   const lightValue = animated
-    ? resolveAnsiTypedFrame(lightFrames, clampProgress(0, 4200))
-    : lightStream;
+    ? resolveAnsiTypedFrame(lightFrames, typingProgress)
+    : LIGHT_SURFACE_STREAM;
   const darkValue = animated
-    ? resolveAnsiTypedFrame(darkFrames, clampProgress(5200, 9400))
-    : darkStream;
+    ? resolveAnsiTypedFrame(darkFrames, typingProgress)
+    : DARK_SURFACE_STREAM;
 
   useEffect(() => {
     if (!animated) {
@@ -3370,7 +3087,12 @@ function LightDarkHostsSurface({
   }, [animated]);
 
   return (
-    <div className="sb-retro-host-grid">
+    <div
+      className="sb-retro-host-grid"
+      data-animation-phase={
+        animated ? (now < LIGHT_DARK_TYPING_MS ? "typing" : "hold") : undefined
+      }
+    >
       <article
         className="sb-retro-host-card sb-retro-host-card--light"
         data-active={resolvedActiveTheme === "light" || resolvedActiveTheme === "both"}
