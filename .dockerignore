@@ -1,0 +1,5 @@
+*
+!storybook-static/
+!storybook-static/**
+!docker/
+!docker/**

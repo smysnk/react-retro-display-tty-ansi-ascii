@@ -21,7 +21,6 @@ concurrency:
 
 permissions:
   contents: write
-  pages: write
   id-token: write
 
 jobs:
@@ -160,11 +159,11 @@ jobs:
           fi
           exit "$exit_code"
 
-      - name: Build Storybook for GitHub Pages
+      - name: Build Storybook for smysnk.com
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
-          STORYBOOK_BASE_PATH: /react-retro-display-tty-ansi-ascii/
-        run: yarn storybook:build
+          STORYBOOK_SOURCE_REVISION: ${{ github.sha }}
+        run: yarn storybook:publish:build
 
       - name: Build test-station badge payloads
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -173,16 +172,80 @@ jobs:
           mkdir -p storybook-static/badges
           cp -R ./.tmp-test-station-pages/badges/. storybook-static/badges/
 
-      - name: Upload Storybook Pages artifact
+      - name: Validate mounted Storybook publication
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: storybook-static
+        run: yarn storybook:publish:check
 
-      - name: Deploy Storybook to GitHub Pages
+      - name: Configure AWS credentials
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        id: deployment
-        uses: actions/deploy-pages@v4
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and publish immutable Storybook image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_STORYBOOK }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            --build-arg SOURCE_REVISION="$IMAGE_TAG" \
+            -f docker/Dockerfile.storybook \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
+            .
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+      - name: Smoke test Storybook image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_STORYBOOK }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          image="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          container_id="$(docker run --detach --publish 8080:8080 "$image")"
+          trap 'docker rm --force "$container_id" >/dev/null 2>&1 || true' EXIT
+          base_url=http://127.0.0.1:8080/projects/react-retro-screen/storybook
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error "$base_url/build-metadata.json" > /tmp/storybook-metadata.json; then
+              break
+            fi
+            sleep 1
+          done
+          jq --exit-status --arg revision "$IMAGE_TAG" \
+            '.project == "react-retro-screen" and .surface == "storybook" and .revision == $revision' \
+            /tmp/storybook-metadata.json
+          curl --fail --silent --show-error "$base_url/" >/dev/null
+          curl --fail --silent --show-error "$base_url/iframe.html?id=retroscreen--midjourney-vortex" >/dev/null
+          curl --fail --silent --show-error "$base_url/index.json" \
+            | jq --exit-status '.entries["retroscreen-display-buffer--bad-apple-ansi"]'
+          curl --fail --silent --show-error "$base_url/ansi-gallery/manifest.json" >/dev/null
+          curl --fail --silent --show-error "$base_url/badges/tests.json" \
+            | jq --exit-status '.schemaVersion == 1'
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' "$base_url")" = "308"
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' "$base_url/not-a-page")" = "404"
+
+      - name: Request personal-website promotion
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_WEBSITE_DISPATCH_TOKEN }}
+          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_REPOSITORY: ${{ vars.ECR_REPOSITORY_STORYBOOK }}
+        run: |
+          payload="$(jq --null-input \
+            --arg slug "react-retro-screen" \
+            --arg surface "storybook" \
+            --arg tag "$IMAGE_TAG" \
+            --arg repository "$IMAGE_REPOSITORY" \
+            '{event_type:"project-site-published",client_payload:{slug:$slug,surface:$surface,image_tag:$tag,image_repository:$repository}}')"
+          gh api --method POST repos/smysnk/personal-website/dispatches --input - <<<"$payload"
 
       - name: Set npm package version from build number
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -236,7 +299,7 @@ jobs:
 
           - Commit: \`${{ github.sha }}\`
           - npm: https://www.npmjs.com/package/${{ steps.package_version.outputs.package_name }}/v/${{ steps.package_version.outputs.package_version }}
-          - Storybook: https://smysnk.github.io/react-retro-display-tty-ansi-ascii/
+          - Storybook: https://smysnk.com/projects/react-retro-screen/storybook/
           EOF
 
       - name: Create or update GitHub release

@@ -1,0 +1,18 @@
+FROM alpine:3.21 AS content
+
+COPY storybook-static/ /site/
+RUN test -f /site/index.html \
+  && test -f /site/iframe.html \
+  && test -f /site/build-metadata.json \
+  && test -f /site/badges/tests.json
+
+FROM nginx:1.27-alpine
+
+ARG SOURCE_REVISION=unknown
+LABEL org.opencontainers.image.source="https://github.com/smysnk/react-retro-display-tty-ansi-ascii"
+LABEL org.opencontainers.image.revision="${SOURCE_REVISION}"
+
+COPY docker/storybook-nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=content /site/ /usr/share/nginx/html/projects/react-retro-screen/storybook/
+
+EXPOSE 8080

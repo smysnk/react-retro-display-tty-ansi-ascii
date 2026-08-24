@@ -62,6 +62,8 @@
     "perf:ansi-byte-playback": "yarn build && node ./scripts/benchmark-ansi-byte-playback.mjs",
     "storybook": "storybook dev -p 6006",
     "storybook:build": "storybook build",
+    "storybook:publish:build": "STORYBOOK_BASE_PATH=/projects/react-retro-screen/storybook/ storybook build && node ./scripts/write-storybook-build-metadata.mjs",
+    "storybook:publish:check": "node ./scripts/check-storybook-publication.mjs",
     "demo:webp": "storybook build && node ./scripts/generate-demo-webp.mjs",
     "ansi:gallery:build": "node ./scripts/build-largest-ansi-gallery.mjs --count 200",
     "oracle:ansilove:build": "node ./scripts/ansilove/build-native-oracle.mjs",

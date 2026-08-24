@@ -7,3 +7,4 @@ storybook-static
 references/
 .tmp-types/
 .tmp/
+.tmp-test-station-pages/

@@ -10,13 +10,13 @@ import { projectAnnotations } from "./projectAnnotations";
 
 const GITHUB_REPOSITORY_URL = "https://github.com/smysnk/react-retro-display-tty-ansi-ascii";
 const NPM_PACKAGE_URL = "https://www.npmjs.com/package/react-retro-display-tty-ansi-ascii";
-const STORYBOOK_URL = "https://smysnk.github.io/react-retro-display-tty-ansi-ascii/";
+const STORYBOOK_URL = "https://smysnk.com/projects/react-retro-screen/storybook/";
 const CI_WORKFLOW_URL =
   "https://github.com/smysnk/react-retro-display-tty-ansi-ascii/actions/workflows/cicd.yml";
 const ANSI_DISPLAY_SUPPORT_REPORT_URL =
   "https://github.com/smysnk/react-retro-display-tty-ansi-ascii/blob/main/docs/ansi-display-support-matrix.md";
 const PUBLISHED_BADGE_BASE_URL =
-  "https://smysnk.github.io/react-retro-display-tty-ansi-ascii/badges";
+  "https://smysnk.com/projects/react-retro-screen/storybook/badges";
 const GITHUB_BADGE_URL =
   "https://img.shields.io/badge/github-smysnk%2Freact--retro--display--tty--ansi--ascii-181717?logo=github&logoColor=white";
 const TESTS_BADGE_URL =

@@ -3,11 +3,11 @@
 # react-retro-display-tty-ansi-ascii
 
 [![npm](https://img.shields.io/npm/v/react-retro-display-tty-ansi-ascii?label=npm)](https://www.npmjs.com/package/react-retro-display-tty-ansi-ascii)
-[![tests](https://img.shields.io/endpoint?url=https%3A%2F%2Fsmysnk.github.io%2Freact-retro-display-tty-ansi-ascii%2Fbadges%2Ftests.json)](https://github.com/smysnk/react-retro-display-tty-ansi-ascii/actions/workflows/cicd.yml)
-[![coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fsmysnk.github.io%2Freact-retro-display-tty-ansi-ascii%2Fbadges%2Fcoverage.json)](https://github.com/smysnk/react-retro-display-tty-ansi-ascii/actions/workflows/cicd.yml)
-[![health](https://img.shields.io/endpoint?url=https%3A%2F%2Fsmysnk.github.io%2Freact-retro-display-tty-ansi-ascii%2Fbadges%2Fhealth.json)](https://github.com/smysnk/react-retro-display-tty-ansi-ascii/actions/workflows/cicd.yml)
+[![tests](https://img.shields.io/endpoint?url=https%3A%2F%2Fsmysnk.com%2Fprojects%2Freact-retro-screen%2Fstorybook%2Fbadges%2Ftests.json)](https://github.com/smysnk/react-retro-display-tty-ansi-ascii/actions/workflows/cicd.yml)
+[![coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fsmysnk.com%2Fprojects%2Freact-retro-screen%2Fstorybook%2Fbadges%2Fcoverage.json)](https://github.com/smysnk/react-retro-display-tty-ansi-ascii/actions/workflows/cicd.yml)
+[![health](https://img.shields.io/endpoint?url=https%3A%2F%2Fsmysnk.com%2Fprojects%2Freact-retro-screen%2Fstorybook%2Fbadges%2Fhealth.json)](https://github.com/smysnk/react-retro-display-tty-ansi-ascii/actions/workflows/cicd.yml)
 
-Storybook: [smysnk.github.io/react-retro-display-tty-ansi-ascii](https://smysnk.github.io/react-retro-display-tty-ansi-ascii/)
+Storybook: [smysnk.com/projects/react-retro-screen/storybook](https://smysnk.com/projects/react-retro-screen/storybook/)
 
 `react-retro-display-tty-ansi-ascii` is a React component for calm, terminal-flavored interfaces.
 It can be a read-only display, a controlled editable surface, a controller-driven terminal,
@@ -895,7 +895,7 @@ and cleanup are in
 [`examples/readme/midjourney-vortex/`](./examples/readme/midjourney-vortex/).
 
 Open it here:
-[smysnk.github.io/react-retro-display-tty-ansi-ascii/?path=/story/retroscreen--midjourney-vortex](https://smysnk.github.io/react-retro-display-tty-ansi-ascii/?path=/story/retroscreen--midjourney-vortex)
+[smysnk.com/projects/react-retro-screen/storybook/?path=/story/retroscreen--midjourney-vortex](https://smysnk.com/projects/react-retro-screen/storybook/?path=/story/retroscreen--midjourney-vortex)
 
 Storybook now includes a dedicated `Bad Apple ANSI` demo that loads the real ANSI release,
 decodes the original IBM VGA / CP437 bytes outside the display component, and then feeds those
@@ -911,7 +911,7 @@ The README clip is a 30-second capture of the real ANSI-art playback path, not a
 Credit for the original ANSI release goes to [Mistigris](https://mistigris.org/).
 
 Open it here:
-[smysnk.github.io/react-retro-display-tty-ansi-ascii/?path=/story/retroscreen-display-buffer--bad-apple-ansi](https://smysnk.github.io/react-retro-display-tty-ansi-ascii/?path=/story/retroscreen-display-buffer--bad-apple-ansi)
+[smysnk.com/projects/react-retro-screen/storybook/?path=/story/retroscreen-display-buffer--bad-apple-ansi](https://smysnk.com/projects/react-retro-screen/storybook/?path=/story/retroscreen-display-buffer--bad-apple-ansi)
 
 The Storybook demo is backed by the bundled asset at
 [src/stories/assets/bad-apple.ans](./src/stories/assets/bad-apple.ans).
