@@ -76,7 +76,7 @@ That makes it a good fit for grid-driven interfaces such as soft terminals, retr
 touch menus, and keypad-like overlays where the host wants to interpret one deliberate press
 at a time.
 
-See it in action in the live [m68k-interpreter touch demo](https://smysnk.github.io/m68k-interpreter/).
+See it in action in the live [m68k-interpreter touch demo](https://smysnk.com/m68k-interpreter).
 
 **Complete example:** the rendered `<output>` makes the emitted coordinates visible to the host.
 
