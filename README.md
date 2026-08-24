@@ -245,7 +245,7 @@ Use `displaySurfaceMode` when the LCD itself should read like a light instrument
 dark night-ops surface. This is separate from the host page theme, so the same ANSI-rich
 terminal content can sit inside bright docs, dark dashboards, or a side-by-side comparison view.
 
-[![Light And Dark Hosts Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi-ascii/main/docs/assets/react-retro-display-tty-ansi-ascii-light-dark-hosts.webp)](https://github.com/user-attachments/assets/fb758db8-d014-46b3-96fc-cc649bf0c475)
+[![Light And Dark Hosts Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi-ascii/main/docs/assets/react-retro-display-tty-ansi-ascii-light-dark-hosts.webp)](https://github.com/user-attachments/assets/69f414ac-577c-4840-9acf-f7646033a39c)
 
 **Complete multi-file example:** the synchronized typing, both host cards, responsive layout, and
 cleanup are in [`examples/readme/light-dark-surfaces/`](./examples/readme/light-dark-surfaces/).
