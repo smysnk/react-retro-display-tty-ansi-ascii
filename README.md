@@ -445,12 +445,15 @@ This is the same four-message sequence, per-character cadence, screen clearing, 
 
 ### 3. Matrix code rain
 
-Use the terminal renderer as a dense animated display surface when you want the operators' green rain instead of a message prompt.
+The effect keeps a seeded glyph field fixed on the grid while independently moving brightness
+heads illuminate each column. Five per-cell RGB shades form the trails, and small glyph mutations
+near each active trail create motion without scrolling strings through the terminal.
 
 [![Matrix Code Rain Demo](https://raw.githubusercontent.com/smysnk/react-retro-display-tty-ansi-ascii/main/docs/assets/react-retro-display-tty-ansi-ascii-matrix-code-rain.webp)](https://github.com/user-attachments/assets/df2c7fdc-cd27-4296-8f70-1373fdfb63aa)
 
-**Complete multi-file example:** the seeded glyph field, column engine, cell rasterization,
-animation loop, styling, and cleanup are in
+**Complete multi-file example and implementation walkthrough:** the seeded glyph field, column
+engine, distance-based shading, selective glyph mutation, cell rasterization, animation loop,
+styling, tuning controls, and cleanup are documented in
 [`examples/readme/matrix-code-rain/`](./examples/readme/matrix-code-rain/).
 
 The runnable entry point is:
